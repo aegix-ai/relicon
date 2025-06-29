@@ -74,7 +74,25 @@ VISUAL STYLE OPTIONS:
 - confident: steady_glow, fade_reveal (trustworthy, professional)
 - urgent: shake_emphasis, zoom_burst (immediate action required)
 
-Create script with varied durations, creative visual styles, and compelling text that fits 9:16 format.
+Create script with natural, conversational speech that feels human and energetic:
+
+CRITICAL AUDIO REQUIREMENTS:
+- Write like you're speaking to a friend - natural, conversational tone
+- Use questions to engage ("Have you ever felt...?", "What if I told you...?")
+- Add emotional expressions ("Wow!", "Listen...", "Here's the thing...")
+- Include natural pauses and rhythm breaks
+- Build energy progressively through each scene
+- Make it feel like a real person talking, not robotic text
+- Each segment should feel complete but connected to the story arc
+
+PACING GUIDELINES:
+- Hook: Start with energy, grab attention immediately
+- Problem: Build tension with relatable pain points  
+- Solution: Reveal with excitement and clarity
+- Proof: Speak with confidence and authority
+- CTA: Create urgency but don't rush
+
+Write conversational, human dialogue that will sound natural when spoken aloud.
 
 CRITICAL: Ensure segments total EXACTLY {duration} seconds. Distribute time strategically:
 
@@ -136,21 +154,93 @@ except Exception as e:
           
           const audioScript = `
 import os
-from openai import OpenAI
+import requests
+import json
 
-openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+# ElevenLabs API configuration
+ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
+ELEVENLABS_URL = "https://api.elevenlabs.io/v1/text-to-speech"
 
-text = """${segment.text}"""
+# Professional voice selection based on energy
+voice_map = {
+    "explosive": "ErXwobaYiN019PkySvjV",  # Antoni - energetic, confident
+    "tension": "CYw3kZ02Hs0563khs1Fj",   # Dave - serious, concerned  
+    "exciting": "TX3LPaxmHKxFdv7VOQHJ",  # Liam - enthusiastic, engaging
+    "confident": "pNInz6obpgDQGcFmaJgB", # Adam - professional, trustworthy
+    "urgent": "ErXwobaYiN019PkySvjV"     # Antoni - urgent, action-focused
+}
+
+segment_energy = "${segment.energy}"
+voice_id = voice_map.get(segment_energy, "TX3LPaxmHKxFdv7VOQHJ")
+
+# ENHANCED TEXT with natural pacing and energy
+original_text = """${segment.text}"""
+target_duration = ${segment.duration}
+
+# Add natural speech patterns based on energy and duration
+if segment_energy == "explosive":
+    # Hook - punchy, attention-grabbing
+    enhanced_text = f"Hey! {original_text}... Think about that."
+elif segment_energy == "tension": 
+    # Problem - build suspense with pauses
+    enhanced_text = f"Here's the truth... {original_text}. And that's frustrating, right?"
+elif segment_energy == "exciting":
+    # Solution - enthusiastic reveal
+    enhanced_text = f"But here's what changes everything: {original_text}! This is exactly what you need."
+elif segment_energy == "confident":
+    # Proof - authoritative and trustworthy  
+    enhanced_text = f"The results speak for themselves. {original_text}. That's the difference."
+else:
+    # CTA - urgent but not rushed
+    enhanced_text = f"So here's what you do next: {original_text}. Don't wait on this."
+
+# Add strategic pauses for pacing (based on target duration)
+if target_duration >= 5.0:
+    enhanced_text = enhanced_text.replace(". ", "... ").replace("! ", "! ... ").replace("? ", "? ... ")
+
+print(f"ENHANCED_TEXT: {enhanced_text}")
 
 try:
-    response = openai.audio.speech.create(
-        model="tts-1-hd",
-        voice="${selectedVoice}",
-        input=text,
-        speed=1.0
-    )
-    response.stream_to_file("${audioFile}")
-    print("AUDIO_SUCCESS:${audioFile}")
+    headers = {
+        "Accept": "audio/mpeg",
+        "Content-Type": "application/json",
+        "xi-api-key": ELEVENLABS_API_KEY
+    }
+    
+    # Professional voice settings for natural, engaging speech
+    data = {
+        "text": enhanced_text,
+        "model_id": "eleven_monolingual_v1",
+        "voice_settings": {
+            "stability": 0.75,        # Stable but natural
+            "similarity_boost": 0.85, # Clear voice character
+            "style": 0.8,            # Expressive delivery
+            "use_speaker_boost": True # Enhanced clarity
+        }
+    }
+    
+    response = requests.post(f"{ELEVENLABS_URL}/{voice_id}", json=data, headers=headers)
+    
+    if response.status_code == 200:
+        with open("${audioFile}", "wb") as f:
+            f.write(response.content)
+        print("AUDIO_SUCCESS:${audioFile}")
+    else:
+        print(f"ELEVENLABS_ERROR: {response.status_code} - {response.text}")
+        
+        # Fallback to OpenAI if ElevenLabs fails
+        from openai import OpenAI
+        openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        
+        fallback_response = openai.audio.speech.create(
+            model="tts-1-hd",
+            voice="nova",
+            input=enhanced_text,
+            speed=0.9  # Slightly slower for better pacing
+        )
+        fallback_response.stream_to_file("${audioFile}")
+        print("AUDIO_SUCCESS:${audioFile}")
+        
 except Exception as e:
     print("AUDIO_ERROR:" + str(e))
 `;
