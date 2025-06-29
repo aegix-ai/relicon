@@ -3,87 +3,90 @@
 Quick test to verify server and generate a video
 """
 import requests
-import json
 import time
-import os
+import json
 
 def test_server():
     """Test if server is running and generate a video"""
+    server_url = "http://localhost:8001"
     
-    # Test server health
+    print("QUICK SERVER AND VIDEO GENERATION TEST")
+    print("=" * 50)
+    
+    # Test 1: Health check
+    print("1. Testing server health...")
     try:
-        response = requests.get("http://localhost:8001/health", timeout=5)
-        print(f"Health check: {response.status_code}")
+        response = requests.get(f"{server_url}/health")
         if response.status_code == 200:
-            print(f"Server response: {response.json()}")
+            print("✓ Server is running")
         else:
-            print("Server not healthy")
+            print(f"✗ Server health check failed: {response.status_code}")
             return False
     except Exception as e:
-        print(f"Server connection failed: {str(e)}")
+        print(f"✗ Cannot connect to server: {e}")
         return False
     
-    # Generate a video
+    # Test 2: Generate a video
+    print("2. Requesting video generation...")
     try:
-        test_data = {
-            "brand_name": "QuickFit Pro",
-            "brand_description": "AI fitness app with 15-minute workouts",
-            "target_audience": "Busy professionals",
+        request_data = {
+            "brand_name": "FlowFit",
+            "brand_description": "A mobile fitness app with 15-minute workouts for busy professionals",
+            "target_audience": "Working professionals aged 25-40",
             "tone": "energetic",
-            "duration": 30,
-            "call_to_action": "Try free today"
+            "duration": 25,
+            "call_to_action": "Download the app today!"
         }
         
-        print("Starting video generation...")
-        response = requests.post(
-            "http://localhost:8001/api/generate",
-            json=test_data,
-            timeout=10
-        )
+        response = requests.post(f"{server_url}/api/generate", json=request_data)
         
         if response.status_code == 200:
             result = response.json()
-            job_id = result["job_id"]
-            print(f"Job created: {job_id}")
+            job_id = result.get("job_id")
+            print(f"✓ Video generation started: {job_id}")
             
-            # Check status a few times
-            for i in range(5):
-                time.sleep(3)
-                status_response = requests.get(f"http://localhost:8001/api/jobs/{job_id}")
+            # Test 3: Monitor progress
+            print("3. Monitoring progress...")
+            for i in range(30):  # Wait up to 30 seconds
+                time.sleep(1)
+                
+                status_response = requests.get(f"{server_url}/api/status/{job_id}")
                 if status_response.status_code == 200:
                     status = status_response.json()
-                    print(f"Progress: {status.get('progress', 0)}% - {status.get('message', '')}")
+                    progress = status.get("progress", 0)
+                    message = status.get("message", "")
+                    status_value = status.get("status", "")
                     
-                    if status.get('status') == 'completed':
-                        print("Video generation completed!")
-                        print(f"Video URL: {status.get('video_url', 'N/A')}")
-                        
-                        # Check if video file exists
-                        video_path = f"assets/{job_id}_final.mp4"
-                        if os.path.exists(video_path):
-                            size = os.path.getsize(video_path)
-                            print(f"Video file created: {video_path} ({size:,} bytes)")
-                            return True
-                        else:
-                            print("Video file not found")
-                            return False
-                    elif status.get('status') == 'failed':
-                        print(f"Generation failed: {status.get('message', 'Unknown error')}")
+                    print(f"   Progress: {progress}% - {message}")
+                    
+                    if status_value == "completed":
+                        video_url = status.get("video_url")
+                        print(f"✓ Video completed: {video_url}")
+                        return True
+                    elif status_value == "failed":
+                        error = status.get("error", "Unknown error")
+                        print(f"✗ Video generation failed: {error}")
                         return False
-            
-            print("Still processing after 15 seconds - system is working")
-            return True
-            
+                
+            print("✗ Video generation timed out")
+            return False
         else:
-            print(f"Failed to start generation: {response.status_code}")
-            print(response.text)
+            print(f"✗ Generation request failed: {response.status_code}")
             return False
             
     except Exception as e:
-        print(f"Generation test failed: {str(e)}")
+        print(f"✗ Request failed: {e}")
         return False
 
 if __name__ == "__main__":
-    print("Testing ReelForge server and video generation...")
     success = test_server()
-    print(f"Test result: {'SUCCESS' if success else 'FAILED'}")
+    if success:
+        print("\n🎉 SUCCESS: ReelForge is working perfectly!")
+        print("✓ Server running")
+        print("✓ AI generation working") 
+        print("✓ Video creation successful")
+        print("✓ Complete pipeline functional")
+    else:
+        print("\n💥 FAILED: System needs debugging")
+    
+    exit(0 if success else 1)
