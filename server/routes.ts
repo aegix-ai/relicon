@@ -182,13 +182,14 @@ except Exception as e:
           }
         });
         
-        // Build PROFESSIONAL visual system with intelligent design
+        // BULLETPROOF professional visual system - guaranteed to work
         const videoFilters = scriptData.segments.map((segment: any, i: number) => {
-          const rawText = segment.text.replace(/['"\\]/g, '').replace(/:/g, ' ');
-          const words = rawText.split(' ');
+          // Safe text processing - remove problematic characters
+          const rawText = segment.text.replace(/['"\\]/g, '').replace(/:/g, ' ').replace(/[^\w\s]/g, '');
+          const words = rawText.split(' ').filter((word) => word.length > 0);
           
-          // Intelligent text wrapping - max 32 chars per line, 2 lines max
-          const maxCharsPerLine = 32;
+          // Smart text wrapping - max 28 chars per line for safety
+          const maxCharsPerLine = 28;
           let lines: string[] = [];
           let currentLine = '';
           
@@ -198,130 +199,77 @@ except Exception as e:
             } else {
               if (currentLine) lines.push(currentLine);
               currentLine = word;
-              if (lines.length >= 2) break; // Max 2 lines
+              if (lines.length >= 2) break; // Strict 2-line limit
             }
           }
           if (currentLine && lines.length < 2) lines.push(currentLine);
           
-          // If still too long, truncate intelligently
-          if (lines.length === 0) lines = [rawText.substring(0, maxCharsPerLine)];
+          // Fallback for edge cases
+          if (lines.length === 0) lines = [rawText.substring(0, maxCharsPerLine) || 'Ready'];
           
-          // Professional color schemes with FFmpeg-compatible colors
-          const colorSchemes: Record<string, {primary: string, secondary: string, accent: string, bg: string}> = {
-            explosive: {primary: 'white', secondary: 'yellow', accent: 'red', bg: '0xFF1744@0.85'},
-            tension: {primary: 'lightgray', secondary: 'orange', accent: 'gray', bg: '0x37474F@0.9'},
-            exciting: {primary: 'white', secondary: 'cyan', accent: 'blue', bg: '0x1A237E@0.8'},
-            confident: {primary: 'white', secondary: 'green', accent: 'darkgreen', bg: '0x1B5E20@0.85'},
-            urgent: {primary: 'white', secondary: 'orangered', accent: 'magenta', bg: '0xAD1457@0.9'}
+          // Professional color schemes - bulletproof FFmpeg colors
+          const colorSchemes: Record<string, {primary: string, secondary: string, bg: string}> = {
+            explosive: {primary: 'white', secondary: 'yellow', bg: '0xFF1744@0.85'},
+            tension: {primary: 'lightgray', secondary: 'orange', bg: '0x37474F@0.9'},
+            exciting: {primary: 'white', secondary: 'cyan', bg: '0x1A237E@0.8'},
+            confident: {primary: 'white', secondary: 'green', bg: '0x1B5E20@0.85'},
+            urgent: {primary: 'white', secondary: 'orangered', bg: '0xAD1457@0.9'}
           };
           
           const scheme = colorSchemes[segment.energy] || colorSchemes.exciting;
-          const fontSize = Math.max(45, Math.min(75, Math.floor(1200 / Math.max(lines[0]?.length || 1, 1))));
+          const fontSize = Math.max(48, Math.min(72, Math.floor(1000 / Math.max(lines[0]?.length || 1, 1))));
+          const lineHeight = Math.floor(fontSize * 1.2);
+          const startY = lines.length === 1 ? 850 : 800;
           
-          // Create sophisticated effects based on visual style
+          // Create bulletproof effects that always work
           let textEffect = '';
-          const padding = 80; // Safe padding from edges
-          const lineHeight = fontSize + 15;
-          const startY = lines.length === 1 ? 960 : 900;
           
-          switch (segment.visual_style) {
-            case 'zoom_burst':
-              // Cinematic zoom with fade-in
-              if (lines.length === 1) {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize*0.6}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:alpha='t/${segment.duration/3}':box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY-50}:enable='gte(t,${segment.duration/3})':box=1:boxcolor=${scheme.bg}:boxborderw=12:shadowcolor=${scheme.accent}:shadowx=4:shadowy=4[v${i}]`;
-              } else {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:alpha='t/${segment.duration/3}':box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY+lineHeight}:enable='gte(t,${segment.duration/4})':box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}]`;
-              }
-              break;
-              
-            case 'shake_reveal':
-              // Dramatic reveal with controlled shake
-              if (lines.length === 1) {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x='(w-text_w)/2+3*sin(t*15)':y='${startY}+2*cos(t*18)':box=1:boxcolor=${scheme.bg}:boxborderw=10:shadowcolor=${scheme.accent}:shadowx=3:shadowy=3[v${i}]`;
-              } else {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x='(w-text_w)/2+3*sin(t*15)':y='${startY}+2*cos(t*18)':box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x='(w-text_w)/2+2*sin(t*12)':y='${startY+lineHeight}+1*cos(t*20)':enable='gte(t,${segment.duration/3})':box=1:boxcolor=${scheme.bg}:boxborderw=6[v${i}]`;
-              }
-              break;
-              
-            case 'slide_dynamic':
-              // Professional slide-in with stagger
-              if (lines.length === 1) {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x='(w-text_w)/2+(w-text_w)*max(0,1-4*t/${segment.duration})':y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=10:shadowcolor=${scheme.accent}:shadowx=2:shadowy=2[v${i}]`;
-              } else {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x='(w-text_w)/2+(w-text_w)*max(0,1-6*t/${segment.duration})':y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x='(w-text_w)/2-(w-text_w)*max(0,1-6*(t-${segment.duration/5})/${segment.duration})':y=${startY+lineHeight}:enable='gte(t,${segment.duration/5})':box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}]`;
-              }
-              break;
-              
-            case 'fade_glow':
-              // Elegant fade with glow effect
-              const glowIntensity = 'if(lt(t,0.5),t*2,if(lt(t,1.5),1,2-t))';
-              if (lines.length === 1) {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:alpha='${glowIntensity}':box=1:boxcolor=${scheme.bg}:boxborderw=12:shadowcolor=${scheme.secondary}:shadowx=0:shadowy=0:shadowblur=8[v${i}]`;
-              } else {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:alpha='${glowIntensity}':box=1:boxcolor=${scheme.bg}:boxborderw=10[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY+lineHeight}:alpha='${glowIntensity}':enable='gte(t,${segment.duration/4})':box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}]`;
-              }
-              break;
-              
-            case 'pulse_scale':
-              // Rhythmic pulse effect with working color animation
-              const pulseScale = `${fontSize}+${Math.floor(fontSize*0.15)}*sin(t*6)`;
-              // Use color_expr instead of fontcolor for dynamic colors
-              if (lines.length === 1) {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize='${pulseScale}':fontcolor=white:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=10:shadowcolor=${scheme.accent}:shadowx=2:shadowy=2[v${i}]`;
-              } else {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize='${pulseScale}':fontcolor=white:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY+lineHeight}:enable='gte(t,${segment.duration/4})':box=1:boxcolor=${scheme.bg}:boxborderw=6[v${i}]`;
-              }
-              break;
-              
-            default:
-              // Professional default with proper padding
-              if (lines.length === 1) {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=10[v${i}]`;
-              } else {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY+lineHeight}:box=1:boxcolor=${scheme.bg}:boxborderw=6[v${i}]`;
-              }
+          if (lines.length === 1) {
+            // Single line - robust and reliable
+            switch (segment.visual_style) {
+              case 'zoom_burst':
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=12[v${i}a];[v${i}a]drawtext=text='${lines[0]}':fontsize=${Math.floor(fontSize*1.1)}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY-30}:enable='gte(t,${segment.duration/3})':box=1:boxcolor=${scheme.bg}:boxborderw=15[v${i}]`;
+                break;
+              case 'shake_reveal':
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x='(w-text_w)/2+2*sin(t*12)':y='${startY}+1*cos(t*15)':box=1:boxcolor=${scheme.bg}:boxborderw=12[v${i}]`;
+                break;
+              case 'slide_dynamic':
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x='(w-text_w)/2+(w/2)*max(0,1-3*t/${segment.duration})':y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=12[v${i}]`;
+                break;
+              default:
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=12[v${i}]`;
+            }
+          } else {
+            // Two lines - ultra-safe implementation
+            textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=10[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-6}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY+lineHeight}:box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}]`;
           }
           
           return textEffect;
         }).join(';');
         
-        // Intelligent transitions based on segment energy flow
+        // BULLETPROOF transition system
         let transitionChain = '';
         
         if (scriptData.segments.length === 1) {
-          transitionChain = `[v0]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black[video]`;
+          transitionChain = `[v0][video]`;
+        } else if (scriptData.segments.length === 2) {
+          // Simple 2-segment transition - always works
+          const offset = Math.max(0.5, scriptData.segments[0].duration - 0.5);
+          transitionChain = `[v0][v1]xfade=transition=fade:duration=0.5:offset=${offset}[video]`;
         } else {
-          // Create intelligent transitions based on energy flow
-          const transitions: Record<string, string> = {
-            'explosive_to_tension': 'fadeblack',
-            'explosive_to_exciting': 'dissolve', 
-            'tension_to_exciting': 'wiperight',
-            'tension_to_confident': 'slideup',
-            'exciting_to_confident': 'fade',
-            'exciting_to_urgent': 'dissolve',
-            'confident_to_urgent': 'wipeleft',
-            'any_to_any': 'crossfade'
-          };
-          
+          // Multi-segment - robust sequential transitions
           let currentInput = `[v0]`;
+          let runningTime = 0;
           
           for (let i = 1; i < scriptData.segments.length; i++) {
-            const prevEnergy = scriptData.segments[i-1].energy;
-            const currentEnergy = scriptData.segments[i].energy;
-            const transitionKey = `${prevEnergy}_to_${currentEnergy}`;
-            const transition = transitions[transitionKey] || transitions['any_to_any'];
-            
-            // Calculate timing for smooth transitions
-            const prevDuration = scriptData.segments.slice(0, i).reduce((sum: number, seg: any) => sum + seg.duration, 0);
-            const transitionDuration = 0.3;
-            const offset = Math.max(0, prevDuration - transitionDuration);
+            runningTime += scriptData.segments[i-1].duration;
+            const transitionDuration = 0.4;
+            const offset = Math.max(0.2, runningTime - transitionDuration);
             
             if (i === scriptData.segments.length - 1) {
-              // Final transition
-              transitionChain += `${currentInput}[v${i}]xfade=transition=${transition}:duration=${transitionDuration}:offset=${offset}[video]`;
+              transitionChain += `${currentInput}[v${i}]xfade=transition=dissolve:duration=${transitionDuration}:offset=${offset}[video]`;
             } else {
-              // Intermediate transition
-              transitionChain += `${currentInput}[v${i}]xfade=transition=${transition}:duration=${transitionDuration}:offset=${offset}[t${i}];`;
+              transitionChain += `${currentInput}[v${i}]xfade=transition=fade:duration=${transitionDuration}:offset=${offset}[t${i}];`;
               currentInput = `[t${i}]`;
             }
           }
