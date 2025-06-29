@@ -84,7 +84,10 @@ class ConceptGenerationTool:
             concept_result = response.choices[0].message.content
             
             # Parse and validate the response
-            concept_data = json.loads(concept_result)
+            if concept_result:
+                concept_data = json.loads(concept_result)
+            else:
+                raise Exception("Empty response from OpenAI")
             
             # Add metadata
             concept_data.update({

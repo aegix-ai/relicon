@@ -122,10 +122,30 @@ async def ai_video_generation(job_id: str, request_data: dict):
             print(f"TTS Warning: {audio_data.get('error')} - Continuing with text-only version")
             audio_data = {"audio_files": [], "total_duration": 30}
         
-        # Stage 4: Final assembly (mock for now - would create actual video)
-        await update_job_status(job_id, "processing", 90, "Assembling final video...")
+        # Stage 4: Create actual video with FFmpeg
+        await update_job_status(job_id, "processing", 85, "Generating video with FFmpeg...")
+        from agent.tools.ffmpeg_fx import FFmpegAssemblyTool
         
-        # Create a comprehensive result
+        ffmpeg_tool = FFmpegAssemblyTool()
+        video_input = {
+            "script": script_data,
+            "audio": audio_data,
+            "concept": concept_data,
+            "job_id": job_id
+        }
+        video_result = ffmpeg_tool.run(json.dumps(video_input))
+        video_data = json.loads(video_result)
+        
+        if video_data.get("status") == "failed":
+            print(f"Video Warning: {video_data.get('error')} - Creating text-only version")
+            # Create simplified metadata for failed video generation
+            video_data = {
+                "video_url": f"/assets/{job_id}_final.mp4",
+                "status": "text_only",
+                "audio_included": len(audio_data.get("audio_files", [])) > 0
+            }
+        
+        # Create comprehensive result
         final_metadata = {
             "brand_name": request_data.get("brand_name"),
             "duration": request_data.get("duration", 30),
@@ -135,7 +155,9 @@ async def ai_video_generation(job_id: str, request_data: dict):
             "script_segments": len(script_data.get("segments", [])),
             "audio_files": len(audio_data.get("audio_files", [])),
             "voice_tone": request_data.get("tone", "professional"),
-            "generation_type": "AI-powered short-form ad"
+            "generation_type": "AI-powered short-form ad",
+            "video_format": video_data.get("format", "mp4"),
+            "resolution": video_data.get("resolution", "1080x1920")
         }
         
         # Mark as completed

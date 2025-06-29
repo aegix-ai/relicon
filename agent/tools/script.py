@@ -90,7 +90,10 @@ class ScriptWritingTool:
             script_result = response.choices[0].message.content
             
             # Parse and enhance the result
-            script_data = json.loads(script_result)
+            if script_result:
+                script_data = json.loads(script_result)
+            else:
+                raise Exception("Empty response from OpenAI")
             
             # Add metadata
             script_data.update({
