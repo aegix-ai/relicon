@@ -20,6 +20,89 @@ const updateJobStatus = (job_id: string, status: string, progress: number, messa
   };
 };
 
+// Generate synchronized captions from actual audio files
+const generateSynchronizedCaptions = async (audioFiles: string[], scriptData: any, job_id: string) => {
+  const captionData: any[] = [];
+  let currentTime = 0;
+  
+  for (let i = 0; i < audioFiles.length; i++) {
+    const audioFile = audioFiles[i];
+    const segment = scriptData.segments[i];
+    
+    // Get actual audio duration using ffprobe
+    const probePath = `/tmp/probe_${job_id}_${i}.py`;
+    const probeScript = `
+import subprocess
+import json
+
+try:
+    result = subprocess.run([
+        'ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', 
+        '${audioFile}'
+    ], capture_output=True, text=True)
+    
+    if result.returncode == 0:
+        data = json.loads(result.stdout)
+        duration = float(data['format']['duration'])
+        print(f"DURATION_SUCCESS:{duration}")
+    else:
+        print("DURATION_ERROR:Could not get duration")
+except Exception as e:
+    print(f"DURATION_ERROR:{str(e)}")
+`;
+    
+    fs.writeFileSync(probePath, probeScript);
+    
+    const probe = spawn('python', [probePath], { env: { ...process.env } });
+    let probeOutput = '';
+    
+    await new Promise((resolve) => {
+      probe.stdout.on('data', (data) => { probeOutput += data.toString(); });
+      probe.on('close', () => {
+        fs.unlinkSync(probePath);
+        resolve(null);
+      });
+    });
+    
+    let actualDuration = segment.duration; // fallback
+    if (probeOutput.includes('DURATION_SUCCESS:')) {
+      actualDuration = parseFloat(probeOutput.split('DURATION_SUCCESS:')[1]);
+    }
+    
+    // Create caption segments based on actual audio timing
+    const enhancedText = segment.text;
+    const words = enhancedText.split(' ').filter(w => w.length > 0);
+    const wordsPerSecond = words.length / actualDuration;
+    const avgWordsPerCaption = Math.max(3, Math.min(6, Math.floor(8 / wordsPerSecond)));
+    
+    // Split into caption chunks that will appear/disappear naturally
+    let wordIndex = 0;
+    let captionStartTime = currentTime;
+    
+    while (wordIndex < words.length) {
+      const captionWords = words.slice(wordIndex, wordIndex + avgWordsPerCaption);
+      const captionText = captionWords.join(' ');
+      const captionDuration = captionWords.length / wordsPerSecond;
+      
+      captionData.push({
+        text: captionText,
+        startTime: captionStartTime,
+        endTime: captionStartTime + captionDuration,
+        segmentIndex: i,
+        energy: segment.energy
+      });
+      
+      wordIndex += avgWordsPerCaption;
+      captionStartTime += captionDuration;
+    }
+    
+    currentTime += actualDuration;
+  }
+  
+  console.log('Generated synchronized captions:', captionData.length, 'caption segments');
+  return captionData;
+};
+
 // Simplified AI video generation that actually works
 const generateVideo = async (job_id: string, request_data: any) => {
   try {
@@ -285,9 +368,14 @@ except Exception as e:
         console.log('Script segments count:', scriptData.segments?.length);
         console.log('Audio files exist check:', audioFiles.map(f => ({file: f, exists: fs.existsSync(f)})));
         
-        updateJobStatus(job_id, "processing", 80, "Assembling final video...");
+        updateJobStatus(job_id, "processing", 80, "Creating synchronized captions...");
         
-        // Create DYNAMIC video with extensive effects
+        // REVOLUTIONARY: Generate captions from actual audio duration and timing
+        const captionData = await generateSynchronizedCaptions(audioFiles, scriptData, job_id);
+        
+        updateJobStatus(job_id, "processing", 85, "Assembling final video with synced captions...");
+        
+        // Create video with synchronized captions
         const outputFile = path.join(process.cwd(), "static", `video_${job_id}.mp4`);
         
         // Dynamic color palettes based on energy
@@ -317,10 +405,10 @@ except Exception as e:
           }
         });
         
-        // ADVANCED AI-DRIVEN CREATIVE SYSTEM with 9:16 frame safety
-        const videoFilters = scriptData.segments.map((segment: any, i: number) => {
-          // Advanced text processing with AI reasoning
-          let text = segment.text
+        // REVOLUTIONARY SYNCHRONIZED CAPTION SYSTEM - Captions match actual audio timing
+        const videoFilters = captionData.map((caption: any, i: number) => {
+          // Synchronized caption text processing
+          let text = caption.text
             .replace(/['"\\`]/g, '')
             .replace(/[^\w\s!?.,-]/g, ' ')
             .replace(/\s+/g, ' ')
