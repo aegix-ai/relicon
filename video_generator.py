@@ -142,71 +142,83 @@ def create_video_with_captions(script_segments, audio_files, output_file):
     filter_complex = []
     audio_inputs = []
     
-    # Create video segments with captions
+    # Create video segments with captions - simpler approach
+    video_segments = []
+    
     for i, (segment, audio_file) in enumerate(zip(script_segments, audio_files)):
         duration = segment.get("duration", 3.0)
         text = segment["voiceover"]
         colors = scene_colors[i % len(scene_colors)].split(",")
         
-        # Create gradient background
-        gradient_filter = f"color=c={colors[0]}:size=1080x1920:duration={duration}[bg{i}];"
-        gradient_filter += f"color=c={colors[1]}:size=1080x1920:duration={duration}[fg{i}];"
-        gradient_filter += f"[fg{i}]fade=t=in:st=0:d=0.5:alpha=1[fade{i}];"
-        gradient_filter += f"[bg{i}][fade{i}]overlay[grad{i}];"
+        # Create a simple colored background video segment
+        segment_file = f"/tmp/segment_{i}.mp4"
         
-        # Add caption with professional styling (escape text properly)
-        safe_text = text.replace("'", "\\'").replace(":", "\\:").replace("%", "\\%")[:100]  # Limit length
-        caption_filter = f"[grad{i}]drawtext=text='{safe_text}'"
-        caption_filter += ":fontsize=36:fontcolor=white:box=1:boxcolor=black@0.8"
-        caption_filter += ":boxborderw=8:x=(w-text_w)/2:y=h-150"
-        caption_filter += f":enable='between(t,0,{duration})'[v{i}];"
+        # Escape text properly for FFmpeg
+        safe_text = text.replace("'", "'\"'\"'").replace(":", "\\:").replace("%", "\\%")[:80]
         
-        filter_complex.append(gradient_filter + caption_filter)
-        audio_inputs.append(f"-i {audio_file}")
+        # Create individual segment with background and caption
+        segment_cmd = [
+            "ffmpeg", "-y", "-f", "lavfi", 
+            "-i", f"color=c={colors[0]}:size=1080x1920:duration={duration}",
+            "-i", audio_file,
+            "-filter_complex", 
+            f"[0:v]drawtext=text='{safe_text}':fontsize=42:fontcolor=white:box=1:boxcolor=black@0.8:boxborderw=10:x=(w-text_w)/2:y=h-200[v]",
+            "-map", "[v]", "-map", "1:a",
+            "-c:v", "libx264", "-c:a", "aac",
+            "-t", str(duration),
+            segment_file
+        ]
+        
+        try:
+            result = subprocess.run(segment_cmd, capture_output=True, text=True, timeout=60)
+            if result.returncode == 0 and os.path.exists(segment_file):
+                video_segments.append(segment_file)
+            else:
+                print(f"Warning: Failed to create segment {i}: {result.stderr}")
+                # Create fallback segment
+                fallback_cmd = [
+                    "ffmpeg", "-y", "-f", "lavfi",
+                    "-i", f"color=c={colors[0]}:size=1080x1920:duration={duration}",
+                    "-i", audio_file,
+                    "-map", "0:v", "-map", "1:a", "-t", str(duration),
+                    segment_file
+                ]
+                subprocess.run(fallback_cmd, capture_output=True)
+                video_segments.append(segment_file)
+        except:
+            print(f"Error creating segment {i}, skipping")
     
-    # Concatenate video segments with smooth transitions
-    concat_video = f"[{''.join([f'v{i}' for i in range(len(script_segments))])}]concat=n={len(script_segments)}:v=1:a=0[video];"
-    filter_complex.append(concat_video)
-    
-    # Concatenate audio segments
-    concat_audio = f"[{''.join([f'{i}:a' for i in range(len(audio_files))])}]concat=n={len(audio_files)}:v=0:a=1[audio];"
-    filter_complex.append(concat_audio)
+    if not video_segments:
+        raise Exception("No video segments were created")
     
     progress_update(85, "Assembling final video with synchronized captions")
     
-    # Build complete FFmpeg command
-    cmd = ["ffmpeg", "-y"]
-    
-    # Add audio inputs
-    for audio_file in audio_files:
-        cmd.extend(["-i", audio_file])
-    
-    # Add filter complex
-    cmd.extend(["-filter_complex", "".join(filter_complex)])
-    
-    # Output mapping and encoding
-    cmd.extend([
-        "-map", "[video]",
-        "-map", "[audio]", 
-        "-c:v", "libx264",
-        "-preset", "medium",
-        "-crf", "23",
-        "-c:a", "aac",
-        "-b:a", "128k",
-        "-r", "30",
-        "-aspect", "9:16",
-        "-s", "1080x1920",
-        output_file
-    ])
-    
-    print(f"Running FFmpeg command: {' '.join(cmd)}")
-    
+    # Concatenate all video segments into final output
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-        
-        if result.returncode != 0:
-            print(f"FFmpeg stderr: {result.stderr}")
-            raise Exception(f"FFmpeg failed: {result.stderr}")
+        if len(video_segments) == 1:
+            # Single segment, just copy
+            shutil.copy2(video_segments[0], output_file)
+        else:
+            # Multiple segments, concatenate them
+            concat_list = "/tmp/concat_list.txt"
+            with open(concat_list, "w") as f:
+                for segment in video_segments:
+                    f.write(f"file '{segment}'\n")
+            
+            # Concatenate segments
+            cmd = [
+                "ffmpeg", "-y", "-f", "concat", "-safe", "0",
+                "-i", concat_list,
+                "-c", "copy",
+                output_file
+            ]
+            
+            print(f"Running FFmpeg command: {' '.join(cmd)}")
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            
+            if result.returncode != 0:
+                print(f"FFmpeg stderr: {result.stderr}")
+                raise Exception(f"FFmpeg concatenation failed: {result.stderr}")
         
         progress_update(95, "Finalizing video output")
         
@@ -218,7 +230,14 @@ def create_video_with_captions(script_segments, audio_files, output_file):
         file_size = os.path.getsize(output_file)
         if file_size < 1000:  # Less than 1KB
             raise Exception("Output video file is too small")
-            
+        
+        # Clean up temporary files
+        for segment in video_segments:
+            try:
+                os.remove(segment)
+            except:
+                pass
+        
         progress_update(100, "Video generation completed successfully!")
         return True
         
