@@ -31,29 +31,43 @@ class ConceptGenerationTool:
             
             # Create concept generation prompt
             prompt = f"""
-            Create an innovative, compelling concept for a {brand_info.get('duration', 30)}-second video ad.
+            Create a REVOLUTIONARY concept for a {brand_info.get('duration', 30)}-second SHORT-FORM video ad that will STOP SCROLLERS in their tracks.
             
-            Brand Information:
-            - Name: {brand_info.get('brand_name', 'Unknown Brand')}
+            BRAND CONTEXT:
+            - Brand: {brand_info.get('brand_name', 'Unknown Brand')}
             - Description: {brand_info.get('brand_description', 'No description')}
-            - Target Audience: {brand_info.get('target_audience', 'General audience')}
+            - Target: {brand_info.get('target_audience', 'General audience')}
             - Tone: {brand_info.get('tone', 'professional')}
-            - Call to Action: {brand_info.get('call_to_action', 'Learn more')}
+            - CTA: {brand_info.get('call_to_action', 'Learn more')}
             
-            Requirements:
-            1. Create a REVOLUTIONARY concept that stands out from typical ads
-            2. Design a powerful hook that grabs attention within 3 seconds
-            3. Ensure the concept is perfectly tailored to the target audience
-            4. Make it memorable and shareable
-            5. Include specific visual style recommendations
+            SHORT-FORM VIDEO REQUIREMENTS:
+            1. THUMB-STOPPING POWER - Must captivate within 1-2 seconds
+            2. SCROLL-WORTHY CONCEPT - Unique enough to share and save
+            3. EMOTIONAL TRIGGER - Instant connection with target audience
+            4. VISUAL MAGNETISM - Compelling visual storytelling
+            5. ACTION-DRIVEN - Clear path to conversion
             
-            Respond with a JSON object containing:
-            - concept: The main creative concept (2-3 sentences)
-            - hook: The opening hook (1 sentence, maximum impact)
-            - visual_style: Detailed visual style guide
-            - key_message: Core message to communicate
-            - emotional_appeal: Primary emotion to evoke
-            - uniqueness_factor: What makes this concept revolutionary
+            CREATIVE INNOVATION FACTORS:
+            - Use unexpected angles or surprising reveals
+            - Leverage current trends and cultural moments
+            - Create "aha moments" that viewers remember
+            - Design for multiple viewings and shareability
+            - Optimize for vertical mobile viewing
+            
+            OUTPUT JSON FORMAT:
+            {{
+                "concept": "Revolutionary 2-3 sentence concept description",
+                "hook": "Irresistible opening hook (under 10 words)",
+                "visual_style": "Specific visual direction for dynamic short-form content",
+                "key_message": "Core benefit that drives action",
+                "emotional_appeal": "Primary emotion (curiosity/urgency/excitement/trust)",
+                "uniqueness_factor": "What makes this concept thumb-stopping",
+                "engagement_strategy": "How this will drive saves, shares, and comments",
+                "trend_alignment": "Current trends this concept leverages",
+                "mobile_optimization": "Vertical video considerations"
+            }}
+            
+            Make this concept so compelling that viewers HAVE to watch it through to the end!
             """
             
             # Generate concept using GPT-4o
