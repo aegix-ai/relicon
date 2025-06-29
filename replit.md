@@ -108,16 +108,16 @@ The system follows a microkernel architecture where:
 
 ```
 Changelog:
-- June 29, 2025: MAJOR SYSTEM OVERHAUL - Transcription-Based Synchronized Captions
-- FIXED: Single voice consistency - uses one voice (Liam) for all segments
-- IMPLEMENTED: Real transcription-based captions using OpenAI Whisper
-- UPGRADED: AI reasoning model to o1 for better script generation
-- ENHANCED: Dynamic scene system with 2-4 sub-scenes per segment for visual variety
-- ADDED: Smooth transitions between scenes with varied effects (fade, dissolve, wipe)
-- RESOLVED: Static 2-slide problem - now dynamic multi-scene videos
-- ACHIEVED: Captions synchronized to actual spoken words, not default text
-- MAINTAINED: Exact duration control and 9:16 frame optimization
-- DELIVERED: Professional videos with transcribed captions matching real audio
+- June 29, 2025: CAPTION-SYNCHRONIZED SCENE SYSTEM - Natural Speech-Driven Video Flow
+- FIXED: Rapid scene changes - now scenes change naturally with speech timing (3-5 seconds per scene)
+- IMPLEMENTED: Caption-synchronized scene generation - scenes align with actual spoken content  
+- ENHANCED: Natural pacing system - no more arbitrary rapid transitions
+- ACHIEVED: Speech-driven scene timing - scenes change when captions change, not randomly
+- MAINTAINED: Single voice consistency (Liam) throughout all segments
+- DELIVERED: Professional scene flow with natural transitions (dissolve, fade)
+- RESOLVED: Fixed green static scene issue - dynamic scenes throughout entire video
+- OPTIMIZED: 9:16 frame format with proper margins and caption positioning
+- PERFECTED: Audio-visual synchronization with caption-driven scene changes
 ```
 
 ## User Preferences
