@@ -28,24 +28,85 @@ async function updateJobStatus(jobId: string, status: string, progress: number, 
 
 async function aiVideoGeneration(jobId: string, requestData: any) {
   try {
+    const { spawn } = require('child_process');
+    const path = require('path');
+    
     await updateJobStatus(jobId, 'processing', 10, 'Analyzing brand tone and audience');
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Create the video generation command
+    const pythonScript = path.join(process.cwd(), 'video_generator.py');
+    const outputPath = path.join(process.cwd(), 'outputs', `${jobId}.mp4`);
+    
+    // Prepare the arguments for the Python script
+    const args = [
+      pythonScript,
+      '--brand-name', requestData.brand_name || 'Sample Brand',
+      '--brand-description', requestData.brand_description || 'A revolutionary product that changes everything',
+      '--target-audience', requestData.target_audience || 'young professionals',
+      '--duration', (requestData.duration || 30).toString(),
+      '--tone', requestData.tone || 'professional',
+      '--call-to-action', requestData.call_to_action || 'Take action now',
+      '--output', outputPath,
+      '--job-id', jobId
+    ];
 
-    await updateJobStatus(jobId, 'processing', 30, 'Generating AI script with natural pacing');
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    await updateJobStatus(jobId, 'processing', 20, 'Generating AI script with natural pacing');
+    
+    // Execute the Python video generation script
+    const pythonProcess = spawn('python3', args, {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env }
+    });
 
-    await updateJobStatus(jobId, 'processing', 50, 'Creating voiceover with ElevenLabs AI');
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    let stdout = '';
+    let stderr = '';
 
-    await updateJobStatus(jobId, 'processing', 70, 'Generating dynamic scenes and transitions');
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+      console.log(`Video generation stdout: ${data}`);
+      
+      // Parse progress updates from Python script
+      const lines = data.toString().split('\n');
+      for (const line of lines) {
+        if (line.includes('PROGRESS:')) {
+          const progressMatch = line.match(/PROGRESS:(\d+):(.+)/);
+          if (progressMatch) {
+            const progress = parseInt(progressMatch[1]);
+            const message = progressMatch[2];
+            updateJobStatus(jobId, 'processing', progress, message);
+          }
+        }
+      }
+    });
 
-    await updateJobStatus(jobId, 'processing', 90, 'Assembling final video with synchronized captions');
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+      console.error(`Video generation stderr: ${data}`);
+    });
 
-    // Simulate successful completion
-    const videoUrl = `/api/video/${jobId}.mp4`;
-    await updateJobStatus(jobId, 'completed', 100, 'Video generation completed successfully!', { video_url: videoUrl });
+    // Wait for the Python process to complete
+    await new Promise((resolve, reject) => {
+      pythonProcess.on('close', async (code) => {
+        if (code === 0) {
+          // Check if the output file was created
+          if (fs.existsSync(outputPath)) {
+            const videoUrl = `/api/video/${jobId}.mp4`;
+            await updateJobStatus(jobId, 'completed', 100, 'Video generation completed successfully!', { video_url: videoUrl });
+          } else {
+            await updateJobStatus(jobId, 'failed', 0, 'Video file was not created');
+          }
+          resolve(code);
+        } else {
+          await updateJobStatus(jobId, 'failed', 0, `Video generation failed with code ${code}: ${stderr}`);
+          reject(new Error(`Process exited with code ${code}`));
+        }
+      });
+
+      pythonProcess.on('error', async (error) => {
+        await updateJobStatus(jobId, 'failed', 0, `Failed to start video generation: ${error.message}`);
+        reject(error);
+      });
+    });
 
   } catch (error) {
     console.error('Video generation error:', error);
@@ -103,7 +164,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/video/:filename', (req, res) => {
     const { filename } = req.params;
     
-    // For demo purposes, serve our working sample video
+    // First try to serve the generated video from outputs directory
+    const generatedVideoPath = join(process.cwd(), 'outputs', filename);
+    
+    if (fs.existsSync(generatedVideoPath)) {
+      res.setHeader('Content-Type', 'video/mp4');
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.sendFile(generatedVideoPath);
+      return;
+    }
+    
+    // If not found, serve our working sample video for demo
     const sampleVideoPath = join(process.cwd(), 'working_video_generator.mp4');
     
     if (fs.existsSync(sampleVideoPath)) {
