@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer } from "ws";
 import { join } from "path";
 import fs from "fs";
+import { spawn } from "child_process";
 
 // Job storage
 const jobs = new Map<string, any>();
@@ -28,14 +29,11 @@ async function updateJobStatus(jobId: string, status: string, progress: number, 
 
 async function aiVideoGeneration(jobId: string, requestData: any) {
   try {
-    const { spawn } = require('child_process');
-    const path = require('path');
-    
     await updateJobStatus(jobId, 'processing', 10, 'Analyzing brand tone and audience');
     
     // Create the video generation command
-    const pythonScript = path.join(process.cwd(), 'video_generator.py');
-    const outputPath = path.join(process.cwd(), 'outputs', `${jobId}.mp4`);
+    const pythonScript = join(process.cwd(), 'video_generator.py');
+    const outputPath = join(process.cwd(), 'outputs', `${jobId}.mp4`);
     
     // Prepare the arguments for the Python script
     const args = [
