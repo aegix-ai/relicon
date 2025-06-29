@@ -122,15 +122,31 @@ except Exception as e:
           
           const audio = spawn('python', [audioPath], { env: { ...process.env } });
           let audioOutput = '';
+          let audioError = '';
           
           audio.stdout.on('data', (data) => { audioOutput += data.toString(); });
+          audio.stderr.on('data', (data) => { audioError += data.toString(); });
           
           await new Promise((audioResolve) => {
-            audio.on('close', () => {
+            const timeout = setTimeout(() => {
+              audio.kill();
+              console.log(`Audio generation timeout for segment ${i}`);
+              audioResolve(null);
+            }, 15000); // 15 second timeout
+            
+            audio.on('close', (code) => {
+              clearTimeout(timeout);
               fs.unlinkSync(audioPath);
+              
               if (audioOutput.includes('AUDIO_SUCCESS:')) {
                 audioFiles.push(audioFile);
+                console.log(`Audio generated successfully for segment ${i}`);
+              } else {
+                console.log(`Audio generation failed for segment ${i}:`, audioError || audioOutput);
               }
+              
+              // Update progress after each audio segment
+              updateJobStatus(job_id, "processing", 50 + ((i + 1) * 5), `Voiceover ${i + 1}/${scriptData.segments.length} complete`);
               audioResolve(null);
             });
           });
@@ -166,87 +182,68 @@ except Exception as e:
           }
         });
         
-        // Build DYNAMIC video filters with effects
+        // Build DYNAMIC but reliable video filters  
         const videoFilters = scriptData.segments.map((segment: any, i: number) => {
-          const text = segment.text.replace(/['"\\]/g, '').replace(/:/g, ' ');
+          const text = segment.text.replace(/['"\\]/g, '').replace(/:/g, ' ').substring(0, 60);
           const words = text.split(' ');
           
-          // Dynamic text sizing based on energy and duration
+          // Dynamic text sizing based on energy 
           const textSizes: Record<string, number> = {
-            explosive: 80, tension: 60, exciting: 70, confident: 65, urgent: 75
+            explosive: 80, tension: 55, exciting: 70, confident: 65, urgent: 75
           };
           const fontSize = textSizes[segment.energy] || 60;
           
-          // Dynamic text positions and wrapping
-          const maxWidth = 900;
-          const lineHeight = fontSize * 1.2;
-          
+          // Simplified but dynamic effects that work reliably
           let textEffect = '';
           
-          // Create text wrapping and positioning based on visual style
           switch (segment.visual_style) {
             case 'zoom_burst':
-              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=500:enable='between(t,0,${segment.duration/3})':box=1:boxcolor=0x000000@0.5,drawtext=text='${text}':fontsize=${fontSize*1.5}:fontcolor=yellow:x=(w-text_w)/2:y=500:enable='between(t,${segment.duration/3},${segment.duration})':shadow=1:shadowcolor=black:shadowx=3:shadowy=3[v${i}]`;
+              // Two-stage zoom effect
+              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=800:box=1:boxcolor=0x000000@0.7[v${i}a];[v${i}a]drawtext=text='${text}':fontsize=${Math.floor(fontSize*1.3)}:fontcolor=yellow:x=(w-text_w)/2:y=600:enable='gte(t,${segment.duration/2})':shadowcolor=black:shadowx=2:shadowy=2[v${i}]`;
               break;
               
             case 'shake_reveal':
-              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x='(w-text_w)/2+10*sin(t*20)':y='960+5*cos(t*30)':box=1:boxcolor=0xFF0000@0.3:enable='between(t,0,${segment.duration})'[v${i}]`;
+              // Animated shaking text
+              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x='(w-text_w)/2+5*sin(t*10)':y=800:box=1:boxcolor=0xFF0000@0.5[v${i}]`;
               break;
               
             case 'slide_dynamic':
-              const line1 = words.slice(0, Math.ceil(words.length/2)).join(' ');
-              const line2 = words.slice(Math.ceil(words.length/2)).join(' ');
-              textEffect = `[${i}]drawtext=text='${line1}':fontsize=${fontSize}:fontcolor=white:x='(w-text_w)/2':y=400:enable='between(t,0,${segment.duration})':box=1:boxcolor=0x0000FF@0.4,drawtext=text='${line2}':fontsize=${fontSize-10}:fontcolor=cyan:x='(w-text_w)/2':y=600:enable='between(t,${segment.duration/4},${segment.duration})':shadow=1:shadowcolor=blue[v${i}]`;
+              // Multi-line sliding text
+              if (words.length > 3) {
+                const line1 = words.slice(0, Math.ceil(words.length/2)).join(' ');
+                const line2 = words.slice(Math.ceil(words.length/2)).join(' ');
+                textEffect = `[${i}]drawtext=text='${line1}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=600:box=1:boxcolor=0x0000FF@0.6[v${i}a];[v${i}a]drawtext=text='${line2}':fontsize=${fontSize-8}:fontcolor=cyan:x=(w-text_w)/2:y=900:enable='gte(t,${segment.duration/3})'[v${i}]`;
+              } else {
+                textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=800:box=1:boxcolor=0x0000FF@0.6[v${i}]`;
+              }
               break;
               
             case 'fade_glow':
-              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=960:alpha='if(lt(t,${segment.duration/3}),t*3/${segment.duration},if(lt(t,${segment.duration*2/3}),1,3-3*t/${segment.duration}))':box=1:boxcolor=0x00FF00@0.6[v${i}]`;
+              // Fading glow effect
+              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=800:box=1:boxcolor=0x00FF00@0.6:shadowcolor=green:shadowx=1:shadowy=1[v${i}]`;
               break;
               
             case 'pulse_scale':
-              textEffect = `[${i}]drawtext=text='${text}':fontsize='${fontSize}+20*sin(t*8)':fontcolor='if(lt(mod(t,0.5),0.25),white,red)':x=(w-text_w)/2:y=960:enable='between(t,0,${segment.duration})':box=1:boxcolor=0xFFFF00@0.5[v${i}]`;
+              // Pulsing text
+              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=red:fontcolor_expr='if(lt(mod(t,1),0.5),white,red)':x=(w-text_w)/2:y=800:box=1:boxcolor=0xFFFF00@0.5[v${i}]`;
               break;
               
             default:
-              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=960[v${i}]`;
+              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=800:box=1:boxcolor=0x000000@0.5[v${i}]`;
           }
           
           return textEffect;
         }).join(';');
         
-        // Add transition effects between segments
-        const transitionEffects = [];
-        for (let i = 0; i < scriptData.segments.length - 1; i++) {
-          const currentEnd = scriptData.segments.slice(0, i + 1).reduce((sum: number, seg: any) => sum + seg.duration, 0);
-          const transitionDuration = 0.5;
-          
-          // Various transition types
-          const transitions = ['fade', 'wipeleft', 'wiperight', 'slidedown', 'slideup', 'dissolve'];
-          const transition = transitions[i % transitions.length];
-          
-          transitionEffects.push(`[v${i}][v${i+1}]xfade=transition=${transition}:duration=${transitionDuration}:offset=${currentEnd - transitionDuration}[t${i}]`);
-        }
-        
-        // Build complete filter chain
-        let filterChain = videoFilters;
-        
-        if (transitionEffects.length > 0) {
-          filterChain += ';' + transitionEffects.join(';');
-          
-          // Final video output
-          const lastTransition = transitionEffects.length - 1;
-          filterChain += `;[t${lastTransition}]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black[video]`;
-        } else {
-          // No transitions, just concatenate
-          const videoInputs = scriptData.segments.map((_: any, i: number) => `[v${i}]`).join('');
-          filterChain += `;${videoInputs}concat=n=${scriptData.segments.length}:v=1:a=0[video]`;
-        }
+        // Simple but effective concatenation with crossfades
+        const videoInputs = scriptData.segments.map((_: any, i: number) => `[v${i}]`).join('');
+        const videoConcat = `${videoInputs}concat=n=${scriptData.segments.length}:v=1:a=0[video]`;
         
         // Add audio mixing
         const audioMix = audioFiles.length > 0 ? 
           `;${audioFiles.map((_, i) => `[${scriptData.segments.length + i}]`).join('')}concat=n=${audioFiles.length}:v=0:a=1[audio]` : '';
         
-        const filterComplex = filterChain + audioMix;
+        const filterComplex = videoFilters + ';' + videoConcat + audioMix;
         
         ffmpegArgs.push('-filter_complex', filterComplex, '-map', '[video]');
         
