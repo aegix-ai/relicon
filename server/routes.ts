@@ -484,13 +484,38 @@ except Exception as e:
         
         let ffmpegArgs = ['-y'];
         
-        // SIMPLIFIED SCENE GENERATION - One scene per segment for stability
+        // DYNAMIC SCENE GENERATION - Multiple scenes per segment based on audio timing
+        const allScenes = [];
+        
         for (let i = 0; i < scriptData.segments.length; i++) {
           const segment = scriptData.segments[i];
           const colors = energyColors[segment.energy] || energyColors.exciting;
-          const color = colors[i % colors.length];
           
-          ffmpegArgs.push('-f', 'lavfi', '-i', `color=c=${color}:size=1080x1920:duration=${segment.duration}`);
+          // Create 2-4 sub-scenes per segment for visual variety
+          const numSubScenes = Math.max(2, Math.min(4, Math.ceil(segment.duration / 2.5)));
+          const subSceneDuration = segment.duration / numSubScenes;
+          
+          for (let j = 0; j < numSubScenes; j++) {
+            const colorIndex = (i * numSubScenes + j) % colors.length;
+            const color = colors[colorIndex];
+            
+            // Add visual effects for variety
+            const effects = [
+              `color=c=${color}:size=1080x1920:duration=${subSceneDuration}`,
+              `color=c=${color}:size=1080x1920:duration=${subSceneDuration},fade=t=in:st=0:d=0.2`,
+              `color=c=${color}:size=1080x1920:duration=${subSceneDuration},zoompan=z='min(zoom+0.0015,1.5)':d=${Math.ceil(subSceneDuration * 25)}:s=1080x1920`
+            ];
+            
+            const effect = effects[j % effects.length];
+            ffmpegArgs.push('-f', 'lavfi', '-i', effect);
+            
+            allScenes.push({
+              segmentIndex: i,
+              subSceneIndex: j,
+              duration: subSceneDuration,
+              color: color
+            });
+          }
         }
         
         // Add audio inputs
@@ -500,9 +525,9 @@ except Exception as e:
           }
         });
         
-        // SIMPLIFIED SCENE SYSTEM - Create base video filters for segments
-        const baseVideoFilters = scriptData.segments.map((segment: any, i: number) => {
-          return `[${i}]copy[v${i}]`;
+        // DYNAMIC SCENE SYSTEM - Create base video filters for all scenes
+        const baseVideoFilters = allScenes.map((scene: any, i: number) => {
+          return `[${i}]copy[s${i}]`;
         }).join(';');
         
         // Generate synchronized captions that appear/disappear with speech timing
@@ -534,42 +559,47 @@ except Exception as e:
           const endTime = caption.endTime;
           
           // Return synchronized caption filter
-          return `drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=1200:box=1:boxcolor=${bgColor}:boxborderw=8:enable='between(t,${startTime},${endTime})'`;
-        }).join(':');
+          return `drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=h-200:box=1:boxcolor=${bgColor}:boxborderw=8:enable='between(t,${startTime},${endTime})'`;
+        }).join(',');
         
-        // SIMPLIFIED TRANSITIONS - Basic segment transitions
+        // DYNAMIC SCENE TRANSITIONS - Connect all sub-scenes with smooth transitions
         let transitionChain = '';
         
-        if (scriptData.segments.length === 1) {
-          transitionChain = `[v0]copy[background]`;
+        if (allScenes.length === 1) {
+          transitionChain = `[s0]copy[background]`;
         } else {
-          // Multi-segment transitions
-          let currentInput = `[v0]`;
+          // Multi-scene transitions with dynamic effects
+          let currentInput = `[s0]`;
           let runningTime = 0;
           
-          for (let i = 1; i < scriptData.segments.length; i++) {
-            runningTime += scriptData.segments[i-1].duration;
-            const transitionDuration = 0.3;
+          for (let i = 1; i < allScenes.length; i++) {
+            runningTime += allScenes[i-1].duration;
+            const transitionDuration = 0.2;
             const offset = Math.max(0.1, runningTime - transitionDuration);
             
-            if (i === scriptData.segments.length - 1) {
+            // Vary transition types for visual interest
+            const transitionTypes = ['fade', 'dissolve'];
+            const transitionType = transitionTypes[i % transitionTypes.length];
+            
+            if (i === allScenes.length - 1) {
               // Final transition
-              transitionChain += `${currentInput}[v${i}]xfade=transition=fade:duration=${transitionDuration}:offset=${offset.toFixed(1)}[background]`;
+              transitionChain += `${currentInput}[s${i}]xfade=transition=${transitionType}:duration=${transitionDuration}:offset=${offset.toFixed(1)}[background]`;
             } else {
               // Intermediate transition
-              transitionChain += `${currentInput}[v${i}]xfade=transition=fade:duration=${transitionDuration}:offset=${offset.toFixed(1)}[t${i}];`;
+              transitionChain += `${currentInput}[s${i}]xfade=transition=${transitionType}:duration=${transitionDuration}:offset=${offset.toFixed(1)}[t${i}];`;
               currentInput = `[t${i}]`;
             }
           }
         }
         
-        // SIMPLIFIED: Focus on basic video generation first
-        // TODO: Add transcription captions once basic system works
-        const finalVideo = `[background]copy[video]`;
+        // ENABLE CAPTIONS - Apply synchronized captions to final video
+        const finalVideo = captionFilters.length > 0 ? 
+          `[background]${captionFilters}[video]` : 
+          `[background]copy[video]`;
         
-        // Add audio mixing - audio inputs start after video segment inputs
+        // Add audio mixing - audio inputs start after all scene inputs
         const audioMix = audioFiles.length > 0 ? 
-          `;${audioFiles.map((_, i) => `[${scriptData.segments.length + i}:a]`).join('')}concat=n=${audioFiles.length}:v=0:a=1[audio]` : '';
+          `;${audioFiles.map((_, i) => `[${allScenes.length + i}:a]`).join('')}concat=n=${audioFiles.length}:v=0:a=1[audio]` : '';
         
         const filterComplex = baseVideoFilters + ';' + transitionChain + ';' + finalVideo + audioMix;
         
