@@ -251,7 +251,7 @@ except Exception as e:
         let transitionChain = '';
         
         if (scriptData.segments.length === 1) {
-          transitionChain = `[v0][video]`;
+          transitionChain = `[v0]copy[video]`;
         } else if (scriptData.segments.length === 2) {
           // Simple 2-segment transition - always works
           const offset = Math.max(0.5, scriptData.segments[0].duration - 0.5);
@@ -275,9 +275,9 @@ except Exception as e:
           }
         }
         
-        // Add audio mixing
+        // Add audio mixing - CRITICAL FIX: Audio inputs start after video inputs
         const audioMix = audioFiles.length > 0 ? 
-          `;${audioFiles.map((_, i) => `[${scriptData.segments.length + i}]`).join('')}concat=n=${audioFiles.length}:v=0:a=1[audio]` : '';
+          `;${audioFiles.map((_, i) => `[${scriptData.segments.length + i}:a]`).join('')}concat=n=${audioFiles.length}:v=0:a=1[audio]` : '';
         
         const filterComplex = videoFilters + ';' + transitionChain + audioMix;
         
