@@ -772,113 +772,626 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dashboard route - serve the dashboard directly
+  // Root route - serve the complete landing page
+  app.get('/', (req, res) => {
+    res.redirect('/dashboard');
+  });
+
+  // Dashboard route - serve the complete frontend
   app.get('/dashboard', (req, res) => {
-    const dashboardHtml = `<!DOCTYPE html>
+    const completeFrontend = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ReelForge | AI Video Generation</title>
+    <title>ReelForge | AI-Powered Video Ad Engine</title>
+    <meta name="description" content="Create. Learn. Perform. Ads built by agentic intelligence, tailored for your business.">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; }
-        .bg-gradient { background: linear-gradient(135deg, #000 0%, #1a1a1a 100%); }
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .bg-gradient { background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%); }
+        .dark .bg-gradient { background: linear-gradient(135deg, #111827 0%, #000000 100%); }
+        .transition-theme { transition: background-color 0.3s ease, color 0.3s ease; }
+        @media (prefers-color-scheme: dark) {
+          html { color-scheme: dark; }
+        }
     </style>
 </head>
-<body class="bg-gradient min-h-screen text-white">
-    <div class="container mx-auto px-4 py-8">
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold mb-4">🎬 ReelForge</h1>
-            <p class="text-xl text-gray-300">AI-Powered Video Generation</p>
-        </div>
-        
-        <div class="max-w-2xl mx-auto bg-gray-800 rounded-xl p-8 shadow-2xl">
-            <form id="videoForm" class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Brand Name</label>
-                    <input type="text" id="brandName" required 
-                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+<body class="transition-theme bg-gradient min-h-screen">
+    <div id="app">
+        <!-- Landing Page Content -->
+        <div id="landing-page" class="min-h-screen">
+            <!-- Navbar -->
+            <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+                <div class="container mx-auto px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-[#FF5C00] rounded-lg flex items-center justify-center">
+                                <span class="text-white font-bold text-sm">R</span>
+                            </div>
+                            <span class="text-xl font-bold text-black dark:text-white">ReelForge</span>
+                        </div>
+                        
+                        <div class="hidden md:flex items-center space-x-8">
+                            <a href="#why" class="text-gray-600 dark:text-gray-300 hover:text-[#FF5C00] transition-colors">Why ReelForge</a>
+                            <a href="#how" class="text-gray-600 dark:text-gray-300 hover:text-[#FF5C00] transition-colors">How It Works</a>
+                            <a href="#samples" class="text-gray-600 dark:text-gray-300 hover:text-[#FF5C00] transition-colors">Samples</a>
+                            <a href="#pricing" class="text-gray-600 dark:text-gray-300 hover:text-[#FF5C00] transition-colors">Pricing</a>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                                <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                                <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+                            </button>
+                            <button id="enter-panel-btn" class="bg-[#FF5C00] hover:bg-[#E64A00] text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                                Enter Panel
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">Brand Description</label>
-                    <textarea id="brandDescription" required rows="4"
-                              class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"></textarea>
+            </nav>
+
+            <!-- Hero Section -->
+            <section class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-20">
+                <div class="absolute inset-0 opacity-5 dark:opacity-10">
+                    <div class="absolute inset-0 bg-gradient-to-br from-[#FF5C00]/10 to-transparent">
+                        <div class="absolute inset-0 bg-[length:20px_20px] bg-[radial-gradient(circle,_#FF5C00_1px,_transparent_1px)]"></div>
+                    </div>
                 </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">Target Audience</label>
-                    <input type="text" id="targetAudience" 
-                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">Video Duration: <span id="durationValue">30</span> seconds</label>
-                    <input type="range" id="duration" min="15" max="60" step="15" value="30"
-                           class="w-full" onchange="document.getElementById('durationValue').textContent = this.value">
-                </div>
-                
-                <button type="submit" id="generateBtn"
-                        class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-300">
-                    🚀 Generate Video
-                </button>
-            </form>
-            
-            <div id="progress" class="mt-6 hidden">
-                <div class="bg-gray-700 rounded-lg p-4">
-                    <h4 class="font-medium mb-4">🎯 AI Generation Progress</h4>
-                    <div id="progressSteps" class="space-y-3"></div>
-                </div>
-            </div>
-            
-            <div id="videoResult" class="mt-6 hidden">
-                <div class="bg-gray-700 rounded-lg p-4 text-center">
-                    <h4 class="font-medium mb-4">🎉 Your Video is Ready!</h4>
-                    <video id="videoPlayer" controls class="w-full max-w-md mx-auto rounded-lg" style="aspect-ratio: 9/16;">
-                        <source type="video/mp4">
-                    </video>
-                    <div class="mt-4 space-x-3">
-                        <button id="downloadBtn" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg">
-                            📥 Download Video
+
+                <div class="container mx-auto px-6 py-32 relative z-10 text-center">
+                    <div class="flex items-center justify-center mb-6">
+                        <i data-lucide="sparkles" class="w-6 h-6 text-[#FF5C00] mr-2"></i>
+                        <span class="text-[#FF5C00] font-semibold">AI-Powered by Aegix</span>
+                    </div>
+
+                    <h1 class="text-5xl md:text-7xl font-bold mb-6 text-black dark:text-white leading-tight">
+                        Your Personalized<br>
+                        <span class="text-[#FF5C00]">AI Ad Engine</span>
+                    </h1>
+
+                    <p class="text-xl md:text-2xl mb-10 max-w-3xl mx-auto text-gray-600 dark:text-gray-300 leading-relaxed">
+                        Create. Learn. Perform. Ads built by agentic intelligence, tailored for your business.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+                        <button id="hero-enter-panel" class="bg-[#FF5C00] hover:bg-[#E64A00] text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors flex items-center">
+                            <i data-lucide="play" class="w-5 h-5 mr-2"></i>
+                            Start Creating
                         </button>
-                        <button onclick="location.reload()" class="bg-gray-600 hover:bg-gray-500 px-6 py-2 rounded-lg">
-                            🔄 Create Another
+                        <button onclick="scrollToSection('#how')" class="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-8 py-4 rounded-lg font-semibold text-lg transition-colors">
+                            Learn More
                         </button>
                     </div>
                 </div>
+            </section>
+
+            <!-- Why ReelForge Section -->
+            <section id="why" class="py-24 bg-gray-50 dark:bg-gray-900">
+                <div class="container mx-auto px-6">
+                    <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-black dark:text-white">
+                        Why Choose <span class="text-[#FF5C00]">ReelForge</span>?
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <div class="text-center p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+                            <i data-lucide="brain" class="w-12 h-12 text-[#FF5C00] mx-auto mb-4"></i>
+                            <h3 class="text-xl font-bold mb-4 text-black dark:text-white">AI-Powered Creation</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Advanced AI generates personalized video ads that resonate with your target audience.</p>
+                        </div>
+                        <div class="text-center p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+                            <i data-lucide="trending-up" class="w-12 h-12 text-[#FF5C00] mx-auto mb-4"></i>
+                            <h3 class="text-xl font-bold mb-4 text-black dark:text-white">Performance Analytics</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Real-time insights and performance tracking to optimize your campaigns.</p>
+                        </div>
+                        <div class="text-center p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+                            <i data-lucide="zap" class="w-12 h-12 text-[#FF5C00] mx-auto mb-4"></i>
+                            <h3 class="text-xl font-bold mb-4 text-black dark:text-white">Lightning Fast</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Generate professional video ads in minutes, not hours or days.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How It Works Section -->
+            <section id="how" class="py-24">
+                <div class="container mx-auto px-6">
+                    <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-black dark:text-white">
+                        How It <span class="text-[#FF5C00]">Works</span>
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-4 gap-8">
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-[#FF5C00] rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-white font-bold text-xl">1</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-4 text-black dark:text-white">Input Details</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Tell us about your brand, target audience, and campaign goals.</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-[#FF5C00] rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-white font-bold text-xl">2</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-4 text-black dark:text-white">AI Generation</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Our AI creates personalized video content with synchronized captions.</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-[#FF5C00] rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-white font-bold text-xl">3</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-4 text-black dark:text-white">Review & Edit</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Preview your video and make any necessary adjustments.</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-[#FF5C00] rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-white font-bold text-xl">4</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-4 text-black dark:text-white">Deploy & Track</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Launch your campaigns and monitor performance in real-time.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Video Samples Section -->
+            <section id="samples" class="py-24 bg-gray-50 dark:bg-gray-900">
+                <div class="container mx-auto px-6">
+                    <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-black dark:text-white">
+                        Sample <span class="text-[#FF5C00]">Videos</span>
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+                            <div class="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg mb-4 flex items-center justify-center">
+                                <i data-lucide="play" class="w-12 h-12 text-gray-400"></i>
+                            </div>
+                            <h3 class="text-lg font-bold mb-2 text-black dark:text-white">E-commerce Product</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Dynamic product showcase with AI-generated script and voiceover.</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+                            <div class="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg mb-4 flex items-center justify-center">
+                                <i data-lucide="play" class="w-12 h-12 text-gray-400"></i>
+                            </div>
+                            <h3 class="text-lg font-bold mb-2 text-black dark:text-white">Service Business</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Professional service ad with testimonials and call-to-action.</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+                            <div class="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg mb-4 flex items-center justify-center">
+                                <i data-lucide="play" class="w-12 h-12 text-gray-400"></i>
+                            </div>
+                            <h3 class="text-lg font-bold mb-2 text-black dark:text-white">App Launch</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Mobile app promotion with feature highlights and user benefits.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pricing Section -->
+            <section id="pricing" class="py-24">
+                <div class="container mx-auto px-6">
+                    <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-black dark:text-white">
+                        Simple <span class="text-[#FF5C00]">Pricing</span>
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg border border-gray-200 dark:border-gray-700">
+                            <h3 class="text-2xl font-bold mb-4 text-black dark:text-white">Starter</h3>
+                            <div class="text-4xl font-bold mb-6 text-[#FF5C00]">$29<span class="text-lg text-gray-500">/mo</span></div>
+                            <ul class="space-y-3 mb-8">
+                                <li class="flex items-center text-gray-600 dark:text-gray-300">
+                                    <i data-lucide="check" class="w-5 h-5 text-green-500 mr-2"></i>
+                                    10 videos per month
+                                </li>
+                                <li class="flex items-center text-gray-600 dark:text-gray-300">
+                                    <i data-lucide="check" class="w-5 h-5 text-green-500 mr-2"></i>
+                                    Basic AI features
+                                </li>
+                                <li class="flex items-center text-gray-600 dark:text-gray-300">
+                                    <i data-lucide="check" class="w-5 h-5 text-green-500 mr-2"></i>
+                                    720p quality
+                                </li>
+                            </ul>
+                            <button class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-3 rounded-lg font-semibold">
+                                Get Started
+                            </button>
+                        </div>
+                        
+                        <div class="bg-[#FF5C00] rounded-xl p-8 shadow-lg relative transform scale-105">
+                            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 text-[#FF5C00] px-4 py-1 rounded-full text-sm font-semibold">
+                                Most Popular
+                            </div>
+                            <h3 class="text-2xl font-bold mb-4 text-white">Professional</h3>
+                            <div class="text-4xl font-bold mb-6 text-white">$99<span class="text-lg text-orange-200">/mo</span></div>
+                            <ul class="space-y-3 mb-8">
+                                <li class="flex items-center text-white">
+                                    <i data-lucide="check" class="w-5 h-5 text-white mr-2"></i>
+                                    50 videos per month
+                                </li>
+                                <li class="flex items-center text-white">
+                                    <i data-lucide="check" class="w-5 h-5 text-white mr-2"></i>
+                                    Advanced AI features
+                                </li>
+                                <li class="flex items-center text-white">
+                                    <i data-lucide="check" class="w-5 h-5 text-white mr-2"></i>
+                                    1080p quality
+                                </li>
+                                <li class="flex items-center text-white">
+                                    <i data-lucide="check" class="w-5 h-5 text-white mr-2"></i>
+                                    Priority support
+                                </li>
+                            </ul>
+                            <button class="w-full bg-white text-[#FF5C00] py-3 rounded-lg font-semibold">
+                                Start Free Trial
+                            </button>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg border border-gray-200 dark:border-gray-700">
+                            <h3 class="text-2xl font-bold mb-4 text-black dark:text-white">Enterprise</h3>
+                            <div class="text-4xl font-bold mb-6 text-[#FF5C00]">$299<span class="text-lg text-gray-500">/mo</span></div>
+                            <ul class="space-y-3 mb-8">
+                                <li class="flex items-center text-gray-600 dark:text-gray-300">
+                                    <i data-lucide="check" class="w-5 h-5 text-green-500 mr-2"></i>
+                                    Unlimited videos
+                                </li>
+                                <li class="flex items-center text-gray-600 dark:text-gray-300">
+                                    <i data-lucide="check" class="w-5 h-5 text-green-500 mr-2"></i>
+                                    Custom AI training
+                                </li>
+                                <li class="flex items-center text-gray-600 dark:text-gray-300">
+                                    <i data-lucide="check" class="w-5 h-5 text-green-500 mr-2"></i>
+                                    4K quality
+                                </li>
+                                <li class="flex items-center text-gray-600 dark:text-gray-300">
+                                    <i data-lucide="check" class="w-5 h-5 text-green-500 mr-2"></i>
+                                    Dedicated support
+                                </li>
+                            </ul>
+                            <button class="w-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-3 rounded-lg font-semibold">
+                                Contact Sales
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="bg-gray-900 text-white py-16">
+                <div class="container mx-auto px-6">
+                    <div class="grid md:grid-cols-4 gap-8">
+                        <div>
+                            <div class="flex items-center space-x-2 mb-6">
+                                <div class="w-8 h-8 bg-[#FF5C00] rounded-lg flex items-center justify-center">
+                                    <span class="text-white font-bold text-sm">R</span>
+                                </div>
+                                <span class="text-xl font-bold">ReelForge</span>
+                            </div>
+                            <p class="text-gray-400 mb-4">AI-powered video ad engine for modern businesses.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-semibold mb-4">Product</h4>
+                            <ul class="space-y-2 text-gray-400">
+                                <li><a href="#" class="hover:text-white transition-colors">Features</a></li>
+                                <li><a href="#" class="hover:text-white transition-colors">Pricing</a></li>
+                                <li><a href="#" class="hover:text-white transition-colors">API</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-semibold mb-4">Company</h4>
+                            <ul class="space-y-2 text-gray-400">
+                                <li><a href="#" class="hover:text-white transition-colors">About</a></li>
+                                <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
+                                <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-semibold mb-4">Support</h4>
+                            <ul class="space-y-2 text-gray-400">
+                                <li><a href="#" class="hover:text-white transition-colors">Help Center</a></li>
+                                <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+                                <li><a href="#" class="hover:text-white transition-colors">Status</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+                        <p>&copy; 2025 ReelForge. All rights reserved.</p>
+                    </div>
+                </div>
+            </footer>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="hidden min-h-screen bg-gray-900 text-white">
+            <!-- Dashboard Header -->
+            <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4 cursor-pointer hover:opacity-80 transition-opacity" onclick="showLandingPage()">
+                        <div class="w-8 h-8 bg-[#FF5C00] rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-sm">R</span>
+                        </div>
+                        <span class="text-xl font-bold">ReelForge</span>
+                        <i data-lucide="arrow-left" class="w-4 h-4 text-gray-400"></i>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-gray-600 rounded-full"></div>
+                            <span class="text-sm">User</span>
+                        </div>
+                        <button id="dashboard-theme-toggle" class="p-2 rounded-lg bg-gray-700 text-gray-300">
+                            <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+                            <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Navigation -->
+            <div class="flex">
+                <nav class="w-64 bg-gray-800 min-h-screen p-6">
+                    <div class="space-y-2">
+                        <button onclick="showDashboardTab('overview')" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg bg-gray-700 text-white">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                            <span>Dashboard</span>
+                        </button>
+                        <button onclick="showDashboardTab('ai-engine')" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition-colors">
+                            <i data-lucide="brain" class="w-5 h-5"></i>
+                            <span>Ad Engine</span>
+                        </button>
+                        <button onclick="showDashboardTab('performance')" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition-colors">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                            <span>Performance</span>
+                        </button>
+                        <button onclick="showDashboardTab('connect')" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white transition-colors">
+                            <i data-lucide="link" class="w-5 h-5"></i>
+                            <span>Connect Accounts</span>
+                        </button>
+                    </div>
+                </nav>
+
+                <!-- Dashboard Content -->
+                <main class="flex-1 p-8">
+                    <!-- AI Engine Panel -->
+                    <div id="ai-engine-panel" class="hidden">
+                        <div class="max-w-4xl mx-auto">
+                            <h1 class="text-3xl font-bold mb-8">AI Ad Engine</h1>
+                            
+                            <div class="grid lg:grid-cols-2 gap-8">
+                                <!-- Input Form -->
+                                <div class="bg-gray-800 rounded-xl p-6">
+                                    <h2 class="text-xl font-semibold mb-6">Create Your Video Ad</h2>
+                                    
+                                    <form id="ai-video-form" class="space-y-6">
+                                        <div>
+                                            <label class="block text-sm font-medium mb-2">Brand Name</label>
+                                            <input type="text" id="ai-brand-name" required 
+                                                   class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium mb-2">Brand Description</label>
+                                            <textarea id="ai-brand-description" required rows="4"
+                                                      class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                                                      placeholder="Describe your brand, products, or services..."></textarea>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium mb-2">Target Audience</label>
+                                            <input type="text" id="ai-target-audience" 
+                                                   class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                                                   placeholder="e.g., young professionals, parents, tech enthusiasts">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium mb-2">Call to Action</label>
+                                            <input type="text" id="ai-call-to-action" 
+                                                   class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                                                   placeholder="e.g., Buy now, Sign up today, Learn more">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium mb-2">Video Duration: <span id="ai-duration-value">30</span> seconds</label>
+                                            <input type="range" id="ai-duration" min="15" max="60" step="15" value="30"
+                                                   class="w-full" onchange="document.getElementById('ai-duration-value').textContent = this.value">
+                                            <div class="flex justify-between text-sm text-gray-400 mt-1">
+                                                <span>15s</span>
+                                                <span>30s</span>
+                                                <span>45s</span>
+                                                <span>60s</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <button type="submit" id="ai-generate-btn"
+                                                class="w-full bg-[#FF5C00] hover:bg-[#E64A00] text-white font-semibold py-3 px-6 rounded-lg transition duration-300">
+                                            Generate Video
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- Progress & Results -->
+                                <div class="space-y-6">
+                                    <!-- Progress Panel -->
+                                    <div id="ai-progress" class="hidden bg-gray-800 rounded-xl p-6">
+                                        <h3 class="text-lg font-semibold mb-4">AI Generation Progress</h3>
+                                        <div id="ai-progress-steps" class="space-y-3"></div>
+                                    </div>
+
+                                    <!-- Video Result -->
+                                    <div id="ai-video-result" class="hidden bg-gray-800 rounded-xl p-6">
+                                        <h3 class="text-lg font-semibold mb-4">Your Video is Ready!</h3>
+                                        <div class="bg-black rounded-lg overflow-hidden mb-4">
+                                            <video id="ai-video-player" controls class="w-full" style="aspect-ratio: 9/16;">
+                                                <source type="video/mp4">
+                                            </video>
+                                        </div>
+                                        <div class="flex gap-3">
+                                            <button id="ai-download-btn" class="bg-[#FF5C00] hover:bg-[#E64A00] px-4 py-2 rounded-lg flex-1">
+                                                Download Video
+                                            </button>
+                                            <button onclick="resetAIForm()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg flex-1">
+                                                Create Another
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Default Dashboard Overview -->
+                    <div id="overview-panel">
+                        <h1 class="text-3xl font-bold mb-8">Dashboard Overview</h1>
+                        
+                        <div class="grid md:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-gray-800 rounded-xl p-6">
+                                <h3 class="text-lg font-semibold mb-2">Videos Created</h3>
+                                <div class="text-3xl font-bold text-[#FF5C00]">24</div>
+                                <p class="text-gray-400 text-sm">+12% from last month</p>
+                            </div>
+                            <div class="bg-gray-800 rounded-xl p-6">
+                                <h3 class="text-lg font-semibold mb-2">Total Views</h3>
+                                <div class="text-3xl font-bold text-[#FF5C00]">1.2K</div>
+                                <p class="text-gray-400 text-sm">+25% from last month</p>
+                            </div>
+                            <div class="bg-gray-800 rounded-xl p-6">
+                                <h3 class="text-lg font-semibold mb-2">Conversion Rate</h3>
+                                <div class="text-3xl font-bold text-[#FF5C00]">4.8%</div>
+                                <p class="text-gray-400 text-sm">+8% from last month</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-800 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <button onclick="showDashboardTab('ai-engine')" class="bg-[#FF5C00] hover:bg-[#E64A00] text-white p-4 rounded-lg text-left">
+                                    <i data-lucide="brain" class="w-6 h-6 mb-2"></i>
+                                    <div class="font-semibold">Create New Video</div>
+                                    <div class="text-sm opacity-90">Generate AI-powered video ads</div>
+                                </button>
+                                <button class="bg-gray-700 hover:bg-gray-600 text-white p-4 rounded-lg text-left">
+                                    <i data-lucide="bar-chart-3" class="w-6 h-6 mb-2"></i>
+                                    <div class="font-semibold">View Analytics</div>
+                                    <div class="text-sm opacity-90">Track video performance</div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other panels can be added here -->
+                    <div id="performance-panel" class="hidden">
+                        <h1 class="text-3xl font-bold mb-8">Performance Analytics</h1>
+                        <div class="bg-gray-800 rounded-xl p-6">
+                            <p class="text-gray-400">Performance analytics coming soon...</p>
+                        </div>
+                    </div>
+
+                    <div id="connect-panel" class="hidden">
+                        <h1 class="text-3xl font-bold mb-8">Connect Accounts</h1>
+                        <div class="bg-gray-800 rounded-xl p-6">
+                            <p class="text-gray-400">Connect your social media accounts...</p>
+                        </div>
+                    </div>
+                </main>
             </div>
         </div>
     </div>
 
     <script>
-        const steps = [
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Theme management
+        function initTheme() {
+            const isDark = localStorage.getItem('theme') === 'dark' || 
+                          (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        }
+
+        // Theme toggle buttons
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        document.getElementById('dashboard-theme-toggle').addEventListener('click', toggleTheme);
+
+        // Navigation functions
+        function showDashboard() {
+            document.getElementById('landing-page').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            showDashboardTab('overview');
+        }
+
+        function showLandingPage() {
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('landing-page').classList.remove('hidden');
+        }
+
+        function showDashboardTab(tabName) {
+            // Hide all panels
+            document.querySelectorAll('[id$="-panel"]').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            
+            // Show selected panel
+            document.getElementById(tabName + '-panel').classList.remove('hidden');
+            
+            // Update navigation
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('bg-gray-700', 'text-white');
+                btn.classList.add('text-gray-300', 'hover:bg-gray-700', 'hover:text-white');
+            });
+            
+            event.target.classList.add('bg-gray-700', 'text-white');
+            event.target.classList.remove('text-gray-300', 'hover:bg-gray-700', 'hover:text-white');
+        }
+
+        function scrollToSection(href) {
+            const element = document.querySelector(href);
+            if (element) {
+                const offsetTop = element.offsetTop - 80;
+                window.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // AI Video Generation
+        const aiSteps = [
             "Analyzing brand tone and audience",
-            "Generating AI script with natural pacing", 
+            "Generating AI script with natural pacing",
             "Creating voiceover with ElevenLabs AI",
             "Generating dynamic scenes and transitions",
             "Assembling final video with synchronized captions",
             "✓ Video ready!"
         ];
-        
-        let currentStep = 0;
-        let pollInterval;
-        
-        document.getElementById('videoForm').addEventListener('submit', async (e) => {
+
+        let aiPollInterval;
+
+        document.getElementById('ai-video-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const formData = {
-                brand_name: document.getElementById('brandName').value,
-                brand_description: document.getElementById('brandDescription').value,
-                target_audience: document.getElementById('targetAudience').value || 'general audience',
+                brand_name: document.getElementById('ai-brand-name').value,
+                brand_description: document.getElementById('ai-brand-description').value,
+                target_audience: document.getElementById('ai-target-audience').value || 'general audience',
                 tone: 'professional',
-                duration: parseInt(document.getElementById('duration').value),
-                call_to_action: 'Take action now'
+                duration: parseInt(document.getElementById('ai-duration').value),
+                call_to_action: document.getElementById('ai-call-to-action').value || 'Take action now'
             };
             
-            document.getElementById('generateBtn').disabled = true;
-            document.getElementById('generateBtn').textContent = '🔄 Generating...';
-            document.getElementById('progress').classList.remove('hidden');
+            document.getElementById('ai-generate-btn').disabled = true;
+            document.getElementById('ai-generate-btn').textContent = 'Generating...';
+            document.getElementById('ai-progress').classList.remove('hidden');
+            document.getElementById('ai-video-result').classList.add('hidden');
             
             try {
                 const response = await fetch('/api/generate', {
@@ -889,42 +1402,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 
                 const result = await response.json();
                 if (result.job_id) {
-                    pollJobStatus(result.job_id);
+                    pollAIJobStatus(result.job_id);
                 }
             } catch (error) {
                 console.error('Error:', error);
                 alert('Failed to start video generation');
-                resetForm();
+                resetAIForm();
             }
         });
-        
-        function pollJobStatus(jobId) {
-            pollInterval = setInterval(async () => {
+
+        function pollAIJobStatus(jobId) {
+            aiPollInterval = setInterval(async () => {
                 try {
                     const response = await fetch(\`/api/status/\${jobId}\`);
                     const status = await response.json();
                     
-                    updateProgress(status.progress);
+                    updateAIProgress(status.progress);
                     
                     if (status.status === 'completed') {
-                        clearInterval(pollInterval);
-                        showVideo(status.video_url);
+                        clearInterval(aiPollInterval);
+                        showAIVideo(status.video_url);
                     } else if (status.status === 'failed') {
-                        clearInterval(pollInterval);
+                        clearInterval(aiPollInterval);
                         alert('Video generation failed: ' + status.message);
-                        resetForm();
+                        resetAIForm();
                     }
                 } catch (error) {
                     console.error('Polling error:', error);
                 }
             }, 2000);
         }
-        
-        function updateProgress(progress) {
-            const stepIndex = Math.floor(progress / 17); // 6 steps
-            const progressSteps = document.getElementById('progressSteps');
+
+        function updateAIProgress(progress) {
+            const stepIndex = Math.floor(progress / 17);
+            const progressSteps = document.getElementById('ai-progress-steps');
             
-            progressSteps.innerHTML = steps.map((step, index) => {
+            progressSteps.innerHTML = aiSteps.map((step, index) => {
                 const status = index < stepIndex ? 'completed' : 
                               index === stepIndex ? 'current' : 'pending';
                 const color = status === 'completed' ? 'text-green-400' :
@@ -940,30 +1453,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 \`;
             }).join('');
         }
-        
-        function showVideo(videoUrl) {
-            document.getElementById('progress').classList.add('hidden');
-            document.getElementById('videoResult').classList.remove('hidden');
+
+        function showAIVideo(videoUrl) {
+            document.getElementById('ai-progress').classList.add('hidden');
+            document.getElementById('ai-video-result').classList.remove('hidden');
             
-            const videoPlayer = document.getElementById('videoPlayer');
+            const videoPlayer = document.getElementById('ai-video-player');
             videoPlayer.src = videoUrl;
             
-            document.getElementById('downloadBtn').onclick = () => {
+            document.getElementById('ai-download-btn').onclick = () => {
                 window.open(videoUrl, '_blank');
             };
         }
-        
-        function resetForm() {
-            document.getElementById('generateBtn').disabled = false;
-            document.getElementById('generateBtn').textContent = '🚀 Generate Video';
-            document.getElementById('progress').classList.add('hidden');
-            document.getElementById('videoResult').classList.add('hidden');
+
+        function resetAIForm() {
+            document.getElementById('ai-generate-btn').disabled = false;
+            document.getElementById('ai-generate-btn').textContent = 'Generate Video';
+            document.getElementById('ai-progress').classList.add('hidden');
+            document.getElementById('ai-video-result').classList.add('hidden');
+            document.getElementById('ai-video-form').reset();
+            document.getElementById('ai-duration-value').textContent = '30';
         }
+
+        // Event listeners for enter panel buttons
+        document.getElementById('enter-panel-btn').addEventListener('click', showDashboard);
+        document.getElementById('hero-enter-panel').addEventListener('click', showDashboard);
+
+        // Initialize theme on page load
+        initTheme();
     </script>
 </body>
 </html>`;
     
-    res.send(dashboardHtml);
+    res.send(completeFrontend);
   });
 
   // Start Next.js server endpoint
