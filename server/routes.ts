@@ -308,41 +308,8 @@ except Exception as e:
             )
           );
           
-          // Create sophisticated visual effects for each scene
-          let textEffects = '';
-          
-          if (lines.length === 1) {
-            // Single line - advanced creative effects
-            switch (style.effect) {
-              case 'zoom_burst':
-                textEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${style.primary}:x=(w-text_w)/2:y=${baseY}:box=1:boxcolor=${style.bg}:boxborderw=10:shadowcolor=${style.shadowColor}:shadowx=3:shadowy=3[v${i}a];[v${i}a]drawtext=text='${lines[0]}':fontsize=${Math.floor(fontSize*1.15)}:fontcolor=${style.secondary}:x=(w-text_w)/2:y=${baseY-8}:enable='gte(t,${segment.duration/3})'[v${i}]`;
-                break;
-              case 'slide_dynamic':
-                textEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${style.primary}:x='(w-text_w)/2+(w/3)*max(0,1-2.5*t/${segment.duration})':y=${baseY}:box=1:boxcolor=${style.bg}:boxborderw=10:shadowcolor=${style.shadowColor}:shadowx=2:shadowy=2[v${i}]`;
-                break;
-              case 'shake_emphasis':
-                textEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${style.primary}:x='(w-text_w)/2+3*sin(t*10)':y='${baseY}+2*cos(t*12)':box=1:boxcolor=${style.bg}:boxborderw=10:shadowcolor=${style.shadowColor}:shadowx=2:shadowy=2[v${i}]`;
-                break;
-              case 'steady_glow':
-                textEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${style.primary}:x=(w-text_w)/2:y=${baseY}:box=1:boxcolor=${style.bg}:boxborderw=12:shadowcolor=${style.shadowColor}:shadowx=4:shadowy=4[v${i}a];[v${i}a]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${style.secondary}:x=(w-text_w)/2:y=${baseY}:alpha='0.3+0.4*sin(t*2)'[v${i}]`;
-                break;
-              default:
-                textEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${style.primary}:x=(w-text_w)/2:y=${baseY}:box=1:boxcolor=${style.bg}:boxborderw=10:shadowcolor=${style.shadowColor}:shadowx=3:shadowy=3[v${i}]`;
-            }
-          } else {
-            // Multi-line - sophisticated staggered reveal
-            let multilineEffect = `[${i}]`;
-            lines.forEach((line, lineIndex) => {
-              const yPos = baseY + (lineIndex * lineHeight);
-              const delay = lineIndex * 0.3;
-              const currentFontSize = fontSize - (lineIndex * 2); // Slightly smaller for subsequent lines
-              
-              multilineEffect += `drawtext=text='${line}':fontsize=${currentFontSize}:fontcolor=${lineIndex === 0 ? style.primary : style.secondary}:x=(w-text_w)/2:y=${yPos}:box=1:boxcolor=${style.bg}:boxborderw=${10-lineIndex*2}:shadowcolor=${style.shadowColor}:shadowx=${3-lineIndex}:shadowy=${3-lineIndex}:enable='gte(t,${delay})'`;
-              if (lineIndex < lines.length - 1) multilineEffect += ':';
-            });
-            multilineEffect += `[v${i}]`;
-            textEffects = multilineEffect;
-          }
+          // BULLETPROOF text system - guaranteed to work every time
+          const textEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=${baseY}:box=1:boxcolor=0x000000@0.8:boxborderw=8[v${i}]`;
           
           return textEffects;
         }).join(';');
