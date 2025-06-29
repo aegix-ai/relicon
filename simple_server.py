@@ -352,7 +352,7 @@ class ReelForgeHandler(SimpleHTTPRequestHandler):
         self.wfile.write(html.encode())
 
 if __name__ == '__main__':
-    PORT = 8000
+    PORT = 7000
     print(f"🚀 ReelForge server starting on http://localhost:{PORT}")
     print(f"📊 Dashboard: http://localhost:{PORT}/dashboard")
     print(f"🔧 API Health: http://localhost:{PORT}/api/health")
