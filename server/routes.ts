@@ -182,68 +182,155 @@ except Exception as e:
           }
         });
         
-        // Build DYNAMIC but reliable video filters  
+        // Build PROFESSIONAL visual system with intelligent design
         const videoFilters = scriptData.segments.map((segment: any, i: number) => {
-          const text = segment.text.replace(/['"\\]/g, '').replace(/:/g, ' ').substring(0, 60);
-          const words = text.split(' ');
+          const rawText = segment.text.replace(/['"\\]/g, '').replace(/:/g, ' ');
+          const words = rawText.split(' ');
           
-          // Dynamic text sizing based on energy 
-          const textSizes: Record<string, number> = {
-            explosive: 80, tension: 55, exciting: 70, confident: 65, urgent: 75
+          // Intelligent text wrapping - max 32 chars per line, 2 lines max
+          const maxCharsPerLine = 32;
+          let lines: string[] = [];
+          let currentLine = '';
+          
+          for (const word of words) {
+            if (currentLine.length + word.length + 1 <= maxCharsPerLine) {
+              currentLine += (currentLine ? ' ' : '') + word;
+            } else {
+              if (currentLine) lines.push(currentLine);
+              currentLine = word;
+              if (lines.length >= 2) break; // Max 2 lines
+            }
+          }
+          if (currentLine && lines.length < 2) lines.push(currentLine);
+          
+          // If still too long, truncate intelligently
+          if (lines.length === 0) lines = [rawText.substring(0, maxCharsPerLine)];
+          
+          // Professional color schemes based on energy and position
+          const colorSchemes: Record<string, {primary: string, secondary: string, accent: string, bg: string}> = {
+            explosive: {primary: '#FFFFFF', secondary: '#FFD700', accent: '#FF4444', bg: '0xFF1744@0.85'},
+            tension: {primary: '#F5F5F5', secondary: '#FFAB00', accent: '#424242', bg: '0x37474F@0.9'},
+            exciting: {primary: '#FFFFFF', secondary: '#00E5FF', accent: '#3F51B5', bg: '0x1A237E@0.8'},
+            confident: {primary: '#FFFFFF', secondary: '#4CAF50', accent: '#2E7D32', bg: '0x1B5E20@0.85'},
+            urgent: {primary: '#FFFFFF', secondary: '#FF5722', accent: '#E91E63', bg: '0xAD1457@0.9'}
           };
-          const fontSize = textSizes[segment.energy] || 60;
           
-          // Simplified but dynamic effects that work reliably
+          const scheme = colorSchemes[segment.energy] || colorSchemes.exciting;
+          const fontSize = Math.max(45, Math.min(75, Math.floor(1200 / Math.max(lines[0]?.length || 1, 1))));
+          
+          // Create sophisticated effects based on visual style
           let textEffect = '';
+          const padding = 80; // Safe padding from edges
+          const lineHeight = fontSize + 15;
+          const startY = lines.length === 1 ? 960 : 900;
           
           switch (segment.visual_style) {
             case 'zoom_burst':
-              // Two-stage zoom effect
-              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=800:box=1:boxcolor=0x000000@0.7[v${i}a];[v${i}a]drawtext=text='${text}':fontsize=${Math.floor(fontSize*1.3)}:fontcolor=yellow:x=(w-text_w)/2:y=600:enable='gte(t,${segment.duration/2})':shadowcolor=black:shadowx=2:shadowy=2[v${i}]`;
+              // Cinematic zoom with fade-in
+              if (lines.length === 1) {
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize*0.6}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:alpha='t/${segment.duration/3}':box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY-50}:enable='gte(t,${segment.duration/3})':box=1:boxcolor=${scheme.bg}:boxborderw=12:shadowcolor=${scheme.accent}:shadowx=4:shadowy=4[v${i}]`;
+              } else {
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:alpha='t/${segment.duration/3}':box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY+lineHeight}:enable='gte(t,${segment.duration/4})':box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}]`;
+              }
               break;
               
             case 'shake_reveal':
-              // Animated shaking text
-              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x='(w-text_w)/2+5*sin(t*10)':y=800:box=1:boxcolor=0xFF0000@0.5[v${i}]`;
+              // Dramatic reveal with controlled shake
+              if (lines.length === 1) {
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x='(w-text_w)/2+3*sin(t*15)':y='${startY}+2*cos(t*18)':box=1:boxcolor=${scheme.bg}:boxborderw=10:shadowcolor=${scheme.accent}:shadowx=3:shadowy=3[v${i}]`;
+              } else {
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x='(w-text_w)/2+3*sin(t*15)':y='${startY}+2*cos(t*18)':box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x='(w-text_w)/2+2*sin(t*12)':y='${startY+lineHeight}+1*cos(t*20)':enable='gte(t,${segment.duration/3})':box=1:boxcolor=${scheme.bg}:boxborderw=6[v${i}]`;
+              }
               break;
               
             case 'slide_dynamic':
-              // Multi-line sliding text
-              if (words.length > 3) {
-                const line1 = words.slice(0, Math.ceil(words.length/2)).join(' ');
-                const line2 = words.slice(Math.ceil(words.length/2)).join(' ');
-                textEffect = `[${i}]drawtext=text='${line1}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=600:box=1:boxcolor=0x0000FF@0.6[v${i}a];[v${i}a]drawtext=text='${line2}':fontsize=${fontSize-8}:fontcolor=cyan:x=(w-text_w)/2:y=900:enable='gte(t,${segment.duration/3})'[v${i}]`;
+              // Professional slide-in with stagger
+              if (lines.length === 1) {
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x='(w-text_w)/2+(w-text_w)*max(0,1-4*t/${segment.duration})':y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=10:shadowcolor=${scheme.accent}:shadowx=2:shadowy=2[v${i}]`;
               } else {
-                textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=800:box=1:boxcolor=0x0000FF@0.6[v${i}]`;
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x='(w-text_w)/2+(w-text_w)*max(0,1-6*t/${segment.duration})':y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x='(w-text_w)/2-(w-text_w)*max(0,1-6*(t-${segment.duration/5})/${segment.duration})':y=${startY+lineHeight}:enable='gte(t,${segment.duration/5})':box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}]`;
               }
               break;
               
             case 'fade_glow':
-              // Fading glow effect
-              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=800:box=1:boxcolor=0x00FF00@0.6:shadowcolor=green:shadowx=1:shadowy=1[v${i}]`;
+              // Elegant fade with glow effect
+              const glowIntensity = 'if(lt(t,0.5),t*2,if(lt(t,1.5),1,2-t))';
+              if (lines.length === 1) {
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:alpha='${glowIntensity}':box=1:boxcolor=${scheme.bg}:boxborderw=12:shadowcolor=${scheme.secondary}:shadowx=0:shadowy=0:shadowblur=8[v${i}]`;
+              } else {
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:alpha='${glowIntensity}':box=1:boxcolor=${scheme.bg}:boxborderw=10[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY+lineHeight}:alpha='${glowIntensity}':enable='gte(t,${segment.duration/4})':box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}]`;
+              }
               break;
               
             case 'pulse_scale':
-              // Pulsing text
-              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=red:fontcolor_expr='if(lt(mod(t,1),0.5),white,red)':x=(w-text_w)/2:y=800:box=1:boxcolor=0xFFFF00@0.5[v${i}]`;
+              // Rhythmic pulse effect
+              const pulseScale = `${fontSize}+${Math.floor(fontSize*0.15)}*sin(t*6)`;
+              if (lines.length === 1) {
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize='${pulseScale}':fontcolor='if(lt(mod(t,0.8),0.4),${scheme.primary},${scheme.secondary})':x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=10:shadowcolor=${scheme.accent}:shadowx=2:shadowy=2[v${i}]`;
+              } else {
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize='${pulseScale}':fontcolor='if(lt(mod(t,0.8),0.4),${scheme.primary},${scheme.secondary})':x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY+lineHeight}:enable='gte(t,${segment.duration/4})':box=1:boxcolor=${scheme.bg}:boxborderw=6[v${i}]`;
+              }
               break;
               
             default:
-              textEffect = `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=800:box=1:boxcolor=0x000000@0.5[v${i}]`;
+              // Professional default with proper padding
+              if (lines.length === 1) {
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=10[v${i}]`;
+              } else {
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY+lineHeight}:box=1:boxcolor=${scheme.bg}:boxborderw=6[v${i}]`;
+              }
           }
           
           return textEffect;
         }).join(';');
         
-        // Simple but effective concatenation with crossfades
-        const videoInputs = scriptData.segments.map((_: any, i: number) => `[v${i}]`).join('');
-        const videoConcat = `${videoInputs}concat=n=${scriptData.segments.length}:v=1:a=0[video]`;
+        // Intelligent transitions based on segment energy flow
+        let transitionChain = '';
+        
+        if (scriptData.segments.length === 1) {
+          transitionChain = `[v0]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black[video]`;
+        } else {
+          // Create intelligent transitions based on energy flow
+          const transitions: Record<string, string> = {
+            'explosive_to_tension': 'fadeblack',
+            'explosive_to_exciting': 'dissolve', 
+            'tension_to_exciting': 'wiperight',
+            'tension_to_confident': 'slideup',
+            'exciting_to_confident': 'fade',
+            'exciting_to_urgent': 'dissolve',
+            'confident_to_urgent': 'wipeleft',
+            'any_to_any': 'crossfade'
+          };
+          
+          let currentInput = `[v0]`;
+          
+          for (let i = 1; i < scriptData.segments.length; i++) {
+            const prevEnergy = scriptData.segments[i-1].energy;
+            const currentEnergy = scriptData.segments[i].energy;
+            const transitionKey = `${prevEnergy}_to_${currentEnergy}`;
+            const transition = transitions[transitionKey] || transitions['any_to_any'];
+            
+            // Calculate timing for smooth transitions
+            const prevDuration = scriptData.segments.slice(0, i).reduce((sum: number, seg: any) => sum + seg.duration, 0);
+            const transitionDuration = 0.3;
+            const offset = Math.max(0, prevDuration - transitionDuration);
+            
+            if (i === scriptData.segments.length - 1) {
+              // Final transition
+              transitionChain += `${currentInput}[v${i}]xfade=transition=${transition}:duration=${transitionDuration}:offset=${offset}[video]`;
+            } else {
+              // Intermediate transition
+              transitionChain += `${currentInput}[v${i}]xfade=transition=${transition}:duration=${transitionDuration}:offset=${offset}[t${i}];`;
+              currentInput = `[t${i}]`;
+            }
+          }
+        }
         
         // Add audio mixing
         const audioMix = audioFiles.length > 0 ? 
           `;${audioFiles.map((_, i) => `[${scriptData.segments.length + i}]`).join('')}concat=n=${audioFiles.length}:v=0:a=1[audio]` : '';
         
-        const filterComplex = videoFilters + ';' + videoConcat + audioMix;
+        const filterComplex = videoFilters + ';' + transitionChain + audioMix;
         
         ffmpegArgs.push('-filter_complex', filterComplex, '-map', '[video]');
         
