@@ -50,7 +50,7 @@ export default function AICreationPanel() {
 
     try {
       // Call our backend API
-      const response = await fetch('/api/generate', {
+      const response = await fetch('http://localhost:5000/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,7 +83,7 @@ export default function AICreationPanel() {
   const pollJobStatus = async (jobId: string) => {
     const poll = async () => {
       try {
-        const response = await fetch(`/api/status/${jobId}`)
+        const response = await fetch(`http://localhost:5000/api/status/${jobId}`)
         const status = await response.json()
         
         // Update generation step based on progress
