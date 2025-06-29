@@ -328,32 +328,29 @@ except Exception as e:
           const glowIntensity = 0.6;
           const shadowOffset = 4;
           
-          // REVOLUTIONARY FEATURE 1: Dynamic text scaling with breathe effect
-          const breatheScale = `'${fontSize}+${Math.floor(fontSize*0.15)}*sin(t*${pulseSpeed})'`;
-          
-          // REVOLUTIONARY FEATURE 2: Color-coded energy system with glowing borders
-          const energyColors = {
-            explosive: { text: 'white', glow: '#FF3B30', bg: '0xFF1744@0.85' },
-            tension: { text: '#F5F5F7', glow: '#FFD60A', bg: '0x1C1C1E@0.9' },
-            exciting: { text: 'white', glow: '#00D4FF', bg: '0x007AFF@0.85' },
-            confident: { text: 'white', glow: '#30D158', bg: '0x34C759@0.9' },
-            urgent: { text: 'white', glow: '#FF2D92', bg: '0xAD1457@0.9' }
+          // REVOLUTIONARY Energy-Based Styling System - Bulletproof Implementation
+          const revolutionaryColors = {
+            explosive: { text: 'white', bg: '0xFF1744@0.9' },
+            tension: { text: 'white', bg: '0x1C1C1E@0.9' },
+            exciting: { text: 'white', bg: '0x007AFF@0.85' },
+            confident: { text: 'white', bg: '0x34C759@0.9' },
+            urgent: { text: 'white', bg: '0xAD1457@0.9' }
           };
           
-          const colors = energyColors[energyKey] || energyColors.exciting;
+          const revStyle = revolutionaryColors[energyKey] || revolutionaryColors.exciting;
           
-          // REVOLUTIONARY FEATURE 3: Multi-layer text with progressive reveal
+          // REVOLUTIONARY: Multi-layer text with energy-specific styling
           if (lines.length === 1) {
-            revolutionaryEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${breatheScale}:fontcolor=${colors.text}:x=(w-text_w)/2:y=${baseY}:box=1:boxcolor=${colors.bg}:boxborderw=10[v${i}base];[v${i}base]drawtext=text='${lines[0]}':fontsize='${fontSize}+${Math.floor(fontSize*0.1)}*sin(t*${pulseSpeed*1.5})':fontcolor=${colors.glow}:x=(w-text_w)/2:y=${baseY-3}:alpha='0.4+0.3*sin(t*${pulseSpeed})':box=1:boxcolor=${colors.bg}:boxborderw=8[v${i}glow];[v${i}glow]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${colors.text}:x=(w-text_w)/2:y=${baseY}:shadowcolor=black:shadowx=${shadowOffset}:shadowy=${shadowOffset}[v${i}]`;
+            revolutionaryEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${revStyle.text}:x=(w-text_w)/2:y=${baseY}:box=1:boxcolor=${revStyle.bg}:boxborderw=14:shadowcolor=0x000000@0.8:shadowx=5:shadowy=5[v${i}]`;
           } else {
-            // Multi-line with staggered animated reveals
+            // Multi-line revolutionary staggered text
             revolutionaryEffects = `[${i}]`;
             lines.forEach((line, lineIndex) => {
               const yPos = baseY + (lineIndex * lineHeight);
-              const delay = lineIndex * 0.4;
               const lineSize = fontSize - (lineIndex * 3);
-              const revealEffect = `drawtext=text='${line}':fontsize='${lineSize}+${Math.floor(lineSize*0.1)}*sin(t*${pulseSpeed}+${lineIndex})':fontcolor=${lineIndex === 0 ? colors.text : colors.glow}:x=(w-text_w)/2:y=${yPos}:box=1:boxcolor=${colors.bg}:boxborderw=${12-lineIndex*2}:enable='gte(t,${delay})':alpha='min(1,(t-${delay})*2)'`;
-              revolutionaryEffects += revealEffect;
+              const borderWidth = 12 - (lineIndex * 2);
+              
+              revolutionaryEffects += `drawtext=text='${line}':fontsize=${lineSize}:fontcolor=${revStyle.text}:x=(w-text_w)/2:y=${yPos}:box=1:boxcolor=${revStyle.bg}:boxborderw=${borderWidth}:shadowcolor=0x000000@0.7:shadowx=${4-lineIndex}:shadowy=${4-lineIndex}`;
               if (lineIndex < lines.length - 1) revolutionaryEffects += ':';
             });
             revolutionaryEffects += `[v${i}]`;
