@@ -244,13 +244,19 @@ import json
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
 ELEVENLABS_URL = "https://api.elevenlabs.io/v1/text-to-speech"
 
-# Professional voice selection based on energy
+# CONSISTENT VOICE SYSTEM - Max 2 voices, default to 1
+# Primary voice for most content - natural and engaging
+PRIMARY_VOICE = "TX3LPaxmHKxFdv7VOQHJ"  # Liam - versatile, natural
+# Secondary voice only for contrast when needed
+SECONDARY_VOICE = "pNInz6obpgDQGcFmaJgB"  # Adam - professional depth
+
+# Use primary voice for most segments, secondary only for authority/proof
 voice_map = {
-    "explosive": "ErXwobaYiN019PkySvjV",  # Antoni - energetic, confident
-    "tension": "CYw3kZ02Hs0563khs1Fj",   # Dave - serious, concerned  
-    "exciting": "TX3LPaxmHKxFdv7VOQHJ",  # Liam - enthusiastic, engaging
-    "confident": "pNInz6obpgDQGcFmaJgB", # Adam - professional, trustworthy
-    "urgent": "ErXwobaYiN019PkySvjV"     # Antoni - urgent, action-focused
+    "explosive": PRIMARY_VOICE,    # Hook - engaging and energetic
+    "tension": PRIMARY_VOICE,      # Problem - same voice for continuity
+    "exciting": PRIMARY_VOICE,     # Solution - maintain connection
+    "confident": SECONDARY_VOICE,  # Proof - add authority when needed
+    "urgent": PRIMARY_VOICE        # CTA - back to primary for action
 }
 
 segment_energy = "${segment.energy}"
@@ -451,17 +457,15 @@ except Exception as e:
           return `drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=1200:box=1:boxcolor=${bgColor}:boxborderw=8:enable='between(t,${startTime},${endTime})'`;
         }).join(':');
         
-        // Create synchronized video with all captions
-        const videoWithCaptions = `${baseVideoFilters};[v0]${captionFilters}[video_with_captions]`;
-        
-        // Create transitions between segments with synchronized captions
+        // SIMPLIFIED SYNCHRONIZED CAPTION SYSTEM
+        // Create transitions first, then add synchronized captions to final video
         let transitionChain = '';
         
         if (scriptData.segments.length === 1) {
-          transitionChain = `[video_with_captions]copy[video]`;
+          transitionChain = `[v0]copy[background]`;
         } else {
           // Multi-segment transitions that change on audio pauses
-          let currentInput = `[v0]${captionFilters}`;
+          let currentInput = `[v0]`;
           let runningTime = 0;
           
           for (let i = 1; i < scriptData.segments.length; i++) {
@@ -470,7 +474,7 @@ except Exception as e:
             const offset = Math.max(0.1, runningTime - transitionDuration);
             
             if (i === scriptData.segments.length - 1) {
-              transitionChain = `${currentInput}[v${i}]xfade=transition=fade:duration=${transitionDuration}:offset=${offset}[video]`;
+              transitionChain = `${currentInput}[v${i}]xfade=transition=fade:duration=${transitionDuration}:offset=${offset}[background]`;
             } else {
               transitionChain += `${currentInput}[v${i}]xfade=transition=fade:duration=${transitionDuration}:offset=${offset}[t${i}];`;
               currentInput = `[t${i}]`;
@@ -478,11 +482,14 @@ except Exception as e:
           }
         }
         
+        // Add synchronized captions to the final background video
+        const finalVideo = `[background]${captionFilters}[video]`;
+        
         // Add audio mixing
         const audioMix = audioFiles.length > 0 ? 
           `;${audioFiles.map((_, i) => `[${scriptData.segments.length + i}:a]`).join('')}concat=n=${audioFiles.length}:v=0:a=1[audio]` : '';
         
-        const filterComplex = videoWithCaptions + ';' + transitionChain + audioMix;
+        const filterComplex = baseVideoFilters + ';' + transitionChain + ';' + finalVideo + audioMix;
         
         // DEBUG: Log the exact filter being used
         console.log("=== FILTER COMPLEX DEBUG ===");
