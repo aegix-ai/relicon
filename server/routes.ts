@@ -38,10 +38,10 @@ openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 def generate_video():
     try:
         # Generate AI concept and script
-        brand_name = "${request_data.brand_name}"
-        brand_description = "${request_data.brand_description}"
+        brand_name = """${request_data.brand_name}"""
+        brand_description = """${request_data.brand_description}"""
         
-        prompt = f"""Create a viral short-form video concept for {brand_name}: {brand_description}
+        prompt = "Create a viral short-form video concept for " + brand_name + ": " + brand_description + """
 
 Generate a JSON response with:
 1. A hook (opening line to grab attention)
