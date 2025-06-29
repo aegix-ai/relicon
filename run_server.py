@@ -115,11 +115,11 @@ async def mock_video_generation(job_id: str, request_data: dict):
             f"Video generation failed: {str(e)}"
         )
 
-@app.get("/")
-async def root():
-    """Main page"""
+@app.get("/api/")
+async def api_root():
+    """API root endpoint"""
     return {
-        "message": "ReelForge AI Video Generator",
+        "message": "ReelForge AI Video Generator API",
         "status": "running",
         "version": "1.0.0",
         "description": "Autonomous AI-powered video ad generation"
@@ -188,6 +188,21 @@ async def serve_interface():
     """Serve the HTML interface"""
     from fastapi.responses import FileResponse
     return FileResponse("static/index.html")
+
+@app.get("/")
+async def serve_frontend():
+    """Serve the main frontend interface"""
+    from fastapi.responses import FileResponse
+    if os.path.exists("static/index.html"):
+        return FileResponse("static/index.html")
+    else:
+        return {
+            "message": "ReelForge AI Video Generator",
+            "status": "running",
+            "version": "1.0.0",
+            "frontend": "Available at /interface",
+            "api_docs": "Available at /docs"
+        }
 
 if __name__ == "__main__":
     print("🎬 Starting ReelForge AI Video Generator")
