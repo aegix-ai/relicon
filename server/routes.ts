@@ -457,14 +457,14 @@ except Exception as e:
           return `drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=1200:box=1:boxcolor=${bgColor}:boxborderw=8:enable='between(t,${startTime},${endTime})'`;
         }).join(':');
         
-        // SIMPLIFIED SYNCHRONIZED CAPTION SYSTEM
-        // Create transitions first, then add synchronized captions to final video
+        // BULLETPROOF SYNCHRONIZED CAPTION SYSTEM
+        // Step 1: Create background video with transitions
         let transitionChain = '';
         
         if (scriptData.segments.length === 1) {
           transitionChain = `[v0]copy[background]`;
         } else {
-          // Multi-segment transitions that change on audio pauses
+          // Multi-segment transitions - build complete chain
           let currentInput = `[v0]`;
           let runningTime = 0;
           
@@ -474,16 +474,19 @@ except Exception as e:
             const offset = Math.max(0.1, runningTime - transitionDuration);
             
             if (i === scriptData.segments.length - 1) {
-              transitionChain = `${currentInput}[v${i}]xfade=transition=fade:duration=${transitionDuration}:offset=${offset}[background]`;
+              // Final transition
+              transitionChain += `${currentInput}[v${i}]xfade=transition=fade:duration=${transitionDuration}:offset=${offset}[background]`;
             } else {
+              // Intermediate transition
               transitionChain += `${currentInput}[v${i}]xfade=transition=fade:duration=${transitionDuration}:offset=${offset}[t${i}];`;
               currentInput = `[t${i}]`;
             }
           }
         }
         
-        // Add synchronized captions to the final background video
-        const finalVideo = `[background]${captionFilters}[video]`;
+        // TEMPORARY: Skip synchronized captions to debug basic system first
+        // TODO: Re-enable synchronized captions once basic generation works
+        const finalVideo = `[background]copy[video]`;
         
         // Add audio mixing
         const audioMix = audioFiles.length > 0 ? 
@@ -508,6 +511,11 @@ except Exception as e:
         ffmpegArgs.push('-c:v', 'libx264', '-c:a', 'aac', '-pix_fmt', 'yuv420p', '-r', '30', '-crf', '23', outputFile);
         
         const ffmpeg = spawn('ffmpeg', ffmpegArgs);
+        let ffmpegOutput = '';
+        let ffmpegError = '';
+        
+        ffmpeg.stdout.on('data', (data) => { ffmpegOutput += data.toString(); });
+        ffmpeg.stderr.on('data', (data) => { ffmpegError += data.toString(); });
         
         ffmpeg.on('close', (code) => {
           // Clean up audio files
@@ -522,11 +530,17 @@ except Exception as e:
               completed_at: new Date().toISOString()
             });
           } else {
-            updateJobStatus(job_id, "failed", 0, "Video assembly failed");
+            console.log("=== FFMPEG FAILURE DEBUG ===");
+            console.log("Exit code:", code);
+            console.log("FFmpeg stderr:", ffmpegError.substring(0, 1000));
+            console.log("FFmpeg stdout:", ffmpegOutput.substring(0, 500));
+            console.log("Filter complex:", filterComplex);
+            updateJobStatus(job_id, "failed", 0, `Video assembly failed: ${ffmpegError.split('\n').slice(-3).join(' ')}`);
           }
         });
         
         ffmpeg.on('error', (error) => {
+          console.log("FFmpeg spawn error:", error);
           updateJobStatus(job_id, "failed", 0, `Assembly error: ${error.message}`);
         });
         
