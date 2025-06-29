@@ -112,10 +112,12 @@ except Exception as e:
   return captionFilters;
 };
 
-// Generate synchronized captions from actual audio files
+// Generate synchronized captions using OpenAI Whisper transcription
 const generateSynchronizedCaptions = async (audioFiles: string[], scriptData: any, job_id: string) => {
   const captionData: any[] = [];
   let currentTime = 0;
+  
+  console.log('Starting Whisper transcription for', audioFiles.length, 'audio files...');
   
   for (let i = 0; i < audioFiles.length; i++) {
     const audioFile = audioFiles[i];
@@ -484,39 +486,80 @@ except Exception as e:
         
         let ffmpegArgs = ['-y'];
         
-        // DYNAMIC SCENE GENERATION - Multiple scenes per segment based on audio timing
+        // CAPTION-SYNCHRONIZED SCENES - Generate scenes based on actual caption timing
         const allScenes = [];
         
-        for (let i = 0; i < scriptData.segments.length; i++) {
-          const segment = scriptData.segments[i];
-          const colors = energyColors[segment.energy] || energyColors.exciting;
+        // Group captions by similar timing to create meaningful scene changes
+        let currentSceneDuration = 0;
+        let sceneStartTime = 0;
+        let currentSegment = 0;
+        
+        for (let i = 0; i < captionData.length; i++) {
+          const caption = captionData[i];
+          const captionDuration = caption.endTime - caption.startTime;
           
-          // Create 2-4 sub-scenes per segment for visual variety
-          const numSubScenes = Math.max(2, Math.min(4, Math.ceil(segment.duration / 2.5)));
-          const subSceneDuration = segment.duration / numSubScenes;
+          // Create a new scene every 3-5 seconds OR when segment changes
+          const shouldCreateNewScene = 
+            currentSceneDuration >= 3.0 || // Minimum 3 seconds per scene
+            caption.segmentIndex !== currentSegment || // New segment
+            (currentSceneDuration >= 2.0 && captionDuration > 1.5); // Natural break point
           
-          for (let j = 0; j < numSubScenes; j++) {
-            const colorIndex = (i * numSubScenes + j) % colors.length;
-            const color = colors[colorIndex];
+          if (shouldCreateNewScene && currentSceneDuration > 0) {
+            // Finalize current scene
+            const segment = scriptData.segments[currentSegment];
+            const colors = energyColors[segment.energy] || energyColors.exciting;
+            const color = colors[allScenes.length % colors.length];
             
-            // Add visual effects for variety
-            const effects = [
-              `color=c=${color}:size=1080x1920:duration=${subSceneDuration}`,
-              `color=c=${color}:size=1080x1920:duration=${subSceneDuration},fade=t=in:st=0:d=0.2`,
-              `color=c=${color}:size=1080x1920:duration=${subSceneDuration},zoompan=z='min(zoom+0.0015,1.5)':d=${Math.ceil(subSceneDuration * 25)}:s=1080x1920`
-            ];
+            // Create scene with subtle animation based on energy
+            const effects = {
+              explosive: `color=c=${color}:size=1080x1920:duration=${currentSceneDuration},zoompan=z='min(zoom+0.002,1.3)':d=${Math.ceil(currentSceneDuration * 25)}:s=1080x1920`,
+              tension: `color=c=${color}:size=1080x1920:duration=${currentSceneDuration},fade=t=in:st=0:d=0.3`,
+              exciting: `color=c=${color}:size=1080x1920:duration=${currentSceneDuration}`,
+              confident: `color=c=${color}:size=1080x1920:duration=${currentSceneDuration},zoompan=z='min(zoom+0.001,1.1)':d=${Math.ceil(currentSceneDuration * 25)}:s=1080x1920`,
+              urgent: `color=c=${color}:size=1080x1920:duration=${currentSceneDuration}`
+            };
             
-            const effect = effects[j % effects.length];
+            const effect = effects[segment.energy] || effects.exciting;
             ffmpegArgs.push('-f', 'lavfi', '-i', effect);
             
             allScenes.push({
-              segmentIndex: i,
-              subSceneIndex: j,
-              duration: subSceneDuration,
-              color: color
+              segmentIndex: currentSegment,
+              duration: currentSceneDuration,
+              color: color,
+              startTime: sceneStartTime,
+              endTime: sceneStartTime + currentSceneDuration
             });
+            
+            // Start new scene
+            sceneStartTime += currentSceneDuration;
+            currentSceneDuration = captionDuration;
+            currentSegment = caption.segmentIndex;
+          } else {
+            // Extend current scene
+            currentSceneDuration += captionDuration;
+            currentSegment = caption.segmentIndex;
           }
         }
+        
+        // Don't forget the last scene
+        if (currentSceneDuration > 0) {
+          const segment = scriptData.segments[currentSegment];
+          const colors = energyColors[segment.energy] || energyColors.exciting;
+          const color = colors[allScenes.length % colors.length];
+          
+          const effect = `color=c=${color}:size=1080x1920:duration=${currentSceneDuration}`;
+          ffmpegArgs.push('-f', 'lavfi', '-i', effect);
+          
+          allScenes.push({
+            segmentIndex: currentSegment,
+            duration: currentSceneDuration,
+            color: color,
+            startTime: sceneStartTime,
+            endTime: sceneStartTime + currentSceneDuration
+          });
+        }
+        
+        console.log(`Created ${allScenes.length} caption-synchronized scenes:`, allScenes.map(s => `${s.duration.toFixed(1)}s`));
         
         // Add audio inputs
         audioFiles.forEach((file: string) => {
