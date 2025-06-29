@@ -772,6 +772,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Start Next.js server endpoint
+  app.post('/api/start-nextjs', async (req, res) => {
+    try {
+      const { spawn } = await import('child_process');
+      
+      // Start Next.js in the background
+      const nextProcess = spawn('npm', ['run', 'dev'], {
+        cwd: path.join(process.cwd(), 'client'),
+        detached: true,
+        stdio: 'ignore',
+        env: { ...process.env, PORT: '3000' }
+      });
+      
+      nextProcess.unref();
+      
+      res.json({ success: true, message: 'Next.js starting...' });
+    } catch (error) {
+      console.error('Error starting Next.js:', error);
+      res.status(500).json({ error: 'Failed to start Next.js' });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

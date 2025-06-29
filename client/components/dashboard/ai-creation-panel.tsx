@@ -27,33 +27,95 @@ export default function AICreationPanel() {
     setSelectedPlatforms((prev) => (prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform]))
   }
 
-  const handleGenerateAd = () => {
+  const [formData, setFormData] = useState({
+    brandName: '',
+    brandDescription: '',
+    targetAudience: '',
+    tone: '',
+    duration: 30,
+    callToAction: ''
+  })
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [jobId, setJobId] = useState<string | null>(null)
+
+  const handleGenerateAd = async () => {
+    if (!formData.brandName || !formData.brandDescription) {
+      alert('Please fill in at least Brand Name and Brand Description');
+      return;
+    }
+
     setIsGenerating(true)
     setGenerationStep(0)
+    setVideoUrl(null)
 
-    const steps = [
-      "Analyzing brand tone and audience",
-      "Generating script variations",
-      "Generating script variations",
-      "Creating visual concepts",
-      "Optimizing for platform algorithms",
-      "Finalizing your ad",
-    ]
-
-    steps.forEach((_, index) => {
-      setTimeout(
-        () => {
-          setGenerationStep(index + 1)
-          if (index === steps.length - 1) {
-            setTimeout(() => {
-              setIsGenerating(false)
-              setCurrentPreview((prev) => (prev + 1) % adPreviews.length)
-            }, 1000)
-          }
+    try {
+      // Call our backend API
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        (index + 1) * 1000,
-      )
-    })
+        body: JSON.stringify({
+          brand_name: formData.brandName,
+          brand_description: formData.brandDescription,
+          target_audience: formData.targetAudience || 'general audience',
+          tone: formData.tone || 'professional',
+          duration: formData.duration,
+          call_to_action: formData.callToAction || 'Take action now'
+        }),
+      })
+
+      const result = await response.json()
+      
+      if (result.job_id) {
+        setJobId(result.job_id)
+        pollJobStatus(result.job_id)
+      } else {
+        throw new Error('Failed to start video generation')
+      }
+    } catch (error) {
+      console.error('Error generating video:', error)
+      setIsGenerating(false)
+      alert('Failed to start video generation. Please try again.')
+    }
+  }
+
+  const pollJobStatus = async (jobId: string) => {
+    const poll = async () => {
+      try {
+        const response = await fetch(`/api/status/${jobId}`)
+        const status = await response.json()
+        
+        // Update generation step based on progress
+        if (status.progress <= 20) {
+          setGenerationStep(1) // Analyzing brand
+        } else if (status.progress <= 40) {
+          setGenerationStep(2) // Generating script
+        } else if (status.progress <= 60) {
+          setGenerationStep(3) // Creating audio
+        } else if (status.progress <= 80) {
+          setGenerationStep(4) // Creating visuals
+        } else if (status.progress < 100) {
+          setGenerationStep(5) // Finalizing
+        }
+
+        if (status.status === 'completed' && status.video_url) {
+          setIsGenerating(false)
+          setVideoUrl(status.video_url)
+          setGenerationStep(6)
+        } else if (status.status === 'failed') {
+          setIsGenerating(false)
+          alert(`Video generation failed: ${status.message}`)
+        } else if (status.status === 'processing') {
+          setTimeout(poll, 2000) // Poll every 2 seconds
+        }
+      } catch (error) {
+        console.error('Error polling job status:', error)
+        setTimeout(poll, 5000) // Retry after 5 seconds
+      }
+    }
+    
+    setTimeout(poll, 1000) // Start polling after 1 second
   }
 
   const generationSteps = [
@@ -89,10 +151,12 @@ export default function AICreationPanel() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-300 dark:text-gray-300 light:text-gray-700 mb-2">
-                  Product Name
+                  Brand Name *
                 </label>
                 <Input
-                  placeholder="Enter product name"
+                  placeholder="Enter your brand name"
+                  value={formData.brandName}
+                  onChange={(e) => setFormData(prev => ({...prev, brandName: e.target.value}))}
                   className="bg-gray-700 dark:bg-gray-700 light:bg-gray-100 border-gray-600 dark:border-gray-600 light:border-gray-300 text-white dark:text-white light:text-gray-900 placeholder-gray-400 dark:placeholder-gray-400 light:placeholder-gray-500"
                 />
               </div>
@@ -100,7 +164,7 @@ export default function AICreationPanel() {
                 <label className="block text-sm font-medium text-gray-300 dark:text-gray-300 light:text-gray-700 mb-2">
                   Brand Tone
                 </label>
-                <Select>
+                <Select value={formData.tone} onValueChange={(value) => setFormData(prev => ({...prev, tone: value}))}>
                   <SelectTrigger className="bg-gray-700 dark:bg-gray-700 light:bg-gray-100 border-gray-600 dark:border-gray-600 light:border-gray-300 text-white dark:text-white light:text-gray-900">
                     <SelectValue placeholder="Select tone" />
                   </SelectTrigger>
@@ -120,10 +184,12 @@ export default function AICreationPanel() {
             </div>
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-300 dark:text-gray-300 light:text-gray-700 mb-2">
-                Key Product Features
+                Brand Description *
               </label>
               <Textarea
-                placeholder="Describe your product's main benefits and unique selling points..."
+                placeholder="Describe your brand/product in detail - benefits, unique selling points, what makes it special..."
+                value={formData.brandDescription}
+                onChange={(e) => setFormData(prev => ({...prev, brandDescription: e.target.value}))}
                 className="bg-gray-700 dark:bg-gray-700 light:bg-gray-100 border-gray-600 dark:border-gray-600 light:border-gray-300 text-white dark:text-white light:text-gray-900 placeholder-gray-400 dark:placeholder-gray-400 light:placeholder-gray-500 min-h-[100px]"
               />
             </div>
@@ -163,7 +229,20 @@ export default function AICreationPanel() {
                 </label>
                 <Textarea
                   placeholder="Describe your ideal customer (age, interests, behaviors, pain points)..."
+                  value={formData.targetAudience}
+                  onChange={(e) => setFormData(prev => ({...prev, targetAudience: e.target.value}))}
                   className="bg-gray-700 dark:bg-gray-700 light:bg-gray-100 border-gray-600 dark:border-gray-600 light:border-gray-300 text-white dark:text-white light:text-gray-900 placeholder-gray-400 dark:placeholder-gray-400 light:placeholder-gray-500 min-h-[100px]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 dark:text-gray-300 light:text-gray-700 mb-2">
+                  Call to Action
+                </label>
+                <Input
+                  placeholder="e.g., Buy now, Sign up today, Get started..."
+                  value={formData.callToAction}
+                  onChange={(e) => setFormData(prev => ({...prev, callToAction: e.target.value}))}
+                  className="bg-gray-700 dark:bg-gray-700 light:bg-gray-100 border-gray-600 dark:border-gray-600 light:border-gray-300 text-white dark:text-white light:text-gray-900 placeholder-gray-400 dark:placeholder-gray-400 light:placeholder-gray-500"
                 />
               </div>
             </div>
