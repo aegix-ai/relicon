@@ -82,11 +82,9 @@ Make it engaging and thumb-stopping for social media."""
             duration = segment.get('duration', 8)
             text = segment.get('text', f'Segment {i+1}')
             
-            # Clean text for FFmpeg - more thorough sanitization
-            safe_text = text.replace("'", "").replace('"', "").replace(":", "").replace(",", "")
-            safe_text = safe_text.replace("(", "").replace(")", "").replace("!", "")
-            safe_text = safe_text.replace("?", "").replace("&", "and").replace("#", "")
-            safe_text = safe_text.replace("\\", "").replace("/", "").replace("*", "")
+            # Clean text for FFmpeg - simple alphanumeric only
+            import re
+            safe_text = re.sub(r'[^a-zA-Z0-9 ]', '', text)
             if len(safe_text) > 40:
                 safe_text = safe_text[:37] + "..."
             
