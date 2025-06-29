@@ -339,8 +339,8 @@ except Exception as e:
           
           const revStyle = revolutionaryColors[energyKey] || revolutionaryColors.exciting;
           
-          // ULTRA-BULLETPROOF with Revolutionary Energy Colors
-          revolutionaryEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=${baseY}:box=1:boxcolor=${revStyle.bg}:boxborderw=8[v${i}]`;
+          // ABSOLUTE BULLETPROOF - Simplest possible with energy colors
+          revolutionaryEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=1200:box=1:boxcolor=0x000000@0.8:boxborderw=6[v${i}]`;
           
           return revolutionaryEffects;
         }).join(';');
