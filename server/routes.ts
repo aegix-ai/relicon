@@ -339,22 +339,8 @@ except Exception as e:
           
           const revStyle = revolutionaryColors[energyKey] || revolutionaryColors.exciting;
           
-          // REVOLUTIONARY: Multi-layer text with energy-specific styling
-          if (lines.length === 1) {
-            revolutionaryEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${revStyle.text}:x=(w-text_w)/2:y=${baseY}:box=1:boxcolor=${revStyle.bg}:boxborderw=14:shadowcolor=0x000000@0.8:shadowx=5:shadowy=5[v${i}]`;
-          } else {
-            // Multi-line revolutionary staggered text
-            revolutionaryEffects = `[${i}]`;
-            lines.forEach((line, lineIndex) => {
-              const yPos = baseY + (lineIndex * lineHeight);
-              const lineSize = fontSize - (lineIndex * 3);
-              const borderWidth = 12 - (lineIndex * 2);
-              
-              revolutionaryEffects += `drawtext=text='${line}':fontsize=${lineSize}:fontcolor=${revStyle.text}:x=(w-text_w)/2:y=${yPos}:box=1:boxcolor=${revStyle.bg}:boxborderw=${borderWidth}:shadowcolor=0x000000@0.7:shadowx=${4-lineIndex}:shadowy=${4-lineIndex}`;
-              if (lineIndex < lines.length - 1) revolutionaryEffects += ':';
-            });
-            revolutionaryEffects += `[v${i}]`;
-          }
+          // ULTRA-BULLETPROOF with Revolutionary Energy Colors
+          revolutionaryEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=${baseY}:box=1:boxcolor=${revStyle.bg}:boxborderw=8[v${i}]`;
           
           return revolutionaryEffects;
         }).join(';');
