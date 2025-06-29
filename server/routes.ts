@@ -152,6 +152,11 @@ except Exception as e:
           });
         }
         
+        console.log('=== PRE-ASSEMBLY DEBUG ===');
+        console.log('Audio files count:', audioFiles.length);
+        console.log('Script segments count:', scriptData.segments?.length);
+        console.log('Audio files exist check:', audioFiles.map(f => ({file: f, exists: fs.existsSync(f)})));
+        
         updateJobStatus(job_id, "processing", 80, "Assembling final video...");
         
         // Create DYNAMIC video with extensive effects
@@ -182,69 +187,23 @@ except Exception as e:
           }
         });
         
-        // BULLETPROOF professional visual system - guaranteed to work
+        // ULTRA-SIMPLE bulletproof system - prioritize working over fancy effects
         const videoFilters = scriptData.segments.map((segment: any, i: number) => {
-          // Safe text processing - remove problematic characters
-          const rawText = segment.text.replace(/['"\\]/g, '').replace(/:/g, ' ').replace(/[^\w\s]/g, '');
-          const words = rawText.split(' ').filter((word) => word.length > 0);
+          // Ultra-safe text processing
+          let text = segment.text
+            .replace(/['"\\`]/g, '')  // Remove quotes and special chars
+            .replace(/[^\w\s]/g, ' ') // Replace all non-alphanumeric with spaces
+            .replace(/\s+/g, ' ')     // Collapse multiple spaces
+            .trim()
+            .substring(0, 50);        // Hard limit to 50 chars
           
-          // Smart text wrapping - max 28 chars per line for safety
-          const maxCharsPerLine = 28;
-          let lines: string[] = [];
-          let currentLine = '';
+          if (!text) text = 'Ready'; // Ultimate fallback
           
-          for (const word of words) {
-            if (currentLine.length + word.length + 1 <= maxCharsPerLine) {
-              currentLine += (currentLine ? ' ' : '') + word;
-            } else {
-              if (currentLine) lines.push(currentLine);
-              currentLine = word;
-              if (lines.length >= 2) break; // Strict 2-line limit
-            }
-          }
-          if (currentLine && lines.length < 2) lines.push(currentLine);
+          // Simple, reliable styling
+          const fontSize = Math.max(50, Math.min(70, Math.floor(1200 / text.length)));
           
-          // Fallback for edge cases
-          if (lines.length === 0) lines = [rawText.substring(0, maxCharsPerLine) || 'Ready'];
-          
-          // Professional color schemes - bulletproof FFmpeg colors
-          const colorSchemes: Record<string, {primary: string, secondary: string, bg: string}> = {
-            explosive: {primary: 'white', secondary: 'yellow', bg: '0xFF1744@0.85'},
-            tension: {primary: 'lightgray', secondary: 'orange', bg: '0x37474F@0.9'},
-            exciting: {primary: 'white', secondary: 'cyan', bg: '0x1A237E@0.8'},
-            confident: {primary: 'white', secondary: 'green', bg: '0x1B5E20@0.85'},
-            urgent: {primary: 'white', secondary: 'orangered', bg: '0xAD1457@0.9'}
-          };
-          
-          const scheme = colorSchemes[segment.energy] || colorSchemes.exciting;
-          const fontSize = Math.max(48, Math.min(72, Math.floor(1000 / Math.max(lines[0]?.length || 1, 1))));
-          const lineHeight = Math.floor(fontSize * 1.2);
-          const startY = lines.length === 1 ? 850 : 800;
-          
-          // Create bulletproof effects that always work
-          let textEffect = '';
-          
-          if (lines.length === 1) {
-            // Single line - robust and reliable
-            switch (segment.visual_style) {
-              case 'zoom_burst':
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=12[v${i}a];[v${i}a]drawtext=text='${lines[0]}':fontsize=${Math.floor(fontSize*1.1)}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY-30}:enable='gte(t,${segment.duration/3})':box=1:boxcolor=${scheme.bg}:boxborderw=15[v${i}]`;
-                break;
-              case 'shake_reveal':
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x='(w-text_w)/2+2*sin(t*12)':y='${startY}+1*cos(t*15)':box=1:boxcolor=${scheme.bg}:boxborderw=12[v${i}]`;
-                break;
-              case 'slide_dynamic':
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x='(w-text_w)/2+(w/2)*max(0,1-3*t/${segment.duration})':y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=12[v${i}]`;
-                break;
-              default:
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=12[v${i}]`;
-            }
-          } else {
-            // Two lines - ultra-safe implementation
-            textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${scheme.primary}:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=10[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-6}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY+lineHeight}:box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}]`;
-          }
-          
-          return textEffect;
+          // Ultra-simple single-line text that ALWAYS works
+          return `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=900:box=1:boxcolor=0x000000@0.7:boxborderw=8[v${i}]`;
         }).join(';');
         
         // BULLETPROOF transition system
