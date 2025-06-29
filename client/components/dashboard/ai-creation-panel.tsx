@@ -120,10 +120,11 @@ export default function AICreationPanel() {
 
   const generationSteps = [
     "Analyzing brand tone and audience",
-    "Generating script variations",
-    "Creating visual concepts",
-    "Optimizing for platform algorithms",
-    "Finalizing your ad",
+    "Generating AI script with natural pacing",
+    "Creating voiceover with ElevenLabs AI",
+    "Generating dynamic scenes and transitions",
+    "Assembling final video with synchronized captions",
+    "✓ Video ready!"
   ]
 
   return (
@@ -300,18 +301,22 @@ export default function AICreationPanel() {
             </div>
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-300 dark:text-gray-300 light:text-gray-700 mb-2">
-                Ad Duration: {adDuration[0]} seconds
+                Video Duration: {formData.duration} seconds
               </label>
-              <Slider value={adDuration} onValueChange={setAdDuration} max={60} min={5} step={5} className="w-full" />
-            </div>
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-300 dark:text-gray-300 light:text-gray-700 mb-2">
-                Call-to-Action
-              </label>
-              <Input
-                placeholder="e.g., Shop Now, Learn More, Get Started"
-                className="bg-gray-700 dark:bg-gray-700 light:bg-gray-100 border-gray-600 dark:border-gray-600 light:border-gray-300 text-white dark:text-white light:text-gray-900 placeholder-gray-400 dark:placeholder-gray-400 light:placeholder-gray-500"
+              <Slider 
+                value={[formData.duration]} 
+                onValueChange={(value) => setFormData(prev => ({...prev, duration: value[0]}))} 
+                max={60} 
+                min={15} 
+                step={15} 
+                className="w-full" 
               />
+              <div className="flex justify-between text-sm text-gray-400 mt-1">
+                <span>15s</span>
+                <span>30s</span>
+                <span>45s</span>
+                <span>60s</span>
+              </div>
             </div>
           </div>
 
@@ -423,6 +428,42 @@ export default function AICreationPanel() {
                       </span>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {videoUrl && (
+              <div className="mt-6 bg-gray-700 dark:bg-gray-700 light:bg-gray-100 rounded-lg p-4">
+                <h4 className="text-white dark:text-white light:text-gray-900 font-medium mb-4">
+                  🎉 Your Video is Ready!
+                </h4>
+                <div className="bg-black rounded-lg overflow-hidden">
+                  <video 
+                    controls 
+                    className="w-full max-w-md mx-auto"
+                    style={{ aspectRatio: '9/16' }}
+                  >
+                    <source src={videoUrl} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+                <div className="flex gap-3 mt-4">
+                  <Button 
+                    onClick={() => window.open(videoUrl, '_blank')} 
+                    className="bg-[#FF5C00] hover:bg-[#E05000]"
+                  >
+                    Download Video
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setVideoUrl(null);
+                      setGenerationStep(0);
+                    }}
+                    className="border-gray-600 text-gray-300 hover:bg-gray-600"
+                  >
+                    Create Another
+                  </Button>
                 </div>
               </div>
             )}
