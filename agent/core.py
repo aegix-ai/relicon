@@ -39,8 +39,7 @@ class ReelForgeAgent:
         self.llm = ChatOpenAI(
             model="gpt-4o",
             temperature=0.7,
-            openai_api_key=self.openai_api_key,
-            max_tokens=4000
+            api_key=self.openai_api_key
         )
         
         # Initialize memory
