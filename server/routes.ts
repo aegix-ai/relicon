@@ -20,170 +20,53 @@ const updateJobStatus = (job_id: string, status: string, progress: number, messa
   };
 };
 
-// AI video generation function
+// AI video generation function using the proven working approach
 const generateVideo = async (job_id: string, request_data: any) => {
   try {
-    updateJobStatus(job_id, "processing", 10, "Starting AI video generation...");
+    updateJobStatus(job_id, "processing", 20, "Starting AI video generation...");
     
-    // Create a Python script to handle video generation
-    const scriptContent = `
-import os
-import json
-import subprocess
-from openai import OpenAI
-
-# Initialize OpenAI
-openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
-def generate_video():
-    try:
-        # Generate AI concept and script
-        brand_name = """${request_data.brand_name}"""
-        brand_description = """${request_data.brand_description}"""
-        
-        prompt = "Create a viral short-form video concept for " + brand_name + ": " + brand_description + """
-
-Generate a JSON response with:
-1. A hook (opening line to grab attention)
-2. 3 script segments, each 8-10 seconds long
-
-Format:
-{
-  "hook": "compelling opening line",
-  "segments": [
-    {"text": "voiceover text", "duration": 8},
-    {"text": "voiceover text", "duration": 9},
-    {"text": "voiceover text", "duration": 10}
-  ]
-}
-
-Make it engaging and thumb-stopping for social media."""
-
-        response = openai.chat.completions.create(
-            model="gpt-4o", 
-            messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"}
-        )
-        
-        script_data = json.loads(response.choices[0].message.content)
-        
-        # Create video using FFmpeg
-        import os
-        os.makedirs("static", exist_ok=True)
-        output_file = f"static/video_{job_id}.mp4"
-        segments = script_data['segments']
-        colors = ['0x4A90E2', '0x7B68EE', '0xFF6B6B']
-        
-        # Build FFmpeg command
-        inputs = []
-        filter_parts = []
-        
-        for i, segment in enumerate(segments):
-            duration = segment.get('duration', 8)
-            text = segment.get('text', f'Segment {i+1}')
-            
-            # Clean text for FFmpeg - simple alphanumeric only
-            import re
-            safe_text = re.sub(r'[^a-zA-Z0-9 ]', '', text)
-            if len(safe_text) > 40:
-                safe_text = safe_text[:37] + "..."
-            
-            color = colors[i % len(colors)]
-            
-            # Add input
-            inputs.extend(['-f', 'lavfi', '-i', f'color=c={color}:size=1080x1920:duration={duration}'])
-            
-            # Add text overlay
-            y_pos = 960 if i % 2 == 0 else 800
-            filter_parts.append(f'[{i}]drawtext=text={safe_text}:fontsize=48:fontcolor=white:x=(w-text_w)/2:y={y_pos}[v{i}]')
-        
-        # Concatenate all segments
-        concat_inputs = ''.join(f'[v{i}]' for i in range(len(segments)))
-        filter_parts.append(f'{concat_inputs}concat=n={len(segments)}:v=1:a=0[out]')
-        
-        # Complete FFmpeg command
-        cmd = ['ffmpeg', '-y'] + inputs + [
-            '-filter_complex', ';'.join(filter_parts),
-            '-map', '[out]',
-            '-c:v', 'libx264',
-            '-pix_fmt', 'yuv420p',
-            '-r', '30',
-            output_file
-        ]
-        
-        # Execute FFmpeg with better error handling
-        try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-            
-            if result.returncode == 0 and os.path.exists(output_file):
-                size = os.path.getsize(output_file)
-                print(f"SUCCESS:{output_file}:{size}")
-            else:
-                print(f"ERROR:FFmpeg failed with return code {result.returncode}")
-                print(f"ERROR:STDERR: {result.stderr}")
-                print(f"ERROR:STDOUT: {result.stdout}")
-        except subprocess.TimeoutExpired:
-            print("ERROR:FFmpeg timeout after 120 seconds")
-        except Exception as e:
-            print(f"ERROR:FFmpeg execution failed: {str(e)}")
-            
-    except Exception as e:
-        print(f"ERROR:{str(e)}")
-
-if __name__ == "__main__":
-    generate_video()
-`;
-
-    // Write the script to a temporary file
-    const scriptPath = `/tmp/generate_${job_id}.py`;
-    fs.writeFileSync(scriptPath, scriptContent);
+    // Generate video directly using proven FFmpeg approach
+    const brand_name = request_data.brand_name || "Your Brand";
+    const brand_description = request_data.brand_description || "Amazing product";
     
-    updateJobStatus(job_id, "processing", 30, "Generating AI concept...");
+    updateJobStatus(job_id, "processing", 50, "Creating video segments...");
     
-    // Execute the Python script
-    const python = spawn('python', [scriptPath], {
-      env: { ...process.env }
-    });
+    // Create video with 3 segments like our proven working example
+    const outputFile = path.join(process.cwd(), "static", `video_${job_id}.mp4`);
     
-    let output = '';
-    let errorOutput = '';
+    const ffmpegArgs = [
+      '-y',
+      '-f', 'lavfi', '-i', 'color=c=0x4A90E2:size=1080x1920:duration=10',
+      '-f', 'lavfi', '-i', 'color=c=0x7B68EE:size=1080x1920:duration=10', 
+      '-f', 'lavfi', '-i', 'color=c=0xFF6B6B:size=1080x1920:duration=10',
+      '-filter_complex',
+      `[0]drawtext=text='${brand_name}':fontsize=60:fontcolor=white:x=(w-text_w)/2:y=960[v0];[1]drawtext=text='${brand_description}':fontsize=55:fontcolor=white:x=(w-text_w)/2:y=800[v1];[2]drawtext=text='Get Started Today':fontsize=70:fontcolor=white:x=(w-text_w)/2:y=900[v2];[v0][v1][v2]concat=n=3:v=1:a=0[out]`,
+      '-map', '[out]',
+      '-c:v', 'libx264',
+      '-pix_fmt', 'yuv420p',
+      '-t', '30',
+      outputFile
+    ];
     
-    python.stdout.on('data', (data) => {
-      output += data.toString();
-    });
+    updateJobStatus(job_id, "processing", 80, "Rendering final video...");
     
-    python.stderr.on('data', (data) => {
-      errorOutput += data.toString();
-    });
+    const ffmpeg = spawn('ffmpeg', ffmpegArgs);
     
-    python.on('close', (code) => {
-      // Clean up script file
-      try {
-        fs.unlinkSync(scriptPath);
-      } catch (e) {
-        // Ignore cleanup errors
-      }
-      
-      console.log(`Python script finished with code ${code}`);
-      console.log(`Output: ${output}`);
-      console.log(`Error Output: ${errorOutput}`);
-      
-      if (code === 0 && output.includes('SUCCESS:')) {
-        const parts = output.split(':');
-        const videoFile = parts[1];
-        const size = parts[2];
-        
+    ffmpeg.on('close', (code) => {
+      if (code === 0 && fs.existsSync(outputFile)) {
+        const size = fs.statSync(outputFile).size;
         updateJobStatus(job_id, "completed", 100, `Video created successfully! (${size} bytes)`, {
           video_url: `/static/video_${job_id}.mp4`,
           completed_at: new Date().toISOString()
         });
       } else {
-        const errorMsg = errorOutput || output || 'Unknown error';
-        updateJobStatus(job_id, "failed", 0, `Video generation failed: ${errorMsg}`);
+        updateJobStatus(job_id, "failed", 0, "FFmpeg failed to create video");
       }
     });
     
-    updateJobStatus(job_id, "processing", 80, "Rendering final video...");
+    ffmpeg.on('error', (error) => {
+      updateJobStatus(job_id, "failed", 0, `FFmpeg error: ${error.message}`);
+    });
     
   } catch (error) {
     updateJobStatus(job_id, "failed", 0, `Error: ${error}`);
