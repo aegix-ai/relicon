@@ -281,6 +281,14 @@ except Exception as e:
         
         const filterComplex = videoFilters + ';' + transitionChain + audioMix;
         
+        // DEBUG: Log the exact filter being used
+        console.log("=== FILTER COMPLEX DEBUG ===");
+        console.log("Video segments:", scriptData.segments.length);
+        console.log("Audio files:", audioFiles.length);
+        console.log("Filter length:", filterComplex.length);
+        console.log("Filter preview:", filterComplex.substring(0, 200) + "...");
+        console.log("FFmpeg args:", ffmpegArgs.slice(0, 10).join(' '), "...");
+        
         ffmpegArgs.push('-filter_complex', filterComplex, '-map', '[video]');
         
         if (audioFiles.length > 0) {
