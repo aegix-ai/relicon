@@ -68,6 +68,8 @@ Make it engaging and thumb-stopping for social media."""
         script_data = json.loads(response.choices[0].message.content)
         
         # Create video using FFmpeg
+        import os
+        os.makedirs("static", exist_ok=True)
         output_file = f"static/video_{job_id}.mp4"
         segments = script_data['segments']
         colors = ['0x4A90E2', '0x7B68EE', '0xFF6B6B']
@@ -80,10 +82,13 @@ Make it engaging and thumb-stopping for social media."""
             duration = segment.get('duration', 8)
             text = segment.get('text', f'Segment {i+1}')
             
-            # Clean text for FFmpeg
+            # Clean text for FFmpeg - more thorough sanitization
             safe_text = text.replace("'", "").replace('"', "").replace(":", "").replace(",", "")
-            if len(safe_text) > 45:
-                safe_text = safe_text[:42] + "..."
+            safe_text = safe_text.replace("(", "").replace(")", "").replace("!", "")
+            safe_text = safe_text.replace("?", "").replace("&", "and").replace("#", "")
+            safe_text = safe_text.replace("\\", "").replace("/", "").replace("*", "")
+            if len(safe_text) > 40:
+                safe_text = safe_text[:37] + "..."
             
             color = colors[i % len(colors)]
             
@@ -108,14 +113,21 @@ Make it engaging and thumb-stopping for social media."""
             output_file
         ]
         
-        # Execute FFmpeg
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-        
-        if result.returncode == 0 and os.path.exists(output_file):
-            size = os.path.getsize(output_file)
-            print(f"SUCCESS:{output_file}:{size}")
-        else:
-            print(f"ERROR:{result.stderr}")
+        # Execute FFmpeg with better error handling
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+            
+            if result.returncode == 0 and os.path.exists(output_file):
+                size = os.path.getsize(output_file)
+                print(f"SUCCESS:{output_file}:{size}")
+            else:
+                print(f"ERROR:FFmpeg failed with return code {result.returncode}")
+                print(f"ERROR:STDERR: {result.stderr}")
+                print(f"ERROR:STDOUT: {result.stdout}")
+        except subprocess.TimeoutExpired:
+            print("ERROR:FFmpeg timeout after 120 seconds")
+        except Exception as e:
+            print(f"ERROR:FFmpeg execution failed: {str(e)}")
             
     except Exception as e:
         print(f"ERROR:{str(e)}")
@@ -148,7 +160,15 @@ if __name__ == "__main__":
     
     python.on('close', (code) => {
       // Clean up script file
-      fs.unlinkSync(scriptPath);
+      try {
+        fs.unlinkSync(scriptPath);
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+      
+      console.log(`Python script finished with code ${code}`);
+      console.log(`Output: ${output}`);
+      console.log(`Error Output: ${errorOutput}`);
       
       if (code === 0 && output.includes('SUCCESS:')) {
         const parts = output.split(':');
@@ -160,7 +180,8 @@ if __name__ == "__main__":
           completed_at: new Date().toISOString()
         });
       } else {
-        updateJobStatus(job_id, "failed", 0, `Video generation failed: ${errorOutput || 'Unknown error'}`);
+        const errorMsg = errorOutput || output || 'Unknown error';
+        updateJobStatus(job_id, "failed", 0, `Video generation failed: ${errorMsg}`);
       }
     });
     
