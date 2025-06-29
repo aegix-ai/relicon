@@ -206,13 +206,13 @@ except Exception as e:
           // If still too long, truncate intelligently
           if (lines.length === 0) lines = [rawText.substring(0, maxCharsPerLine)];
           
-          // Professional color schemes based on energy and position
+          // Professional color schemes with FFmpeg-compatible colors
           const colorSchemes: Record<string, {primary: string, secondary: string, accent: string, bg: string}> = {
-            explosive: {primary: '#FFFFFF', secondary: '#FFD700', accent: '#FF4444', bg: '0xFF1744@0.85'},
-            tension: {primary: '#F5F5F5', secondary: '#FFAB00', accent: '#424242', bg: '0x37474F@0.9'},
-            exciting: {primary: '#FFFFFF', secondary: '#00E5FF', accent: '#3F51B5', bg: '0x1A237E@0.8'},
-            confident: {primary: '#FFFFFF', secondary: '#4CAF50', accent: '#2E7D32', bg: '0x1B5E20@0.85'},
-            urgent: {primary: '#FFFFFF', secondary: '#FF5722', accent: '#E91E63', bg: '0xAD1457@0.9'}
+            explosive: {primary: 'white', secondary: 'yellow', accent: 'red', bg: '0xFF1744@0.85'},
+            tension: {primary: 'lightgray', secondary: 'orange', accent: 'gray', bg: '0x37474F@0.9'},
+            exciting: {primary: 'white', secondary: 'cyan', accent: 'blue', bg: '0x1A237E@0.8'},
+            confident: {primary: 'white', secondary: 'green', accent: 'darkgreen', bg: '0x1B5E20@0.85'},
+            urgent: {primary: 'white', secondary: 'orangered', accent: 'magenta', bg: '0xAD1457@0.9'}
           };
           
           const scheme = colorSchemes[segment.energy] || colorSchemes.exciting;
@@ -263,12 +263,13 @@ except Exception as e:
               break;
               
             case 'pulse_scale':
-              // Rhythmic pulse effect
+              // Rhythmic pulse effect with working color animation
               const pulseScale = `${fontSize}+${Math.floor(fontSize*0.15)}*sin(t*6)`;
+              // Use color_expr instead of fontcolor for dynamic colors
               if (lines.length === 1) {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize='${pulseScale}':fontcolor='if(lt(mod(t,0.8),0.4),${scheme.primary},${scheme.secondary})':x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=10:shadowcolor=${scheme.accent}:shadowx=2:shadowy=2[v${i}]`;
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize='${pulseScale}':fontcolor=white:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=10:shadowcolor=${scheme.accent}:shadowx=2:shadowy=2[v${i}]`;
               } else {
-                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize='${pulseScale}':fontcolor='if(lt(mod(t,0.8),0.4),${scheme.primary},${scheme.secondary})':x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY+lineHeight}:enable='gte(t,${segment.duration/4})':box=1:boxcolor=${scheme.bg}:boxborderw=6[v${i}]`;
+                textEffect = `[${i}]drawtext=text='${lines[0]}':fontsize='${pulseScale}':fontcolor=white:x=(w-text_w)/2:y=${startY}:box=1:boxcolor=${scheme.bg}:boxborderw=8[v${i}a];[v${i}a]drawtext=text='${lines[1]}':fontsize=${fontSize-8}:fontcolor=${scheme.secondary}:x=(w-text_w)/2:y=${startY+lineHeight}:enable='gte(t,${segment.duration/4})':box=1:boxcolor=${scheme.bg}:boxborderw=6[v${i}]`;
               }
               break;
               
