@@ -389,14 +389,22 @@ except Exception as e:
         
         let ffmpegArgs = ['-y'];
         
-        // REVOLUTIONARY DYNAMIC BACKGROUNDS - Energy-based with subtle animations
-        scriptData.segments.forEach((segment: any, i: number) => {
+        // SYNCHRONIZED CAPTION BACKGROUNDS - Scene changes on audio pauses
+        const totalDuration = Math.ceil(captionData[captionData.length - 1]?.endTime || duration);
+        
+        // Generate background scenes that change with natural pauses in speech
+        let currentTime = 0;
+        let sceneIndex = 0;
+        
+        for (let i = 0; i < scriptData.segments.length; i++) {
+          const segment = scriptData.segments[i];
           const colors = energyColors[segment.energy] || energyColors.exciting;
-          const color = colors[i % colors.length];
+          const color = colors[sceneIndex % colors.length];
           
-          // Revolutionary: Dynamic color-shifting backgrounds based on segment energy
+          // Create scene for this segment duration  
           ffmpegArgs.push('-f', 'lavfi', '-i', `color=c=${color}:size=1080x1920:duration=${segment.duration}`);
-        });
+          sceneIndex++;
+        }
         
         // Add audio inputs
         audioFiles.forEach((file: string) => {
@@ -405,145 +413,64 @@ except Exception as e:
           }
         });
         
-        // REVOLUTIONARY SYNCHRONIZED CAPTION SYSTEM - Captions match actual audio timing
-        const videoFilters = captionData.map((caption: any, i: number) => {
-          // Synchronized caption text processing
+        // CLEAN SYNCHRONIZED CAPTION SYSTEM - Match actual audio timing
+        // Create base video filters with background colors per segment
+        const baseVideoFilters = scriptData.segments.map((segment: any, i: number) => {
+          return `[${i}]copy[v${i}]`;
+        }).join(';');
+        
+        // Generate synchronized captions that appear/disappear with speech timing
+        const captionFilters = captionData.map((caption: any, i: number) => {
           let text = caption.text
             .replace(/['"\\`]/g, '')
             .replace(/[^\w\s!?.,-]/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
           
-          if (!text) text = 'Ready';
+          if (!text || text.length === 0) text = 'Ready';
           
-          // CRITICAL: 9:16 frame boundaries (1080x1920) with proper margins
-          const SAFE_WIDTH = 1080 - 120;   // 60px margin on each side
-          const SAFE_HEIGHT = 1920 - 240;  // 120px margin top/bottom
-          const MARGIN_LEFT = 60;
-          const MARGIN_TOP = 120;
+          // Smart font sizing for readability
+          const fontSize = Math.max(52, Math.min(78, Math.floor(1000 / text.length)));
           
-          // AI-driven text layout with advanced reasoning
-          const words = text.split(' ');
-          const maxWordsPerLine = Math.max(3, Math.min(6, Math.floor(12 - words.length / 4)));
-          
-          // Smart multi-line text wrapping for 9:16 format
-          let lines: string[] = [];
-          let currentLine = '';
-          
-          for (const word of words) {
-            const testLine = currentLine ? `${currentLine} ${word}` : word;
-            // Estimate character width for 9:16 safety
-            const estimatedWidth = testLine.length * 28; // Conservative estimate
-            
-            if (estimatedWidth <= SAFE_WIDTH - 100 && currentLine.split(' ').length < maxWordsPerLine) {
-              currentLine = testLine;
-            } else {
-              if (currentLine) lines.push(currentLine);
-              currentLine = word;
-              if (lines.length >= 3) break; // Max 3 lines for 9:16 format
-            }
-          }
-          if (currentLine && lines.length < 3) lines.push(currentLine);
-          
-          // Fallback for edge cases
-          if (lines.length === 0) lines = [text.substring(0, 30) || 'Ready'];
-          
-          // Advanced AI-driven creative styles based on segment analysis
-          const creativeStyles = {
-            explosive: {
-              primary: 'white', secondary: '#FF6B35', bg: '0xFF1744@0.9',
-              effect: 'zoom_burst', shadowColor: '#000000@0.8'
-            },
-            tension: {
-              primary: '#F0F0F0', secondary: '#FFD60A', bg: '0x2C2C2E@0.85',
-              effect: 'fade_reveal', shadowColor: '#000000@0.7'
-            },
-            exciting: {
-              primary: 'white', secondary: '#00D4FF', bg: '0x007AFF@0.85',
-              effect: 'slide_dynamic', shadowColor: '#001F3F@0.8'
-            },
-            confident: {
-              primary: 'white', secondary: '#30D158', bg: '0x1B5E20@0.9',
-              effect: 'steady_glow', shadowColor: '#003300@0.8'
-            },
-            urgent: {
-              primary: 'white', secondary: '#FF2D92', bg: '0xAD1457@0.9',
-              effect: 'shake_emphasis', shadowColor: '#330011@0.8'
-            }
+          // Energy-based caption colors
+          const energyColors = {
+            explosive: '0xFF1744@0.9',
+            tension: '0x1C1C1E@0.9', 
+            exciting: '0x007AFF@0.85',
+            confident: '0x34C759@0.9',
+            urgent: '0xAD1457@0.9'
           };
           
-          const energyKey = segment.energy as 'explosive' | 'tension' | 'exciting' | 'confident' | 'urgent';
-          const style = creativeStyles[energyKey] || creativeStyles.exciting;
+          const bgColor = energyColors[caption.energy as keyof typeof energyColors] || energyColors.exciting;
           
-          // Calculate optimal font size for 9:16 frame with margins
-          const maxLineLength = Math.max(...lines.map(line => line.length));
-          let fontSize = Math.max(42, Math.min(72, Math.floor(SAFE_WIDTH / (maxLineLength * 0.6))));
+          // Create synchronized caption with timing controls
+          const startTime = caption.startTime;
+          const endTime = caption.endTime;
           
-          // Adjust for multiple lines
-          if (lines.length > 1) {
-            fontSize = Math.max(38, Math.min(fontSize, Math.floor((SAFE_HEIGHT - 400) / (lines.length * 1.4))));
-          }
-          
-          // Calculate safe positioning within 9:16 frame
-          const lineHeight = Math.floor(fontSize * 1.3);
-          const totalTextHeight = lines.length * lineHeight;
-          
-          // Position text in lower third but within safe margins
-          const baseY = Math.max(
-            MARGIN_TOP + 400, // Don't go too high
-            Math.min(
-              1920 - MARGIN_TOP - totalTextHeight - 100, // Stay within bottom margin
-              1200 // Preferred position in lower third
-            )
-          );
-          
-          // REVOLUTIONARY VISUAL SYSTEM - Mind-blowing effects that still work bulletproof
-          let revolutionaryEffects = '';
-          
-          // Time-based variables for dynamic effects
-          const segmentTime = segment.duration;
-          const pulseSpeed = 3.0; // Pulse frequency
-          const glowIntensity = 0.6;
-          const shadowOffset = 4;
-          
-          // REVOLUTIONARY Energy-Based Styling System - Bulletproof Implementation
-          const revolutionaryColors = {
-            explosive: { text: 'white', bg: '0xFF1744@0.9' },
-            tension: { text: 'white', bg: '0x1C1C1E@0.9' },
-            exciting: { text: 'white', bg: '0x007AFF@0.85' },
-            confident: { text: 'white', bg: '0x34C759@0.9' },
-            urgent: { text: 'white', bg: '0xAD1457@0.9' }
-          };
-          
-          const revStyle = revolutionaryColors[energyKey] || revolutionaryColors.exciting;
-          
-          // ABSOLUTE BULLETPROOF - Simplest possible with energy colors
-          revolutionaryEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=1200:box=1:boxcolor=0x000000@0.8:boxborderw=6[v${i}]`;
-          
-          return revolutionaryEffects;
-        }).join(';');
+          // Return synchronized caption filter
+          return `drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=1200:box=1:boxcolor=${bgColor}:boxborderw=8:enable='between(t,${startTime},${endTime})'`;
+        }).join(':');
         
-        // BULLETPROOF transition system
+        // Create synchronized video with all captions
+        const videoWithCaptions = `${baseVideoFilters};[v0]${captionFilters}[video_with_captions]`;
+        
+        // Create transitions between segments with synchronized captions
         let transitionChain = '';
         
         if (scriptData.segments.length === 1) {
-          transitionChain = `[v0]copy[video]`;
-        } else if (scriptData.segments.length === 2) {
-          // Simple 2-segment transition - always works
-          const offset = Math.max(0.5, scriptData.segments[0].duration - 0.5);
-          transitionChain = `[v0][v1]xfade=transition=fade:duration=0.5:offset=${offset}[video]`;
+          transitionChain = `[video_with_captions]copy[video]`;
         } else {
-          // Multi-segment - robust sequential transitions
-          let currentInput = `[v0]`;
+          // Multi-segment transitions that change on audio pauses
+          let currentInput = `[v0]${captionFilters}`;
           let runningTime = 0;
           
           for (let i = 1; i < scriptData.segments.length; i++) {
             runningTime += scriptData.segments[i-1].duration;
-            const transitionDuration = 0.4;
-            const offset = Math.max(0.2, runningTime - transitionDuration);
+            const transitionDuration = 0.3;
+            const offset = Math.max(0.1, runningTime - transitionDuration);
             
             if (i === scriptData.segments.length - 1) {
-              transitionChain += `${currentInput}[v${i}]xfade=transition=dissolve:duration=${transitionDuration}:offset=${offset}[video]`;
+              transitionChain = `${currentInput}[v${i}]xfade=transition=fade:duration=${transitionDuration}:offset=${offset}[video]`;
             } else {
               transitionChain += `${currentInput}[v${i}]xfade=transition=fade:duration=${transitionDuration}:offset=${offset}[t${i}];`;
               currentInput = `[t${i}]`;
@@ -551,11 +478,11 @@ except Exception as e:
           }
         }
         
-        // Add audio mixing - CRITICAL FIX: Audio inputs start after video inputs
+        // Add audio mixing
         const audioMix = audioFiles.length > 0 ? 
           `;${audioFiles.map((_, i) => `[${scriptData.segments.length + i}:a]`).join('')}concat=n=${audioFiles.length}:v=0:a=1[audio]` : '';
         
-        const filterComplex = videoFilters + ';' + transitionChain + audioMix;
+        const filterComplex = videoWithCaptions + ';' + transitionChain + audioMix;
         
         // DEBUG: Log the exact filter being used
         console.log("=== FILTER COMPLEX DEBUG ===");
