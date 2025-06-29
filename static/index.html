@@ -266,11 +266,32 @@
                     if (status.status === 'completed') {
                         clearInterval(statusInterval);
                         showStatus('Video generated successfully!', 'success');
-                        showVideo(status.video_url);
+                        
+                        // Show generated content details
+                        const metadata = status.metadata || {};
+                        const concept = status.concept || {};
+                        const script = status.script || {};
+                        
+                        let detailsHtml = `
+                            <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: left;">
+                                <h4 style="margin: 0 0 10px 0; color: #155724;">Generated Content:</h4>
+                                <p><strong>Concept:</strong> ${concept.concept || 'N/A'}</p>
+                                <p><strong>Hook:</strong> ${concept.hook || 'N/A'}</p>
+                                <p><strong>Script Segments:</strong> ${metadata.script_segments || 0}</p>
+                                <p><strong>Audio Files:</strong> ${metadata.audio_files || 0}</p>
+                                <p><strong>Resolution:</strong> ${metadata.resolution || 'N/A'}</p>
+                            </div>
+                        `;
+                        
+                        statusDiv.innerHTML = statusDiv.innerHTML + detailsHtml;
+                        
+                        if (status.video_url) {
+                            showVideo(status.video_url);
+                        }
                         resetForm();
                     } else if (status.status === 'failed') {
                         clearInterval(statusInterval);
-                        showStatus(`Generation failed: ${status.error || 'Unknown error'}`, 'error');
+                        showStatus(`Generation failed: ${status.message || status.error || 'Unknown error'}`, 'error');
                         resetForm();
                     } else {
                         showStatus(status.message, 'processing');
