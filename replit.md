@@ -104,11 +104,16 @@ The system follows a microkernel architecture where:
 - **AWS S3**: Production asset storage
 - **Database**: PostgreSQL for persistent data
 
-## Changelog
+## Recent Changes
 
 ```
 Changelog:
-- June 29, 2025. Initial setup
+- June 29, 2025: Enhanced ReelForge with ElevenLabs TTS integration
+- Added dynamic short-form ad generation with real AI tools
+- Implemented concept generation optimized for thumb-stopping content
+- Created engaging script writing for viral short-form videos
+- Added high-quality voiceover generation with tone-matched voices
+- Built comprehensive testing and demonstration framework
 ```
 
 ## User Preferences

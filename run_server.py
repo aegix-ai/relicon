@@ -252,15 +252,15 @@ async def serve_frontend():
 
 if __name__ == "__main__":
     print("🎬 Starting ReelForge AI Video Generator")
-    print("📡 API will be available at: http://localhost:8000")
-    print("🌐 Web interface at: http://localhost:8000/interface")
-    print("📚 API docs at: http://localhost:8000/docs")
+    print("📡 API will be available at: http://localhost:8001")
+    print("🌐 Web interface at: http://localhost:8001/interface")
+    print("📚 API docs at: http://localhost:8001/docs")
     print("\nPress Ctrl+C to stop the server\n")
     
     uvicorn.run(
         app, 
         host="0.0.0.0", 
-        port=8000, 
+        port=8001,  # Use different port to avoid conflict
         log_level="info",
         reload=False
     )
