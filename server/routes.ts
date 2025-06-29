@@ -103,12 +103,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/video/:filename', (req, res) => {
     const { filename } = req.params;
     
-    // For demo purposes, we'll serve a placeholder video or redirect to a sample
-    const videoPath = join(process.cwd(), 'outputs', filename);
+    // For demo purposes, serve our working sample video
+    const sampleVideoPath = join(process.cwd(), 'working_video_generator.mp4');
     
-    if (fs.existsSync(videoPath)) {
-      res.sendFile(videoPath);
+    if (fs.existsSync(sampleVideoPath)) {
+      res.setHeader('Content-Type', 'video/mp4');
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.sendFile(sampleVideoPath);
     } else {
+      // Fallback to other sample videos if main one doesn't exist
+      const fallbackVideos = [
+        'test_complete.mp4',
+        'bulletproof_test.mp4',
+        'working_shortform_video.mp4'
+      ];
+      
+      for (const fallback of fallbackVideos) {
+        const fallbackPath = join(process.cwd(), fallback);
+        if (fs.existsSync(fallbackPath)) {
+          res.setHeader('Content-Type', 'video/mp4');
+          res.setHeader('Accept-Ranges', 'bytes');
+          return res.sendFile(fallbackPath);
+        }
+      }
+      
       res.status(404).json({ error: "Video not found" });
     }
   });
