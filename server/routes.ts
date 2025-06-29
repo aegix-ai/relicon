@@ -38,16 +38,42 @@ openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 brand = "${brand_name}"
 desc = "${brand_description}"
 
-prompt = f"""Create an ENERGETIC viral video script for {brand}: {desc}
+prompt = f"""You are an expert creative director specializing in viral short-form video ads. Create a comprehensive, strategically planned video script.
 
-Make 5 dynamic segments with VARIED durations and extraordinary scenes:
-- Hook: 2-3 seconds (instant attention grab)
-- Problem: 4-6 seconds (build tension)
-- Solution: 8-10 seconds (reveal value)
-- Proof: 3-5 seconds (quick validation)  
-- CTA: 4-6 seconds (urgent action)
+BRAND ANALYSIS:
+Brand: {brand}
+Description: {desc}
+Target: ${target_audience || 'General consumers'}
+Tone: ${tone}
+Duration: ${duration} seconds
 
-Return JSON: {{'segments': [{{'text': 'COMPELLING hook text', 'duration': 3, 'energy': 'explosive', 'visual_style': 'zoom_burst'}}, {{'text': 'Problem description', 'duration': 5, 'energy': 'tension', 'visual_style': 'shake_reveal'}}, {{'text': 'Solution explanation', 'duration': 9, 'energy': 'exciting', 'visual_style': 'slide_dynamic'}}, {{'text': 'Social proof', 'duration': 4, 'energy': 'confident', 'visual_style': 'fade_glow'}}, {{'text': 'Strong CTA', 'duration': 5, 'energy': 'urgent', 'visual_style': 'pulse_scale'}}]}}"""
+ADVANCED REASONING REQUIREMENTS:
+- Analyze brand personality and audience psychology
+- Design each scene with specific creative purpose
+- Vary scene lengths strategically (NO slideshow - dynamic pacing)
+- Create stunning, framy visuals that are energetic and creative
+- Ensure text fits within 9:16 frame with proper margins
+- Plan sophisticated visual effects for each scene
+- Build emotional arc with clear value proposition
+- End with conversion-focused call-to-action
+
+CREATIVE FRAMEWORK (Total ${duration}s):
+Scene 1: EXPLOSIVE HOOK (1.5-2.5s) - Instant attention grab with visual impact
+Scene 2: TENSION BUILD (3-5s) - Problem identification that resonates emotionally  
+Scene 3: SOLUTION REVEAL (4-7s) - Product/service introduction with clear benefits
+Scene 4: PROOF/VALIDATION (2-4s) - Social proof or demonstration of value
+Scene 5: URGENT CTA (2-4s) - Strong call-to-action for immediate conversion
+
+VISUAL STYLE OPTIONS:
+- explosive: zoom_burst, shake_emphasis (high energy, attention-grabbing)
+- tension: fade_reveal, slide_dynamic (building suspense)
+- exciting: slide_dynamic, steady_glow (engaging revelation)
+- confident: steady_glow, fade_reveal (trustworthy, professional)
+- urgent: shake_emphasis, zoom_burst (immediate action required)
+
+Create script with varied durations, creative visual styles, and compelling text that fits 9:16 format.
+
+Return detailed JSON: {{'segments': [{{'text': 'Attention-grabbing hook under 40 chars', 'duration': 2.5, 'energy': 'explosive', 'visual_style': 'zoom_burst', 'reasoning': 'Why this approach works'}}, {{'text': 'Problem that audience faces', 'duration': 4.0, 'energy': 'tension', 'visual_style': 'fade_reveal', 'reasoning': 'Creates emotional connection'}}, {{'text': 'Your solution explained clearly', 'duration': 6.0, 'energy': 'exciting', 'visual_style': 'slide_dynamic', 'reasoning': 'Reveals value proposition'}}, {{'text': 'Proof of effectiveness', 'duration': 3.5, 'energy': 'confident', 'visual_style': 'steady_glow', 'reasoning': 'Builds trust and credibility'}}, {{'text': 'Strong call to action now', 'duration': 3.0, 'energy': 'urgent', 'visual_style': 'shake_emphasis', 'reasoning': 'Drives immediate conversion'}}]}}"""
 
 try:
     response = openai.chat.completions.create(
@@ -187,23 +213,134 @@ except Exception as e:
           }
         });
         
-        // ULTRA-SIMPLE bulletproof system - prioritize working over fancy effects
+        // ADVANCED AI-DRIVEN CREATIVE SYSTEM with 9:16 frame safety
         const videoFilters = scriptData.segments.map((segment: any, i: number) => {
-          // Ultra-safe text processing
+          // Advanced text processing with AI reasoning
           let text = segment.text
-            .replace(/['"\\`]/g, '')  // Remove quotes and special chars
-            .replace(/[^\w\s]/g, ' ') // Replace all non-alphanumeric with spaces
-            .replace(/\s+/g, ' ')     // Collapse multiple spaces
-            .trim()
-            .substring(0, 50);        // Hard limit to 50 chars
+            .replace(/['"\\`]/g, '')
+            .replace(/[^\w\s!?.,-]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
           
-          if (!text) text = 'Ready'; // Ultimate fallback
+          if (!text) text = 'Ready';
           
-          // Simple, reliable styling
-          const fontSize = Math.max(50, Math.min(70, Math.floor(1200 / text.length)));
+          // CRITICAL: 9:16 frame boundaries (1080x1920) with proper margins
+          const SAFE_WIDTH = 1080 - 120;   // 60px margin on each side
+          const SAFE_HEIGHT = 1920 - 240;  // 120px margin top/bottom
+          const MARGIN_LEFT = 60;
+          const MARGIN_TOP = 120;
           
-          // Ultra-simple single-line text that ALWAYS works
-          return `[${i}]drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=900:box=1:boxcolor=0x000000@0.7:boxborderw=8[v${i}]`;
+          // AI-driven text layout with advanced reasoning
+          const words = text.split(' ');
+          const maxWordsPerLine = Math.max(3, Math.min(6, Math.floor(12 - words.length / 4)));
+          
+          // Smart multi-line text wrapping for 9:16 format
+          let lines: string[] = [];
+          let currentLine = '';
+          
+          for (const word of words) {
+            const testLine = currentLine ? `${currentLine} ${word}` : word;
+            // Estimate character width for 9:16 safety
+            const estimatedWidth = testLine.length * 28; // Conservative estimate
+            
+            if (estimatedWidth <= SAFE_WIDTH - 100 && currentLine.split(' ').length < maxWordsPerLine) {
+              currentLine = testLine;
+            } else {
+              if (currentLine) lines.push(currentLine);
+              currentLine = word;
+              if (lines.length >= 3) break; // Max 3 lines for 9:16 format
+            }
+          }
+          if (currentLine && lines.length < 3) lines.push(currentLine);
+          
+          // Fallback for edge cases
+          if (lines.length === 0) lines = [text.substring(0, 30) || 'Ready'];
+          
+          // Advanced AI-driven creative styles based on segment analysis
+          const creativeStyles = {
+            explosive: {
+              primary: 'white', secondary: '#FF6B35', bg: '0xFF1744@0.9',
+              effect: 'zoom_burst', shadowColor: '#000000@0.8'
+            },
+            tension: {
+              primary: '#F0F0F0', secondary: '#FFD60A', bg: '0x2C2C2E@0.85',
+              effect: 'fade_reveal', shadowColor: '#000000@0.7'
+            },
+            exciting: {
+              primary: 'white', secondary: '#00D4FF', bg: '0x007AFF@0.85',
+              effect: 'slide_dynamic', shadowColor: '#001F3F@0.8'
+            },
+            confident: {
+              primary: 'white', secondary: '#30D158', bg: '0x1B5E20@0.9',
+              effect: 'steady_glow', shadowColor: '#003300@0.8'
+            },
+            urgent: {
+              primary: 'white', secondary: '#FF2D92', bg: '0xAD1457@0.9',
+              effect: 'shake_emphasis', shadowColor: '#330011@0.8'
+            }
+          };
+          
+          const style = creativeStyles[segment.energy] || creativeStyles.exciting;
+          
+          // Calculate optimal font size for 9:16 frame with margins
+          const maxLineLength = Math.max(...lines.map(line => line.length));
+          let fontSize = Math.max(42, Math.min(72, Math.floor(SAFE_WIDTH / (maxLineLength * 0.6))));
+          
+          // Adjust for multiple lines
+          if (lines.length > 1) {
+            fontSize = Math.max(38, Math.min(fontSize, Math.floor((SAFE_HEIGHT - 400) / (lines.length * 1.4))));
+          }
+          
+          // Calculate safe positioning within 9:16 frame
+          const lineHeight = Math.floor(fontSize * 1.3);
+          const totalTextHeight = lines.length * lineHeight;
+          
+          // Position text in lower third but within safe margins
+          const baseY = Math.max(
+            MARGIN_TOP + 400, // Don't go too high
+            Math.min(
+              1920 - MARGIN_TOP - totalTextHeight - 100, // Stay within bottom margin
+              1200 // Preferred position in lower third
+            )
+          );
+          
+          // Create sophisticated visual effects for each scene
+          let textEffects = '';
+          
+          if (lines.length === 1) {
+            // Single line - advanced creative effects
+            switch (style.effect) {
+              case 'zoom_burst':
+                textEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${style.primary}:x=(w-text_w)/2:y=${baseY}:box=1:boxcolor=${style.bg}:boxborderw=10:shadowcolor=${style.shadowColor}:shadowx=3:shadowy=3[v${i}a];[v${i}a]drawtext=text='${lines[0]}':fontsize=${Math.floor(fontSize*1.15)}:fontcolor=${style.secondary}:x=(w-text_w)/2:y=${baseY-8}:enable='gte(t,${segment.duration/3})'[v${i}]`;
+                break;
+              case 'slide_dynamic':
+                textEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${style.primary}:x='(w-text_w)/2+(w/3)*max(0,1-2.5*t/${segment.duration})':y=${baseY}:box=1:boxcolor=${style.bg}:boxborderw=10:shadowcolor=${style.shadowColor}:shadowx=2:shadowy=2[v${i}]`;
+                break;
+              case 'shake_emphasis':
+                textEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${style.primary}:x='(w-text_w)/2+3*sin(t*10)':y='${baseY}+2*cos(t*12)':box=1:boxcolor=${style.bg}:boxborderw=10:shadowcolor=${style.shadowColor}:shadowx=2:shadowy=2[v${i}]`;
+                break;
+              case 'steady_glow':
+                textEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${style.primary}:x=(w-text_w)/2:y=${baseY}:box=1:boxcolor=${style.bg}:boxborderw=12:shadowcolor=${style.shadowColor}:shadowx=4:shadowy=4[v${i}a];[v${i}a]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${style.secondary}:x=(w-text_w)/2:y=${baseY}:alpha='0.3+0.4*sin(t*2)'[v${i}]`;
+                break;
+              default:
+                textEffects = `[${i}]drawtext=text='${lines[0]}':fontsize=${fontSize}:fontcolor=${style.primary}:x=(w-text_w)/2:y=${baseY}:box=1:boxcolor=${style.bg}:boxborderw=10:shadowcolor=${style.shadowColor}:shadowx=3:shadowy=3[v${i}]`;
+            }
+          } else {
+            // Multi-line - sophisticated staggered reveal
+            let multilineEffect = `[${i}]`;
+            lines.forEach((line, lineIndex) => {
+              const yPos = baseY + (lineIndex * lineHeight);
+              const delay = lineIndex * 0.3;
+              const currentFontSize = fontSize - (lineIndex * 2); // Slightly smaller for subsequent lines
+              
+              multilineEffect += `drawtext=text='${line}':fontsize=${currentFontSize}:fontcolor=${lineIndex === 0 ? style.primary : style.secondary}:x=(w-text_w)/2:y=${yPos}:box=1:boxcolor=${style.bg}:boxborderw=${10-lineIndex*2}:shadowcolor=${style.shadowColor}:shadowx=${3-lineIndex}:shadowy=${3-lineIndex}:enable='gte(t,${delay})'`;
+              if (lineIndex < lines.length - 1) multilineEffect += ':';
+            });
+            multilineEffect += `[v${i}]`;
+            textEffects = multilineEffect;
+          }
+          
+          return textEffects;
         }).join(';');
         
         // BULLETPROOF transition system
