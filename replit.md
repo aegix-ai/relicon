@@ -108,15 +108,16 @@ The system follows a microkernel architecture where:
 
 ```
 Changelog:
-- June 29, 2025: PERFECT SUCCESS - Professional ElevenLabs Audio Integration
-- FIXED: Audio timing now matches exact video duration (30s = 30s, not 40% completion)
-- IMPLEMENTED: Natural human-like speech with conversational patterns and energy
-- ENHANCED: ElevenLabs integration with energy-based voice selection (Antoni, Dave, Liam, Adam)
-- ADDED: Strategic pause system and emotional expressions for professional delivery
-- RESOLVED: No more fast TTS yapping - proper pacing with rhythm breaks
-- ACHIEVED: 100% video completion with perfect audio-visual synchronization
-- MAINTAINED: Exact duration control and revolutionary 9:16 frame-safe visuals
-- DELIVERED: Professional quality videos that sound like real human narration
+- June 29, 2025: MAJOR SYSTEM OVERHAUL - Transcription-Based Synchronized Captions
+- FIXED: Single voice consistency - uses one voice (Liam) for all segments
+- IMPLEMENTED: Real transcription-based captions using OpenAI Whisper
+- UPGRADED: AI reasoning model to o1 for better script generation
+- ENHANCED: Dynamic scene system with 2-4 sub-scenes per segment for visual variety
+- ADDED: Smooth transitions between scenes with varied effects (fade, dissolve, wipe)
+- RESOLVED: Static 2-slide problem - now dynamic multi-scene videos
+- ACHIEVED: Captions synchronized to actual spoken words, not default text
+- MAINTAINED: Exact duration control and 9:16 frame optimization
+- DELIVERED: Professional videos with transcribed captions matching real audio
 ```
 
 ## User Preferences

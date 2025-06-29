@@ -20,6 +20,95 @@ const updateJobStatus = (job_id: string, status: string, progress: number, messa
   };
 };
 
+// Create transcription-based captions from actual audio
+const createTranscriptionCaptions = async (audioFiles: string[], originalCaptions: any[], job_id: string) => {
+  const transcriptions: string[] = [];
+  
+  // Use OpenAI Whisper to transcribe actual audio
+  for (let i = 0; i < audioFiles.length; i++) {
+    const audioFile = audioFiles[i];
+    
+    const transcribePath = `/tmp/transcribe_${job_id}_${i}.py`;
+    const transcribeScript = `
+import os
+from openai import OpenAI
+
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+try:
+    with open("${audioFile}", "rb") as audio_file:
+        transcription = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file,
+            response_format="text"
+        )
+    print(f"TRANSCRIPTION_SUCCESS:{transcription}")
+except Exception as e:
+    print(f"TRANSCRIPTION_ERROR:{str(e)}")
+`;
+    
+    fs.writeFileSync(transcribePath, transcribeScript);
+    
+    const transcribe = spawn('python', [transcribePath], { env: { ...process.env } });
+    let transcribeOutput = '';
+    
+    await new Promise((resolve) => {
+      transcribe.stdout.on('data', (data) => { transcribeOutput += data.toString(); });
+      transcribe.on('close', () => {
+        fs.unlinkSync(transcribePath);
+        resolve(null);
+      });
+    });
+    
+    if (transcribeOutput.includes('TRANSCRIPTION_SUCCESS:')) {
+      const transcribedText = transcribeOutput.split('TRANSCRIPTION_SUCCESS:')[1].trim();
+      transcriptions.push(transcribedText);
+    } else {
+      transcriptions.push(''); // Fallback to empty
+    }
+  }
+  
+  // Create captions from transcriptions with timing
+  const captionFilters: string[] = [];
+  let currentTime = 0;
+  
+  for (let i = 0; i < transcriptions.length; i++) {
+    const transcription = transcriptions[i];
+    if (!transcription || transcription.length === 0) continue;
+    
+    // Get audio duration for this segment
+    const segmentCaptions = originalCaptions.filter(c => c.segmentIndex === i);
+    const segmentDuration = segmentCaptions.length > 0 ? 
+      Math.max(...segmentCaptions.map(c => c.endTime)) - Math.min(...segmentCaptions.map(c => c.startTime)) : 5;
+    
+    // Split transcription into words for dynamic captioning
+    const words = transcription.split(' ').filter(w => w.length > 0);
+    const wordsPerCaption = Math.max(2, Math.min(5, Math.ceil(words.length / 3)));
+    
+    let wordIndex = 0;
+    while (wordIndex < words.length) {
+      const captionWords = words.slice(wordIndex, wordIndex + wordsPerCaption);
+      const captionText = captionWords.join(' ').replace(/['"]/g, "\\'");
+      const captionDuration = (captionWords.length / words.length) * segmentDuration;
+      const startTime = currentTime;
+      const endTime = currentTime + captionDuration;
+      
+      // Smart font sizing
+      const fontSize = Math.max(48, Math.min(72, Math.floor(800 / captionText.length)));
+      
+      captionFilters.push(
+        `drawtext=text='${captionText}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=1200:box=1:boxcolor=0x000000@0.8:boxborderw=6:enable='between(t,${startTime.toFixed(1)},${endTime.toFixed(1)})'`
+      );
+      
+      wordIndex += wordsPerCaption;
+      currentTime += captionDuration;
+    }
+  }
+  
+  console.log('Created transcription-based captions:', captionFilters.length);
+  return captionFilters;
+};
+
 // Generate synchronized captions from actual audio files
 const generateSynchronizedCaptions = async (audioFiles: string[], scriptData: any, job_id: string) => {
   const captionData: any[] = [];
@@ -190,9 +279,8 @@ Return JSON with EXACT durations that sum to {duration}s: {{'segments': [{{'text
 
 try:
     response = openai.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}],
-        response_format={"type": "json_object"}
+        model="o1",
+        messages=[{"role": "user", "content": prompt}]
     )
     result = json.loads(response.choices[0].message.content)
     print("SCRIPT_SUCCESS:" + json.dumps(result))
@@ -244,19 +332,17 @@ import json
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
 ELEVENLABS_URL = "https://api.elevenlabs.io/v1/text-to-speech"
 
-# CONSISTENT VOICE SYSTEM - Max 2 voices, default to 1
-# Primary voice for most content - natural and engaging
-PRIMARY_VOICE = "TX3LPaxmHKxFdv7VOQHJ"  # Liam - versatile, natural
-# Secondary voice only for contrast when needed
-SECONDARY_VOICE = "pNInz6obpgDQGcFmaJgB"  # Adam - professional depth
+# SINGLE VOICE SYSTEM - Use ONE voice for consistency
+# Single professional voice for all segments
+SINGLE_VOICE = "TX3LPaxmHKxFdv7VOQHJ"  # Liam - versatile, natural, engaging
 
-# Use primary voice for most segments, secondary only for authority/proof
+# Use the same voice for ALL segments to maintain consistency
 voice_map = {
-    "explosive": PRIMARY_VOICE,    # Hook - engaging and energetic
-    "tension": PRIMARY_VOICE,      # Problem - same voice for continuity
-    "exciting": PRIMARY_VOICE,     # Solution - maintain connection
-    "confident": SECONDARY_VOICE,  # Proof - add authority when needed
-    "urgent": PRIMARY_VOICE        # CTA - back to primary for action
+    "explosive": SINGLE_VOICE,    # Hook
+    "tension": SINGLE_VOICE,      # Problem  
+    "exciting": SINGLE_VOICE,     # Solution
+    "confident": SINGLE_VOICE,    # Proof
+    "urgent": SINGLE_VOICE        # CTA
 }
 
 segment_energy = "${segment.energy}"
@@ -395,21 +481,30 @@ except Exception as e:
         
         let ffmpegArgs = ['-y'];
         
-        // SYNCHRONIZED CAPTION BACKGROUNDS - Scene changes on audio pauses
-        const totalDuration = Math.ceil(captionData[captionData.length - 1]?.endTime || duration);
-        
-        // Generate background scenes that change with natural pauses in speech
-        let currentTime = 0;
+        // DYNAMIC SCENE GENERATION - Multiple scenes per segment for better dynamics
+        let sceneInputs = [];
         let sceneIndex = 0;
         
         for (let i = 0; i < scriptData.segments.length; i++) {
           const segment = scriptData.segments[i];
           const colors = energyColors[segment.energy] || energyColors.exciting;
-          const color = colors[sceneIndex % colors.length];
           
-          // Create scene for this segment duration  
-          ffmpegArgs.push('-f', 'lavfi', '-i', `color=c=${color}:size=1080x1920:duration=${segment.duration}`);
-          sceneIndex++;
+          // Create multiple sub-scenes within each segment for dynamics
+          const segmentDuration = segment.duration;
+          const numSubScenes = Math.max(2, Math.min(4, Math.ceil(segmentDuration / 2.5))); // 2-4 sub-scenes per segment
+          const subSceneDuration = segmentDuration / numSubScenes;
+          
+          for (let j = 0; j < numSubScenes; j++) {
+            const color = colors[(sceneIndex + j) % colors.length];
+            // Add gradient effect for visual interest
+            const gradientEffect = j % 2 === 0 ? 
+              `color=c=${color}:size=1080x1920:duration=${subSceneDuration}` :
+              `color=c=${color}:size=1080x1920:duration=${subSceneDuration}`;
+            
+            ffmpegArgs.push('-f', 'lavfi', '-i', gradientEffect);
+            sceneInputs.push({ segment: i, subScene: j, duration: subSceneDuration, color });
+          }
+          sceneIndex += numSubScenes;
         }
         
         // Add audio inputs
@@ -419,10 +514,9 @@ except Exception as e:
           }
         });
         
-        // CLEAN SYNCHRONIZED CAPTION SYSTEM - Match actual audio timing
-        // Create base video filters with background colors per segment
-        const baseVideoFilters = scriptData.segments.map((segment: any, i: number) => {
-          return `[${i}]copy[v${i}]`;
+        // DYNAMIC SCENE SYSTEM - Create base video filters for all scenes
+        const baseVideoFilters = sceneInputs.map((scene: any, i: number) => {
+          return `[${i}]copy[s${i}]`;
         }).join(';');
         
         // Generate synchronized captions that appear/disappear with speech timing
@@ -457,40 +551,48 @@ except Exception as e:
           return `drawtext=text='${text}':fontsize=${fontSize}:fontcolor=white:x=(w-text_w)/2:y=1200:box=1:boxcolor=${bgColor}:boxborderw=8:enable='between(t,${startTime},${endTime})'`;
         }).join(':');
         
-        // BULLETPROOF SYNCHRONIZED CAPTION SYSTEM
-        // Step 1: Create background video with transitions
+        // DYNAMIC SCENE TRANSITIONS - Connect all sub-scenes with smooth transitions
         let transitionChain = '';
         
-        if (scriptData.segments.length === 1) {
-          transitionChain = `[v0]copy[background]`;
+        if (sceneInputs.length === 1) {
+          transitionChain = `[s0]copy[background]`;
         } else {
-          // Multi-segment transitions - build complete chain
-          let currentInput = `[v0]`;
+          // Multi-scene transitions with dynamic effects
+          let currentInput = `[s0]`;
           let runningTime = 0;
           
-          for (let i = 1; i < scriptData.segments.length; i++) {
-            runningTime += scriptData.segments[i-1].duration;
-            const transitionDuration = 0.3;
+          for (let i = 1; i < sceneInputs.length; i++) {
+            runningTime += sceneInputs[i-1].duration;
+            const transitionDuration = 0.2; // Shorter transitions for smoother flow
             const offset = Math.max(0.1, runningTime - transitionDuration);
             
-            if (i === scriptData.segments.length - 1) {
+            // Vary transition types for visual interest
+            const transitionTypes = ['fade', 'dissolve', 'wiperight', 'wipeuр'];
+            const transitionType = transitionTypes[i % transitionTypes.length];
+            
+            if (i === sceneInputs.length - 1) {
               // Final transition
-              transitionChain += `${currentInput}[v${i}]xfade=transition=fade:duration=${transitionDuration}:offset=${offset}[background]`;
+              transitionChain += `${currentInput}[s${i}]xfade=transition=${transitionType}:duration=${transitionDuration}:offset=${offset.toFixed(1)}[background]`;
             } else {
               // Intermediate transition
-              transitionChain += `${currentInput}[v${i}]xfade=transition=fade:duration=${transitionDuration}:offset=${offset}[t${i}];`;
+              transitionChain += `${currentInput}[s${i}]xfade=transition=${transitionType}:duration=${transitionDuration}:offset=${offset.toFixed(1)}[t${i}];`;
               currentInput = `[t${i}]`;
             }
           }
         }
         
-        // TEMPORARY: Skip synchronized captions to debug basic system first
-        // TODO: Re-enable synchronized captions once basic generation works
-        const finalVideo = `[background]copy[video]`;
+        // TRANSCRIPTION-BASED SYNCHRONIZED CAPTIONS
+        // Create captions based on actual audio transcription
+        const transcriptionCaptions = await createTranscriptionCaptions(audioFiles, captionData, job_id);
         
-        // Add audio mixing
+        // Apply synchronized captions to the final video
+        const finalVideo = transcriptionCaptions.length > 0 ? 
+          `[background]${transcriptionCaptions.join(':')}[video]` : 
+          `[background]copy[video]`;
+        
+        // Add audio mixing - audio inputs start after all scene inputs
         const audioMix = audioFiles.length > 0 ? 
-          `;${audioFiles.map((_, i) => `[${scriptData.segments.length + i}:a]`).join('')}concat=n=${audioFiles.length}:v=0:a=1[audio]` : '';
+          `;${audioFiles.map((_, i) => `[${sceneInputs.length + i}:a]`).join('')}concat=n=${audioFiles.length}:v=0:a=1[audio]` : '';
         
         const filterComplex = baseVideoFilters + ';' + transitionChain + ';' + finalVideo + audioMix;
         
