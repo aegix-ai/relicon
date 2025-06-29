@@ -1,0 +1,229 @@
+Below is a **lean but complete build recipe** I’d hand to a junior engineer on Replit to stand-up the first fully-autonomous ReelForge engine exactly as you described.
+Everything is split into “what” (folder / component) and “how” (the minimal code pattern or command you need). Use it as a checklist while you scaffold the repo and paste the snippets.
+
+---
+
+## 1. Top-level layout
+
+```
+reelforge/
+├─ api/              # FastAPI service (entrypoint)
+│  ├─ main.py
+│  ├─ schemas.py
+│  └─ deps.py
+├─ agent/            # LangChain-powered orchestrator
+│  ├─ core.py
+│  ├─ planning.py
+│  ├─ tools/
+│  │   ├─ concept.py
+│  │   ├─ script.py
+│  │   ├─ tts.py
+│  │   ├─ stock.py
+│  │   └─ ffmpeg_fx.py
+├─ workers/          # Celery worker tasks
+│  ├─ __init__.py
+│  ├─ tasks.py
+│  └─ settings.py
+├─ assets/           # Bundled music, SFX, sample logos
+├─ docker/
+│  ├─ Dockerfile
+│  └─ docker-compose.yml
+└─ README.md
+```
+
+> *Why this shape?* It mirrors the **micro-kernel + plug-in** plan in your manifesto: FastAPI = “kernel”, everything else = lazy-loaded skill.&#x20;
+
+---
+
+## 2. Minimal FastAPI service (`api/main.py`)
+
+```python
+from fastapi import FastAPI, BackgroundTasks
+from uuid import uuid4
+from agent.core import ReelForgeAgent
+from workers.tasks import run_job_async
+
+app = FastAPI()
+agent = ReelForgeAgent()
+
+@app.post("/generate")
+async def generate_ad(req: schemas.GenerateRequest,
+                      bg: BackgroundTasks):
+    job_id = str(uuid4())
+    bg.add_task(run_job_async, job_id, req.dict())
+    return {"job_id": job_id}
+```
+
+*No sync work here; just enqueue and return ID.*
+
+---
+
+## 3. Celery wiring (`workers/tasks.py`)
+
+```python
+from celery import Celery
+from agent.core import ReelForgeAgent
+
+celery = Celery(__name__, broker="redis://redis:6379/0",
+                backend="redis://redis:6379/1")
+
+@celery.task(name="run_job_async")
+def run_job_async(job_id: str, payload: dict):
+    agent = ReelForgeAgent()   # fresh per task
+    agent.run(job_id=job_id, **payload)
+```
+
+Celery gives you fan-out / retries for free.&#x20;
+
+---
+
+## 4. LangChain agent skeleton (`agent/core.py`)
+
+```python
+from langchain.agents import initialize_agent, Tool
+from .tools import concept, script, tts, stock, ffmpeg_fx
+
+class ReelForgeAgent:
+    def __init__(self):
+        self.tools = [
+            Tool(name="concept", func=concept.run, description="Brainstorm hook"),
+            Tool(name="script", func=script.run,  description="Write script"),
+            ...
+            Tool(name="ffmpeg_fx", func=ffmpeg_fx.run,
+                 description="Assemble and render final mp4")
+        ]
+        self.agent = initialize_agent(self.tools, llm="gpt-4o",
+                                      agent_type="zero-shot-react-description")
+
+    def run(self, job_id: str, brand_name: str, brand_desc: str, **kw):
+        prompt = f"Create a 15-60 s short-form ad for {brand_name}. " \
+                 f"Brand details: {brand_desc}. Deliver mp4."
+        self.agent.run(prompt)
+```
+
+*Each real “function” sits in `agent/tools/*` and does one job only.*
+
+---
+
+## 5. How a **single function** looks
+
+Take `agent/tools/ffmpeg_fx.py`—this is the crux of “function → FFmpeg command”.
+
+### 5.1 Interface
+
+```python
+def run(state: dict) -> str:
+    """
+    Expects state["timeline"] = [
+        {"type":"video","path":"path.mp4","dur":3.2},
+        {"type":"transition","name":"crossfade","dur":0.5},
+        ...
+    ]
+    Builds one FFmpeg filter_complex string, renders, returns mp4 path.
+    """
+```
+
+### 5.2 Implementation pattern
+
+1. **Compile graph**
+   Loop through `state["timeline"]`, enumerating streams `v0, v1, …`
+   For each element append its fragment:
+
+```python
+if item["type"] == "video":
+    cmd_parts.append(
+      f'[{idx}:v]trim=0:{item["dur"]},setpts=PTS-STARTPTS[v{idx}]')
+elif item["type"] == "transition":
+    # assume previous two clips are v{idx-2}, v{idx-1}
+    cmd_parts.append(
+      f'[v{idx-2}][v{idx-1}]xfade=transition={item["name"]}:'
+      f'duration={item["dur"]}:offset={prev_offset}[v{idx}]')
+```
+
+2. **Stitch audio with `amix`** exactly like the manifesto.&#x20;
+3. **Spawn FFmpeg once** (`subprocess.run(full_cmd)`).
+
+*Result: every higher-level tool only pushes structured nodes; **they never touch CLI strings**. Simpler for juniors.*
+
+---
+
+## 6. Planning algorithm (high level → timeline)
+
+`agent/planning.py` does:
+
+1. **Concept & brief** (`concept.run`) – returns `{hook, tone, key_points}`.
+2. **Script** (`script.run`) – returns `[{"line": str}]`.
+3. **TTS** – each line → wav + duration.
+4. **Stock** – keyword search per line → mp4 + fits duration.
+5. **Planner** assembles timeline:
+
+```python
+timeline = []
+for i, seg in enumerate(script_lines):
+    timeline += [
+        {"type":"video", "path": broll[i], "dur": seg["dur"]},
+        {"type":"transition","name":"fade","dur":0.4}
+    ]
+timeline.pop()  # remove trailing transition
+state["timeline"] = timeline
+```
+
+*This is the “manifesto → first-principles list of functions” step.*&#x20;
+
+---
+
+## 7. Configuration for **Replit + Docker Compose**
+
+`docker/docker-compose.yml` (abridged):
+
+```yaml
+services:
+  api:
+    build: .
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000
+    depends_on: [redis]
+  worker:
+    build: .
+    command: celery -A workers.tasks worker --loglevel=INFO
+    depends_on: [redis]
+  redis:
+    image: redis:7-alpine
+```
+
+In `.replit` set `run = "docker compose up --build"`.
+
+---
+
+## 8. Sample **frontend** (one file)
+
+A single HTML form that POSTs `/generate` and polls `/status/{job_id}` until the video URL appears, then embeds `<video src=... autoplay loop>`.
+
+*(Keep it out of scope for now—one `index.html` under `/api/static` is enough.)*
+
+---
+
+## 9. Key design answers to your specific questions
+
+| Question                                             | Recommended pattern                                                                                                                                                                                       |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **“Should every function carry an FFmpeg command?”** | No. Each function outputs *data* (e.g., `{"type":"transition","name":"fade","dur":0.5}`); only **one** function (`ffmpeg_fx.run`) **compiles** everything into a single command. Keeps surface area tiny. |
+| **Dynamic ordering / creativity**                    | Delegated to the LangChain agent: it decides timeline order before rendering. You can let GPT choose transition styles too by exposing them in the tool descriptions.                                     |
+| **Parameter minimization**                           | Each function exposes only what it truly needs: e.g., `video_runway(prompt, seconds, resolution)`, `transition(name, dur)`. Extra knobs live in `settings.py` as defaults.                                |
+| **Why LangChain agent vs. hard-coded chain?**        | The agent lets GPT **rewrite the step list** each run, giving the creativity you want while still calling strict, typed tools.                                                                            |
+
+---
+
+## 10. Next-step checklist
+
+1. `pip install fastapi uvicorn celery redis langchain openai ffmpeg-python`
+   (plus `ffmpeg` binary in Docker image).
+2. Copy stock music/SFX into `assets/`; reference by filename.
+3. Add OpenAI key to Replit Secrets as `OPENAI_API_KEY`.
+4. `docker compose up --build`, POST example brand JSON to `/generate`.
+5. Inspect Redis queue & worker logs; final MP4 appears under `/tmp/output/`.
+
+---
+
+### That’s it
+
+Follow the folder scaffold, paste the tiny skeletons, and you’ll have a **minimal but fully modular agentic pipeline** that can evolve without getting messy. Feel free to extend with more transitions or a richer planner once the baseline is stable.
