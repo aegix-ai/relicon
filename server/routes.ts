@@ -23,7 +23,7 @@ const updateJobStatus = (job_id: string, status: string, progress: number, messa
 // Simplified AI video generation that actually works
 const generateVideo = async (job_id: string, request_data: any) => {
   try {
-    const { brand_name, brand_description, tone } = request_data;
+    const { brand_name, brand_description, tone, target_audience, duration } = request_data;
     
     updateJobStatus(job_id, "processing", 20, "Creating AI script...");
     
@@ -37,15 +37,18 @@ openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 brand = "${brand_name}"
 desc = "${brand_description}"
+target_audience = "${target_audience || 'General consumers'}"
+tone = "${tone}"
+duration = ${duration || 30}
 
 prompt = f"""You are an expert creative director specializing in viral short-form video ads. Create a comprehensive, strategically planned video script.
 
 BRAND ANALYSIS:
 Brand: {brand}
 Description: {desc}
-Target: ${target_audience || 'General consumers'}
-Tone: ${tone}
-Duration: ${duration} seconds
+Target: {target_audience or 'General consumers'}
+Tone: {tone}
+Duration: {duration} seconds
 
 ADVANCED REASONING REQUIREMENTS:
 - Analyze brand personality and audience psychology
@@ -57,7 +60,7 @@ ADVANCED REASONING REQUIREMENTS:
 - Build emotional arc with clear value proposition
 - End with conversion-focused call-to-action
 
-CREATIVE FRAMEWORK (Total ${duration}s):
+CREATIVE FRAMEWORK (Total {duration}s):
 Scene 1: EXPLOSIVE HOOK (1.5-2.5s) - Instant attention grab with visual impact
 Scene 2: TENSION BUILD (3-5s) - Problem identification that resonates emotionally  
 Scene 3: SOLUTION REVEAL (4-7s) - Product/service introduction with clear benefits
@@ -280,7 +283,8 @@ except Exception as e:
             }
           };
           
-          const style = creativeStyles[segment.energy] || creativeStyles.exciting;
+          const energyKey = segment.energy as 'explosive' | 'tension' | 'exciting' | 'confident' | 'urgent';
+          const style = creativeStyles[energyKey] || creativeStyles.exciting;
           
           // Calculate optimal font size for 9:16 frame with margins
           const maxLineLength = Math.max(...lines.map(line => line.length));
