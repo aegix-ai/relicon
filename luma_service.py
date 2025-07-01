@@ -104,8 +104,8 @@ class LumaVideoService:
             payload = {
                 "prompt": prompt,
                 "aspect_ratio": "9:16",
-                "duration": duration,
-                "loop": False
+                "loop": False,
+                "model": "ray-2"  # Use ray-2 model for high quality generation
             }
             
             response = requests.post(
