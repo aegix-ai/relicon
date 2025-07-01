@@ -188,6 +188,7 @@ def main():
     parser.add_argument("--duration", type=int, default=30, help="Duration in seconds")
     parser.add_argument("--call-to-action", help="Call to action")
     parser.add_argument("--output", required=True, help="Output file path")
+    parser.add_argument("--job-id", help="Job ID for tracking (optional)")
     
     args = parser.parse_args()
     
