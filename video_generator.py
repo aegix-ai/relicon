@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Complete AI Video Generation System
-Creates dynamic planned videos with audio, captions, and 9:16 formatting
+Complete AI Video Generation System with Luma AI
+Creates professional videos with Luma AI visuals and synchronized audio
 """
 import argparse
 import json
@@ -13,6 +13,7 @@ import shutil
 from pathlib import Path
 import requests
 from openai import OpenAI
+from luma_service import LumaVideoService
 
 def progress_update(progress, message):
     """Send progress update that the Node.js server can parse"""
@@ -122,9 +123,9 @@ def create_voiceover_audio(script_segments, output_dir):
     
     return audio_files
 
-def create_video_with_captions(script_segments, audio_files, output_file):
-    """Create final video with synchronized captions and scenes"""
-    progress_update(70, "Generating dynamic scenes and transitions")
+def create_video_with_luma(script_segments, audio_files, output_file):
+    """Create final video using Luma AI for professional visuals"""
+    progress_update(60, "Generating professional video segments with Luma AI")
     
     # Create color backgrounds for each scene (professional gradient)
     scene_colors = [
