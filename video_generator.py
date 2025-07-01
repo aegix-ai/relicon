@@ -14,6 +14,7 @@ from pathlib import Path
 import requests
 from openai import OpenAI
 from luma_service import LumaVideoService
+from ai_planner import VideoAdPlanner
 
 def progress_update(progress, message):
     """Send progress update that the Node.js server can parse"""

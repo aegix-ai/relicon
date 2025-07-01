@@ -32,7 +32,7 @@ async function aiVideoGeneration(jobId: string, requestData: any) {
     await updateJobStatus(jobId, 'processing', 10, 'Analyzing brand tone and audience');
     
     // Create the video generation command
-    const pythonScript = join(process.cwd(), 'video_generator.py');
+    const pythonScript = join(process.cwd(), 'enhanced_video_generator.py');
     const outputPath = join(process.cwd(), 'outputs', `${jobId}.mp4`);
     
     // Prepare the arguments for the Python script
