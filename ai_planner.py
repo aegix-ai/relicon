@@ -61,8 +61,24 @@ class VideoAdPlanner:
         """
         Step 2: Break down ad into scene components
         """
+        # COST OPTIMIZATION: Limit segments based on duration
+        if duration <= 15:
+            max_scenes = 2
+            scene_guidance = "Create exactly 2 scenes: Hook+Build (8-10s) and Climax+CTA (5-7s)"
+        elif duration <= 30:
+            max_scenes = 3
+            scene_guidance = "Create exactly 3 scenes: Hook (5-8s), Build+Climax (8-12s), CTA (5-10s)"
+        else:
+            max_scenes = 4
+            scene_guidance = "Create exactly 4 scenes: Hook (5-10s), Build (7-12s), Climax (8-15s), CTA (5-10s)"
+        
         breakdown_prompt = f"""
-        Based on this master plan, break down the {duration}-second video ad into 3-6 distinct scenes:
+        Based on this master plan, break down the {duration}-second video ad into exactly {max_scenes} distinct scenes.
+        
+        CRITICAL COST OPTIMIZATION: Create exactly {max_scenes} scenes - no more, no less.
+        Each scene must be substantial (minimum 5 seconds each) to reduce API costs.
+        
+        {scene_guidance}
         
         Master Plan:
         - Core Message: {master_plan.get('core_message')}
@@ -72,7 +88,7 @@ class VideoAdPlanner:
         - Visual Style: {master_plan.get('visual_style')}
         
         Create scenes that:
-        1. Each scene is 3-10 seconds maximum
+        1. Each scene is 5+ seconds (cost efficient)
         2. Total duration equals {duration} seconds
         3. Follow the emotional journey
         4. Build to the call-to-action

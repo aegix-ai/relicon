@@ -79,9 +79,13 @@ def create_enhanced_video_generation(brand_info, output_file):
         
         luma_service = LumaVideoService()
         
-        # Prepare segments for Luma AI
+        # Prepare segments for Luma AI with COST SAFEGUARD
         luma_segments = []
-        for i, scene in enumerate(complete_plan['detailed_scenes']):
+        max_segments = min(4, len(complete_plan['detailed_scenes']))  # Never exceed 4 segments
+        
+        print(f"COST SAFEGUARD: Limiting to {max_segments} segments (was {len(complete_plan['detailed_scenes'])})")
+        
+        for i, scene in enumerate(complete_plan['detailed_scenes'][:max_segments]):
             if i < len(audio_files):  # Only process scenes with audio
                 segment = {
                     'index': i,
