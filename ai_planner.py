@@ -141,11 +141,18 @@ class VideoAdPlanner:
         - Tone: {brand_info.get('tone')}
         
         Create detailed plan with:
-        1. Voiceover script (conversational, engaging)
-        2. Visual description for AI video generation
+        1. Voiceover script (ENERGETIC, charismatic, advertisement-style with engaging questions like "Have you ever...?" "Ready to discover...?" "Tired of...?")
+        2. Visual description for AI video generation  
         3. Camera movement and composition
         4. Lighting and mood
         5. Specific visual elements to include
+        
+        VOICEOVER REQUIREMENTS:
+        - Start with engaging hook questions ("Have you ever wondered...?", "Are you tired of...?", "Ready to discover...?")
+        - Use energetic, charismatic tone
+        - Sound like a professional advertisement narrator, NOT like AI reading text
+        - Include emotional triggers and excitement
+        - End segments with compelling transitions or calls-to-action
         
         Respond in JSON format:
         {{
