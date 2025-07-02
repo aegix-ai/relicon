@@ -105,7 +105,7 @@ class LumaVideoService:
                 "prompt": prompt,
                 "aspect_ratio": "9:16",
                 "loop": False,
-                "model": "ray-2"  # Use ray-2 model for high quality generation
+                "model": "ray-1-6"  # Use ray-1-6 model for balanced quality and cost ($1.20 vs $1.60)
             }
             
             response = requests.post(

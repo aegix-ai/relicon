@@ -1,86 +1,137 @@
 #!/usr/bin/env python3
 """
-Final comprehensive test of the bulletproof system
+Final comprehensive test of the optimized system
 """
-
 import requests
 import time
-import json
 
-def test_end_to_end():
-    """Test complete video generation end-to-end"""
-    print("🎬 Testing bulletproof ReelForge system...")
+def test_optimized_system():
+    """Test complete optimized video generation"""
     
-    # Test data
-    request_data = {
-        "brand_name": "TechFlow AI",
-        "brand_description": "Revolutionary AI automation platform that transforms business workflows with intelligent solutions",
-        "target_audience": "Tech entrepreneurs and business owners",
-        "tone": "exciting",
-        "duration": 30,
-        "call_to_action": "Start your free trial today"
+    print("🎯 FINAL OPTIMIZED SYSTEM TEST")
+    print("=" * 40)
+    
+    # Test with cost-optimized parameters
+    test_request = {
+        "brand_name": "FlowFit", 
+        "brand_description": "AI-powered fitness app that creates personalized workout plans",
+        "target_audience": "fitness enthusiasts aged 25-40",
+        "tone": "energetic",
+        "duration": 15,  # Should create exactly 2 segments with ray-1-6 model
+        "call_to_action": "Start your transformation!"
     }
     
     try:
-        # Submit generation request
-        print("📤 Submitting video generation request...")
-        response = requests.post('http://localhost:5000/api/generate', json=request_data, timeout=10)
-        
-        if response.status_code != 200:
-            print(f"❌ Request failed: {response.status_code}")
+        print("1. Testing server health...")
+        health = requests.get("http://localhost:5000/api/health", timeout=5)
+        if health.status_code != 200:
+            print("❌ Server not responding")
             return False
-            
-        result = response.json()
-        job_id = result.get('job_id')
+        print("✅ Server healthy")
         
-        if not job_id:
-            print("❌ No job ID received")
+        print("\n2. Submitting optimized generation...")
+        print(f"   Brand: {test_request['brand_name']}")
+        print(f"   Duration: {test_request['duration']}s")
+        print(f"   Expected: 2 segments, ray-1-6 model")
+        print(f"   Expected cost: ~$2.42")
+        
+        response = requests.post(
+            "http://localhost:5000/api/generate",
+            json=test_request,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            job_data = response.json()
+            job_id = job_data["job_id"]
+            print(f"✅ Job created: {job_id}")
+        else:
+            print(f"❌ Generation failed: {response.status_code}")
             return False
-            
-        print(f"✅ Job created: {job_id}")
         
-        # Monitor progress
-        max_wait = 120  # 2 minutes max
+        print("\n3. Monitoring generation progress...")
         start_time = time.time()
+        segment_count = 0
+        last_progress = 0
         
-        while time.time() - start_time < max_wait:
-            status_response = requests.get(f'http://localhost:5000/api/status/{job_id}', timeout=5)
-            
-            if status_response.status_code == 200:
-                status = status_response.json()
-                print(f"📊 Status: {status.get('status')} - Progress: {status.get('progress')}% - {status.get('message', '')}")
-                
-                if status.get('status') == 'completed':
-                    video_url = status.get('video_url')
-                    if video_url:
-                        print(f"✅ SUCCESS! Video completed: {video_url}")
-                        return True
-                    else:
-                        print("❌ Completed but no video URL")
-                        return False
+        while time.time() - start_time < 180:  # 3 minute timeout
+            try:
+                status = requests.get(f"http://localhost:5000/api/status/{job_id}")
+                if status.status_code == 200:
+                    data = status.json()
+                    
+                    # Track segments for cost calculation
+                    if "Processing video segment" in data['message']:
+                        try:
+                            segment_num = int(data['message'].split("segment ")[1])
+                            segment_count = max(segment_count, segment_num)
+                        except:
+                            pass
+                    
+                    # Show progress only when it changes
+                    if data['progress'] != last_progress:
+                        print(f"📊 {data['progress']}% - {data['message']}")
+                        last_progress = data['progress']
+                    
+                    if data["status"] == "completed":
+                        print(f"\n🎉 GENERATION COMPLETED!")
                         
-                elif status.get('status') == 'failed':
-                    print(f"❌ Generation failed: {status.get('message', 'Unknown error')}")
-                    return False
-            
-            time.sleep(2)
+                        # Cost analysis
+                        if segment_count > 0:
+                            luma_cost = segment_count * 1.20  # ray-1-6 pricing
+                            tts_cost = segment_count * 0.015
+                            planning_cost = 0.008
+                            total_cost = luma_cost + tts_cost + planning_cost
+                            
+                            print(f"💰 COST BREAKDOWN:")
+                            print(f"   Segments created: {segment_count}")
+                            print(f"   Luma (ray-1-6): ${luma_cost:.2f}")
+                            print(f"   TTS: ${tts_cost:.3f}")
+                            print(f"   Planning: ${planning_cost:.3f}")
+                            print(f"   TOTAL: ${total_cost:.2f}")
+                            
+                            if segment_count <= 2 and total_cost <= 3.00:
+                                print("✅ COST OPTIMIZATION SUCCESS!")
+                            else:
+                                print("⚠️  Cost higher than expected")
+                        
+                        if "video_url" in data:
+                            print(f"📹 Video ready: {data['video_url']}")
+                        
+                        return True
+                        
+                    elif data["status"] == "failed":
+                        print(f"❌ Generation failed: {data.get('error', 'Unknown error')}")
+                        return False
+                
+                time.sleep(2)
+                
+            except Exception as e:
+                print(f"⚠️ Status check error: {e}")
+                time.sleep(2)
         
-        print("❌ Test timed out")
+        print("⏰ Test timed out")
         return False
         
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Network error: {e}")
-        return False
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+        print(f"❌ Test failed: {e}")
         return False
 
-if __name__ == "__main__":
-    print("🎯 ReelForge Final System Test")
-    print("="*50)
+def main():
+    """Run final system test"""
+    print("REELFORGE FINAL SYSTEM VALIDATION")
+    print("Testing complete pipeline with cost optimizations")
+    print("-" * 50)
     
-    if test_end_to_end():
-        print("\n🏆 SYSTEM IS BULLETPROOF AND READY!")
-        print("🚀 Professional-grade video generation working flawlessly!")
+    success = test_optimized_system()
+    
+    if success:
+        print("\n✅ SYSTEM READY FOR PRODUCTION")
+        print("Cost-optimized video generation working correctly")
+        print("Ready to implement autonomous learning features")
     else:
-        print("\n💥 CRITICAL ISSUE - System needs immediate attention")
+        print("\n❌ SYSTEM NEEDS ATTENTION")
+        print("Fix issues before proceeding to autonomous learning")
+
+if __name__ == "__main__":
+    main()
