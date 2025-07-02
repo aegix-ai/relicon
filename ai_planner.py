@@ -1,15 +1,18 @@
 """
-Enhanced AI Video Ad Planner
-Creates comprehensive plans for video ads with detailed component breakdown
+Ultra-Dynamic AI Video Ad Planner
+Revolutionary tree-based planning system with holistic context awareness
+Plans from strategic overview down to granular execution details
 """
 import os
 import json
 from typing import Dict, List, Any, Optional
 from openai import OpenAI
+from dynamic_tree_planner import UltraDynamicTreePlanner
 
 class VideoAdPlanner:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        self.tree_planner = UltraDynamicTreePlanner()  # Revolutionary planning engine
         
     def create_master_plan(self, brand_info: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -217,9 +220,61 @@ class VideoAdPlanner:
         
         return optimized_scenes
     
-    def create_complete_plan(self, brand_info: Dict[str, Any]) -> Dict[str, Any]:
+    def create_complete_plan(self, brand_info: Dict[str, Any], historical_data: List[Dict] = None) -> Dict[str, Any]:
         """
-        Execute complete planning pipeline
+        Execute revolutionary tree-based planning pipeline with full context awareness
+        """
+        
+        print("🌳 ACTIVATING ULTRA-DYNAMIC TREE PLANNER")
+        print("Strategic Overview → Campaign Architecture → Creative Components → Execution Details → Final Optimization")
+        
+        # Revolutionary holistic planning with complete context awareness
+        try:
+            holistic_plan = self.tree_planner.create_holistic_plan(brand_info, historical_data)
+        except Exception as e:
+            print(f"⚠️ Tree planner failed: {e}")
+            print("🔄 Falling back to legacy planning")
+            return self.create_complete_plan_legacy(brand_info)
+        
+        # Extract optimized segments for video generation
+        optimized_segments = holistic_plan['execution_plan']['optimized_segments']
+        
+        # Convert to format expected by video generator
+        detailed_scenes = []
+        for segment in optimized_segments:
+            scene = {
+                'duration': segment.get('duration', 5),
+                'voiceover': segment.get('voiceover_script', ''),
+                'optimized_prompt': segment.get('final_luma_prompt', ''),
+                'visual_prompt': segment.get('final_luma_prompt', ''),
+                'segment_id': segment.get('segment_id', len(detailed_scenes) + 1),
+                'success_probability': segment.get('success_probability', 0.8),
+                'cost_estimate': segment.get('cost_estimate', 1.20)
+            }
+            detailed_scenes.append(scene)
+        
+        print(f"✓ Tree planning completed: {len(detailed_scenes)} optimized segments")
+        print(f"✓ Predicted ROAS: {holistic_plan['success_prediction']['roas_prediction']}")
+        print(f"✓ Total cost estimate: ${holistic_plan['cost_analysis']['total_system_cost']:.2f}")
+        
+        complete_plan = {
+            'planning_method': 'ultra_dynamic_tree',
+            'holistic_analysis': holistic_plan,
+            'master_plan': holistic_plan['strategic_overview'],
+            'scene_components': optimized_segments,
+            'detailed_scenes': detailed_scenes,
+            'total_duration': sum(scene.get('duration', 0) for scene in detailed_scenes),
+            'scene_count': len(detailed_scenes),
+            'cost_analysis': holistic_plan['cost_analysis'],
+            'success_prediction': holistic_plan['success_prediction'],
+            'optimization_summary': holistic_plan['execution_plan'].get('optimization_summary', {})
+        }
+        
+        return complete_plan
+        
+    def create_complete_plan_legacy(self, brand_info: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Legacy planning method (kept for fallback if tree planner fails)
         """
         print("Creating master plan...")
         master_plan = self.create_master_plan(brand_info)
@@ -237,6 +292,7 @@ class VideoAdPlanner:
         optimized_scenes = self.optimize_video_prompts(detailed_scenes)
         
         complete_plan = {
+            'planning_method': 'legacy',
             'master_plan': master_plan,
             'scene_components': scene_components,
             'detailed_scenes': optimized_scenes,
