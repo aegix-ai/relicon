@@ -103,6 +103,12 @@ def create_enhanced_video_generation(brand_info, output_file):
             scene['voiceover'] = energetic_script
             scene['energy_level'] = energetic_segments[i].get('energy_level', 'high')
             scene['emotional_trigger'] = energetic_segments[i].get('emotional_trigger', 'excitement')
+            
+        print("Enhanced plan now includes:")
+        print(f"  📹 Video optimization: {len(complete_plan['detailed_scenes'])} scenes")
+        print(f"  🎙️ Audio optimization: Energetic scripts with volume boost")
+        print(f"  🎵 Music optimization: Component-specific prompts")
+        print(f"  🖼️ Image optimization: Thumbnail and key frame guidance")
         
         print(f"Master Plan: {complete_plan['master_plan']}")
         print(f"Total scenes: {complete_plan['scene_count']} (with energetic scripts)")

@@ -176,56 +176,174 @@ class VideoAdPlanner:
         details = json.loads(response.choices[0].message.content)
         return details
     
-    def optimize_video_prompts(self, scene_details: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def optimize_all_component_prompts(self, scene_details: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        Step 4: Optimize prompts for best Luma AI results
+        Step 4: Optimize prompts for ALL components (video, audio, music, images)
+        Creates dynamic, high-quality prompts for each media type
         """
         optimized_scenes = []
         
         for i, scene in enumerate(scene_details):
-            optimization_prompt = f"""
-            Optimize this video prompt for Luma AI generation to create the highest quality result:
-            
-            Original prompt: {scene.get('visual_prompt')}
-            Camera style: {scene.get('camera_style')}
-            Lighting: {scene.get('lighting')}
-            Mood: {scene.get('mood')}
-            Duration: {scene.get('duration')} seconds
-            
-            Create an optimized prompt that:
-            1. Uses Luma AI best practices
-            2. Includes specific camera movements
-            3. Describes lighting and composition
-            4. Maintains 9:16 aspect ratio
-            5. Keeps under 10 seconds
-            6. Creates engaging visual content
-            
-            Focus on professional, advertising-quality visuals.
-            
-            Respond with just the optimized prompt text, no JSON.
-            """
-            
-            response = self.client.chat.completions.create(
-                model="gpt-4o",
-                messages=[{"role": "user", "content": optimization_prompt}],
-                temperature=0.5
-            )
-            
-            optimized_prompt = response.choices[0].message.content.strip()
-            
-            # Ensure duration is capped at 10 seconds
-            duration = min(scene.get('duration', 5), 10)
-            
-            optimized_scene = {
-                **scene,
-                'optimized_prompt': optimized_prompt,
-                'duration': duration,
-                'scene_index': i
-            }
-            
+            # Optimize ALL components for this scene
+            optimized_scene = self._optimize_scene_components(scene, i)
             optimized_scenes.append(optimized_scene)
         
         return optimized_scenes
+    
+    def _optimize_scene_components(self, scene: Dict[str, Any], scene_index: int) -> Dict[str, Any]:
+        """Optimize all components (video, audio, music, images) for a single scene"""
+        
+        # 1. Optimize VIDEO component
+        video_prompt = self._optimize_video_component(scene)
+        
+        # 2. Optimize AUDIO component (voiceover)
+        audio_prompt = self._optimize_audio_component(scene)
+        
+        # 3. Optimize MUSIC component
+        music_prompt = self._optimize_music_component(scene)
+        
+        # 4. Optimize IMAGE component (if needed for thumbnails/stills)
+        image_prompt = self._optimize_image_component(scene)
+        
+        # Ensure duration is capped at 10 seconds
+        duration = min(scene.get('duration', 5), 10)
+        
+        return {
+            **scene,
+            'optimized_video_prompt': video_prompt,
+            'optimized_audio_prompt': audio_prompt,
+            'optimized_music_prompt': music_prompt,
+            'optimized_image_prompt': image_prompt,
+            'optimized_prompt': video_prompt,  # Keep for backward compatibility
+            'duration': duration,
+            'scene_index': scene_index
+        }
+    
+    def _optimize_video_component(self, scene: Dict[str, Any]) -> str:
+        """Optimize video generation prompt for Luma AI"""
+        
+        optimization_prompt = f"""
+        Optimize this video prompt for Luma AI generation to create the highest quality advertising result:
+        
+        Original prompt: {scene.get('visual_prompt', '')}
+        Camera style: {scene.get('camera_style', 'cinematic')}
+        Lighting: {scene.get('lighting', 'professional')}
+        Mood: {scene.get('mood', 'engaging')}
+        Duration: {scene.get('duration', 5)} seconds
+        Brand context: Professional advertisement
+        
+        Create an optimized prompt that:
+        1. Uses Luma AI best practices for professional results
+        2. Includes specific camera movements (push-in, pull-out, rotate)
+        3. Describes precise lighting and composition
+        4. Maintains 9:16 vertical aspect ratio
+        5. Creates engaging, advertisement-quality visuals
+        6. Focuses on brand messaging through visuals
+        
+        Respond with ONLY the optimized video prompt text.
+        """
+        
+        response = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": optimization_prompt}],
+            temperature=0.5
+        )
+        
+        return response.choices[0].message.content.strip() if response.choices[0].message.content else scene.get('visual_prompt', '')
+    
+    def _optimize_audio_component(self, scene: Dict[str, Any]) -> str:
+        """Optimize audio/voiceover for energetic, charismatic delivery"""
+        
+        original_voiceover = scene.get('voiceover', '')
+        
+        audio_optimization_prompt = f"""
+        Optimize this voiceover script for ENERGETIC, charismatic advertisement delivery:
+        
+        Original script: "{original_voiceover}"
+        Energy level: {scene.get('energy_level', 'high')}
+        Emotional trigger: {scene.get('emotional_trigger', 'excitement')}
+        Scene context: Professional advertisement
+        
+        Create an optimized script that:
+        1. Maintains the same volume and energy established in the system
+        2. Uses charismatic, advertisement-style delivery
+        3. Includes engaging hook questions where appropriate
+        4. Sounds human and professional, NOT robotic
+        5. Matches the emotional trigger and energy level
+        6. Maintains brand messaging and call-to-action
+        
+        Keep the same high-energy, high-volume approach.
+        Respond with ONLY the optimized voiceover script.
+        """
+        
+        response = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": audio_optimization_prompt}],
+            temperature=0.7
+        )
+        
+        return response.choices[0].message.content.strip() if response.choices[0].message.content else original_voiceover
+    
+    def _optimize_music_component(self, scene: Dict[str, Any]) -> str:
+        """Optimize background music selection and style"""
+        
+        music_optimization_prompt = f"""
+        Create an optimized music prompt for this advertisement scene:
+        
+        Scene mood: {scene.get('mood', 'engaging')}
+        Energy level: {scene.get('energy_level', 'high')}
+        Duration: {scene.get('duration', 5)} seconds
+        Visual style: {scene.get('camera_style', 'cinematic')}
+        Brand context: Professional advertisement
+        
+        Define optimal background music that:
+        1. Complements the energetic voiceover without overpowering
+        2. Matches the visual mood and energy level
+        3. Enhances the advertisement's emotional impact
+        4. Maintains professional advertising standards
+        5. Supports the brand messaging
+        
+        Describe the ideal music style, tempo, instruments, and energy.
+        Respond with ONLY the music description/prompt.
+        """
+        
+        response = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": music_optimization_prompt}],
+            temperature=0.6
+        )
+        
+        return response.choices[0].message.content.strip() if response.choices[0].message.content else "Upbeat, professional background music"
+    
+    def _optimize_image_component(self, scene: Dict[str, Any]) -> str:
+        """Optimize still image generation for thumbnails or key frames"""
+        
+        image_optimization_prompt = f"""
+        Create an optimized image prompt for this advertisement scene:
+        
+        Visual concept: {scene.get('visual_prompt', '')}
+        Lighting: {scene.get('lighting', 'professional')}
+        Mood: {scene.get('mood', 'engaging')}
+        Brand context: Professional advertisement
+        
+        Create a prompt for generating high-quality still images that:
+        1. Captures the key visual message of this scene
+        2. Works as a compelling thumbnail or key frame
+        3. Maintains professional advertising aesthetics
+        4. Uses optimal lighting and composition
+        5. Supports brand messaging visually
+        6. Creates immediate visual impact
+        
+        Respond with ONLY the optimized image generation prompt.
+        """
+        
+        response = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": image_optimization_prompt}],
+            temperature=0.5
+        )
+        
+        return response.choices[0].message.content.strip() if response.choices[0].message.content else scene.get('visual_prompt', '')
     
     def create_complete_plan(self, brand_info: Dict[str, Any], historical_data: List[Dict] = None) -> Dict[str, Any]:
         """
@@ -295,8 +413,8 @@ class VideoAdPlanner:
             scene_details = self.plan_scene_details(scene, master_plan, brand_info)
             detailed_scenes.append(scene_details)
         
-        print("Optimizing video prompts...")
-        optimized_scenes = self.optimize_video_prompts(detailed_scenes)
+        print("Optimizing ALL component prompts (video, audio, music, images)...")
+        optimized_scenes = self.optimize_all_component_prompts(detailed_scenes)
         
         complete_plan = {
             'planning_method': 'legacy',
