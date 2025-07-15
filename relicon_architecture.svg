@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="800" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="centralGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff5c00;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff8c42;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="moduleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="apiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="dataGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#0f172a"/>
+  
+  <!-- Title -->
+  <text x="600" y="30" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="24" font-weight="bold">
+    RELICON AI SYSTEM ARCHITECTURE
+  </text>
+  <text x="600" y="55" text-anchor="middle" fill="#94a3b8" font-family="Arial, sans-serif" font-size="14">
+    main.py Central Highway - Complete Dependency Graph
+  </text>
+  
+  <!-- Central Highway - main.py -->
+  <rect x="450" y="100" width="300" height="80" rx="10" fill="url(#centralGradient)" stroke="#ff5c00" stroke-width="3"/>
+  <text x="600" y="130" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16" font-weight="bold">
+    main.py
+  </text>
+  <text x="600" y="150" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12">
+    Central Highway
+  </text>
+  <text x="600" y="165" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+    FastAPI Application
+  </text>
+  
+  <!-- Video Generation Pipeline -->
+  <g id="videoGeneration">
+    <rect x="50" y="220" width="180" height="300" rx="10" fill="url(#moduleGradient)" stroke="#2563eb" stroke-width="2"/>
+    <text x="140" y="240" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">
+      Video Generation
+    </text>
+    
+    <!-- Enhanced Video Generator -->
+    <rect x="60" y="250" width="160" height="40" rx="5" fill="#1e40af" stroke="#3b82f6" stroke-width="1"/>
+    <text x="140" y="270" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      enhanced_video_generator.py
+    </text>
+    
+    <!-- AI Planner -->
+    <rect x="60" y="300" width="160" height="40" rx="5" fill="#1e40af" stroke="#3b82f6" stroke-width="1"/>
+    <text x="140" y="320" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      ai_planner.py
+    </text>
+    
+    <!-- Luma Service -->
+    <rect x="60" y="350" width="160" height="40" rx="5" fill="#1e40af" stroke="#3b82f6" stroke-width="1"/>
+    <text x="140" y="370" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      luma_service.py
+    </text>
+    
+    <!-- Dynamic Tree Planner -->
+    <rect x="60" y="400" width="160" height="40" rx="5" fill="#1e40af" stroke="#3b82f6" stroke-width="1"/>
+    <text x="140" y="420" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      dynamic_tree_planner.py
+    </text>
+    
+    <!-- Script Generator -->
+    <rect x="60" y="450" width="160" height="40" rx="5" fill="#1e40af" stroke="#3b82f6" stroke-width="1"/>
+    <text x="140" y="470" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      energetic_script_generator.py
+    </text>
+  </g>
+  
+  <!-- Database Layer -->
+  <g id="database">
+    <rect x="300" y="350" width="120" height="100" rx="10" fill="url(#dataGradient)" stroke="#7c3aed" stroke-width="2"/>
+    <text x="360" y="370" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">
+      Database
+    </text>
+    <text x="360" y="385" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      database.py
+    </text>
+    <text x="360" y="405" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      • PostgreSQL
+    </text>
+    <text x="360" y="420" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      • Sales, Ads, Metrics
+    </text>
+    <text x="360" y="435" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      • SQLAlchemy ORM
+    </text>
+  </g>
+  
+  <!-- AI Agent -->
+  <g id="aiAgent">
+    <rect x="300" y="220" width="120" height="80" rx="10" fill="url(#moduleGradient)" stroke="#2563eb" stroke-width="2"/>
+    <text x="360" y="240" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">
+      AI Agent
+    </text>
+    <text x="360" y="255" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      agent.py
+    </text>
+    <text x="360" y="270" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      • Hook Generation
+    </text>
+    <text x="360" y="285" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      • LangChain
+    </text>
+  </g>
+  
+  <!-- Task Management -->
+  <g id="tasks">
+    <rect x="780" y="350" width="120" height="100" rx="10" fill="url(#moduleGradient)" stroke="#2563eb" stroke-width="2"/>
+    <text x="840" y="370" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">
+      Task Management
+    </text>
+    <text x="840" y="385" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      tasks.py
+    </text>
+    <text x="840" y="405" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      • Celery Tasks
+    </text>
+    <text x="840" y="420" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      • Metrics Collection
+    </text>
+    <text x="840" y="435" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="9">
+      • Creative Evaluation
+    </text>
+  </g>
+  
+  <!-- External APIs -->
+  <g id="externalApis">
+    <rect x="970" y="220" width="180" height="300" rx="10" fill="url(#apiGradient)" stroke="#059669" stroke-width="2"/>
+    <text x="1060" y="240" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">
+      External APIs
+    </text>
+    
+    <!-- OpenAI -->
+    <rect x="980" y="250" width="160" height="40" rx="5" fill="#047857" stroke="#10b981" stroke-width="1"/>
+    <text x="1060" y="270" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      OpenAI GPT-4o
+    </text>
+    
+    <!-- Luma AI -->
+    <rect x="980" y="300" width="160" height="40" rx="5" fill="#047857" stroke="#10b981" stroke-width="1"/>
+    <text x="1060" y="320" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      Luma AI
+    </text>
+    
+    <!-- ElevenLabs -->
+    <rect x="980" y="350" width="160" height="40" rx="5" fill="#047857" stroke="#10b981" stroke-width="1"/>
+    <text x="1060" y="370" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      ElevenLabs TTS
+    </text>
+    
+    <!-- Meta API -->
+    <rect x="980" y="400" width="160" height="40" rx="5" fill="#047857" stroke="#10b981" stroke-width="1"/>
+    <text x="1060" y="420" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      Meta Business API
+    </text>
+    
+    <!-- TikTok API -->
+    <rect x="980" y="450" width="160" height="40" rx="5" fill="#047857" stroke="#10b981" stroke-width="1"/>
+    <text x="1060" y="470" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">
+      TikTok Ads API
+    </text>
+  </g>
+  
+  <!-- API Endpoints -->
+  <g id="endpoints">
+    <rect x="450" y="600" width="300" height="120" rx="10" fill="#374151" stroke="#6b7280" stroke-width="2"/>
+    <text x="600" y="620" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">
+      API Endpoints
+    </text>
+    <text x="520" y="640" fill="white" font-family="Arial, sans-serif" font-size="9">
+      • /generate-video - Main video generation
+    </text>
+    <text x="520" y="655" fill="white" font-family="Arial, sans-serif" font-size="9">
+      • /generate-plan - AI planning system
+    </text>
+    <text x="520" y="670" fill="white" font-family="Arial, sans-serif" font-size="9">
+      • /generate-script - Script generation
+    </text>
+    <text x="520" y="685" fill="white" font-family="Arial, sans-serif" font-size="9">
+      • /webhook/shopify - Revenue tracking
+    </text>
+    <text x="520" y="700" fill="white" font-family="Arial, sans-serif" font-size="9">
+      • /next-gen/{ad_id} - Hook generation
+    </text>
+  </g>
+  
+  <!-- Connection Lines -->
+  <!-- main.py to Video Generation -->
+  <line x1="450" y1="150" x2="230" y2="220" stroke="#ff5c00" stroke-width="3" stroke-dasharray="5,5"/>
+  
+  <!-- main.py to Database -->
+  <line x1="550" y1="180" x2="360" y2="350" stroke="#ff5c00" stroke-width="3" stroke-dasharray="5,5"/>
+  
+  <!-- main.py to AI Agent -->
+  <line x1="500" y1="180" x2="360" y2="220" stroke="#ff5c00" stroke-width="3" stroke-dasharray="5,5"/>
+  
+  <!-- main.py to Tasks -->
+  <line x1="750" y1="150" x2="840" y2="350" stroke="#ff5c00" stroke-width="3" stroke-dasharray="5,5"/>
+  
+  <!-- main.py to External APIs -->
+  <line x1="750" y1="140" x2="970" y2="220" stroke="#ff5c00" stroke-width="3" stroke-dasharray="5,5"/>
+  
+  <!-- main.py to Endpoints -->
+  <line x1="600" y1="180" x2="600" y2="600" stroke="#ff5c00" stroke-width="3" stroke-dasharray="5,5"/>
+  
+  <!-- Flow indicators -->
+  <text x="100" y="750" fill="#94a3b8" font-family="Arial, sans-serif" font-size="12" font-weight="bold">
+    DATA FLOW:
+  </text>
+  <text x="200" y="750" fill="#94a3b8" font-family="Arial, sans-serif" font-size="10">
+    Request → main.py → Components → External APIs → Response
+  </text>
+  
+  <!-- Legend -->
+  <g id="legend">
+    <rect x="50" y="570" width="200" height="120" rx="5" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="60" y="590" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="bold">
+      Legend:
+    </text>
+    
+    <rect x="60" y="600" width="15" height="10" fill="url(#centralGradient)"/>
+    <text x="85" y="610" fill="white" font-family="Arial, sans-serif" font-size="10">
+      Central Highway
+    </text>
+    
+    <rect x="60" y="620" width="15" height="10" fill="url(#moduleGradient)"/>
+    <text x="85" y="630" fill="white" font-family="Arial, sans-serif" font-size="10">
+      Core Modules
+    </text>
+    
+    <rect x="60" y="640" width="15" height="10" fill="url(#apiGradient)"/>
+    <text x="85" y="650" fill="white" font-family="Arial, sans-serif" font-size="10">
+      External APIs
+    </text>
+    
+    <rect x="60" y="660" width="15" height="10" fill="url(#dataGradient)"/>
+    <text x="85" y="670" fill="white" font-family="Arial, sans-serif" font-size="10">
+      Database Layer
+    </text>
+  </g>
+  
+</svg>
