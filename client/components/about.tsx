@@ -17,9 +17,9 @@ export default function About() {
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-black dark:text-white">About ReelForge</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-black dark:text-white">About Relicon</h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-              ReelForge is a product by <strong>Aegix</strong> — a frontier tech company redefining AI-native software.
+              Relicon is a product by <strong>Aegix</strong> — a frontier tech company redefining AI-native software.
               We're building the future of autonomous advertising with AI agents that think, learn, and optimize like
               the best marketing teams.
             </p>

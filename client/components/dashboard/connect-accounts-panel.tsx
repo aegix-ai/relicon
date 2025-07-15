@@ -150,7 +150,7 @@ export default function ConnectAccountsPanel() {
           Connect Your Accounts
         </h2>
         <p className="text-gray-300 dark:text-gray-300 light:text-gray-700 text-lg">
-          Integrate your advertising and sales platforms to unlock the full power of ReelForge AI
+          Integrate your advertising and sales platforms to unlock the full power of Relicon AI
         </p>
       </div>
 

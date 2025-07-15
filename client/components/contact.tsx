@@ -111,7 +111,7 @@ export default function Contact() {
                 <Calendar className="w-6 h-6 text-[#FF5C00] mr-3" />
                 <h4 className="text-lg font-semibold text-black dark:text-white">Book a Demo</h4>
               </div>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">See ReelForge in action with a personalized demo</p>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">See Relicon in action with a personalized demo</p>
               <Button variant="outline" className="border-[#FF5C00] text-[#FF5C00] hover:bg-[#FF5C00] hover:text-white">
                 Schedule Demo
               </Button>

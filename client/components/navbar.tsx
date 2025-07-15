@@ -6,7 +6,7 @@ import ThemeToggle from "./theme-toggle"
 import { Menu, X } from "lucide-react"
 
 const navItems = [
-  { name: "Why ReelForge", href: "#why" },
+  { name: "Why Relicon", href: "#why" },
   { name: "How It Works", href: "#how" },
   { name: "Pricing", href: "#pricing" },
   { name: "About", href: "#about" },
@@ -57,8 +57,8 @@ export default function Navbar({ onEnterPanel }: NavbarProps) {
             className="flex items-center cursor-pointer"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
-            <img src="/reelforge-icon.png" alt="ReelForge Logo" className="w-10 h-10 mr-3" />
-            <span className="text-xl font-bold text-black dark:text-white">ReelForge</span>
+            <img src="/relicon-icon.png" alt="Relicon Logo" className="w-10 h-10 mr-3" />
+            <span className="text-xl font-bold text-black dark:text-white">Relicon</span>
           </div>
 
           {/* Desktop Navigation */}

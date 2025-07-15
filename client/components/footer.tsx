@@ -11,10 +11,10 @@ export default function Footer() {
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#FF5C00] to-[#E05000] mr-3 flex items-center justify-center">
                 <span className="text-white font-bold text-lg">R</span>
               </div>
-              <span className="text-xl font-bold">ReelForge</span>
+              <span className="text-xl font-bold">Relicon</span>
             </div>
             <p className="text-gray-300 mb-6 max-w-md">
-              ReelForge is a product by Aegix — a frontier tech company redefining AI-native software. We're building
+              Relicon is a product by Aegix — a frontier tech company redefining AI-native software. We're building
               the future of autonomous advertising.
             </p>
             <div className="flex space-x-4">
@@ -22,7 +22,7 @@ export default function Footer() {
                 <Twitter className="w-5 h-5" />
               </a>
               <a
-                href="https://www.linkedin.com/company/reelforge-ai"
+                href="https://www.linkedin.com/company/relicon-ai"
                 className="text-gray-400 hover:text-[#FF5C00] transition-colors"
               >
                 <Linkedin className="w-5 h-5" />
@@ -39,7 +39,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <a href="#why" className="text-gray-300 hover:text-[#FF5C00] transition-colors">
-                  Why ReelForge
+                  Why Relicon
                 </a>
               </li>
               <li>
@@ -92,22 +92,22 @@ export default function Footer() {
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center space-x-6 mb-4 md:mb-0">
             <a
-              href="mailto:team.reelforge@gmail.com"
+              href="mailto:team.relicon@gmail.com"
               className="flex items-center text-gray-300 hover:text-[#FF5C00] transition-colors"
             >
               <Mail className="w-4 h-4 mr-2" />
-              team.reelforge@gmail.com
+              team.relicon@gmail.com
             </a>
             <a
-              href="https://contact.reelforge.ai"
+              href="https://contact.relicon.ai"
               className="flex items-center text-gray-300 hover:text-[#FF5C00] transition-colors"
             >
               <Globe className="w-4 h-4 mr-2" />
-              contact.reelforge.ai
+              contact.relicon.ai
             </a>
           </div>
           <div className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} ReelForge by Aegix. All rights reserved.
+            © {new Date().getFullYear()} Relicon by Aegix. All rights reserved.
           </div>
         </div>
       </div>
