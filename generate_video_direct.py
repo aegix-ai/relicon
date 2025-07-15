@@ -9,11 +9,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 def generate_video(brand_name, brand_description, duration, output_path):
-    """Generate video directly using our video service"""
+    """Generate enhanced video with captions and human-like audio"""
     try:
-        from video.services.video_service import VideoService
-        
-        video_service = VideoService()
+        from video.services.enhanced_video_service import enhanced_video_service
         
         brand_info = {
             'brand_name': brand_name,
@@ -22,11 +20,12 @@ def generate_video(brand_name, brand_description, duration, output_path):
             'platform': 'universal'
         }
         
-        print(f"PROGRESS:30:Generating script for {brand_name}")
+        def progress_callback(progress, message):
+            print(f"PROGRESS:{progress}:{message}")
         
-        result = video_service.create_simple_video(brand_info)
+        print(f"PROGRESS:10:Starting enhanced video generation for {brand_name}")
         
-        print(f"PROGRESS:60:Creating video content...")
+        result = enhanced_video_service.create_enhanced_video(brand_info, progress_callback)
         
         if result.get('success') and result.get('video_path'):
             # Copy to the expected output path
@@ -38,18 +37,18 @@ def generate_video(brand_name, brand_description, duration, output_path):
             
             if os.path.exists(source_path):
                 shutil.copy2(source_path, output_path)
-                print(f"PROGRESS:100:Video generation completed!")
+                print(f"PROGRESS:100:Enhanced video generation completed!")
                 print(f"SUCCESS:{output_path}")
                 return True
             else:
                 print(f"ERROR:Source video not found: {source_path}")
                 return False
         else:
-            print(f"ERROR:Video generation failed: {result.get('error', 'Unknown error')}")
+            print(f"ERROR:Enhanced video generation failed: {result.get('error', 'Unknown error')}")
             return False
             
     except Exception as e:
-        print(f"ERROR:Exception during video generation: {str(e)}")
+        print(f"ERROR:Exception during enhanced video generation: {str(e)}")
         return False
 
 if __name__ == "__main__":
