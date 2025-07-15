@@ -15,12 +15,12 @@ class EnhancedAudioProcessor:
         self.output_dir = Path(settings.OUTPUT_DIR) / "audio"
         self.output_dir.mkdir(exist_ok=True)
         
-        # Human-like voice settings for ElevenLabs
+        # Human-like voice settings for ElevenLabs (reluctant reading style)
         self.voice_settings = {
-            "stability": 0.5,       # More variation for natural speech
-            "similarity_boost": 0.8,  # High similarity to original voice
-            "style": 0.4,           # Moderate style exaggeration
-            "use_speaker_boost": True
+            "stability": 0.3,       # Low stability for reluctant, hesitant speech
+            "similarity_boost": 0.6,  # Moderate similarity
+            "style": 0.2,           # Low style for monotone, reluctant delivery
+            "use_speaker_boost": False
         }
         
         # Best ElevenLabs voices for human-like speech
@@ -100,9 +100,9 @@ class EnhancedAudioProcessor:
             
             response = client.audio.speech.create(
                 model="tts-1-hd",
-                voice="alloy",  # Most natural voice
+                voice="onyx",  # Deeper, more monotone voice
                 input=humanized_text,
-                speed=0.9  # Slightly slower for more natural delivery
+                speed=0.7  # Much slower for reluctant reading
             )
             
             output_file = self.output_dir / f"openai_human_{int(time.time())}.mp3"
@@ -117,24 +117,29 @@ class EnhancedAudioProcessor:
             return None
     
     def _humanize_text(self, text: str) -> str:
-        """Make text more natural and human-like"""
-        # Add natural pauses and emphasis
+        """Make text sound like reluctant reading"""
+        # Make text sound like someone reading reluctantly
         humanized = text
         
-        # Add slight pauses after commas
-        humanized = humanized.replace(',', '... ')
+        # Add hesitation markers
+        humanized = humanized.replace(',', '... uh... ')
         
-        # Add emphasis to key words
-        humanized = humanized.replace('!', '. ')
+        # Add reluctant pauses
+        humanized = humanized.replace('.', '... ')
         
-        # Make sentences flow more naturally
-        humanized = humanized.replace('. ', '... ')
+        # Make it sound monotone and hesitant
+        humanized = humanized.replace('!', '.')
+        humanized = humanized.replace('?', '.')
         
-        # Add natural speech patterns
-        if not humanized.endswith('.'):
-            humanized += '.'
+        # Add "um" and "uh" for reluctant reading
+        words = humanized.split()
+        if len(words) > 3:
+            # Insert hesitation every few words
+            for i in range(2, len(words), 4):
+                if i < len(words):
+                    words[i] = "um... " + words[i]
         
-        return humanized
+        return " ".join(words)
     
     def _enhance_human_qualities(self, audio_file: str) -> Optional[str]:
         """Enhance audio to sound more human and less robotic"""

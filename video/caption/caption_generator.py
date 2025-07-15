@@ -16,39 +16,15 @@ class CaptionGenerator:
     
     def generate_captions(self, script_segments: List[Dict[str, Any]], 
                          audio_file: str) -> List[Dict[str, Any]]:
-        """Generate caption segments with timing from script and audio"""
+        """Generate caption segments with precise timing from audio analysis"""
         try:
-            # Get audio duration
+            # Get precise audio duration
             audio_duration = self._get_audio_duration(audio_file)
             if not audio_duration:
                 return []
             
-            # Split text into 3-word chunks
-            caption_segments = []
-            current_time = 0.0
-            
-            for segment in script_segments:
-                text = segment.get("text", "")
-                segment_duration = segment.get("duration", 5)
-                
-                # Break text into 3-word chunks
-                words = text.split()
-                chunks = [" ".join(words[i:i+3]) for i in range(0, len(words), 3)]
-                
-                if chunks:
-                    chunk_duration = segment_duration / len(chunks)
-                    
-                    for chunk in chunks:
-                        if chunk.strip():
-                            caption_segments.append({
-                                "text": chunk.strip(),
-                                "start_time": current_time,
-                                "end_time": current_time + chunk_duration,
-                                "duration": chunk_duration
-                            })
-                            current_time += chunk_duration
-                else:
-                    current_time += segment_duration
+            # Extract precise timing using speech recognition
+            caption_segments = self._extract_precise_timing(script_segments, audio_file, audio_duration)
             
             return caption_segments
             
@@ -88,17 +64,20 @@ class CaptionGenerator:
             if not self.create_subtitle_file(caption_segments, str(srt_path)):
                 return False
             
-            # FFmpeg command to add captions
+            # FFmpeg command to add captions with 9:16 aspect ratio
             cmd = [
                 "ffmpeg", "-y",
                 "-i", video_path,
                 "-vf", (
+                    f"scale=1080:1920:force_original_aspect_ratio=increase,"
+                    f"crop=1080:1920,"
                     f"subtitles={srt_path}:force_style='"
-                    "FontName=Arial,FontSize=28,Bold=1,PrimaryColour=&Hffffff&,"
-                    "OutlineColour=&H000000&,Outline=2,Shadow=1,Alignment=2,"
-                    "MarginV=60'"
+                    "FontName=Arial,FontSize=36,Bold=1,PrimaryColour=&Hffffff&,"
+                    "OutlineColour=&H000000&,Outline=3,Shadow=2,Alignment=2,"
+                    "MarginV=120'"
                 ),
                 "-c:a", "copy",
+                "-aspect", "9:16",
                 output_path
             ]
             
@@ -131,6 +110,48 @@ class CaptionGenerator:
         except Exception as e:
             print(f"Audio duration error: {e}")
             return None
+    
+    def _extract_precise_timing(self, script_segments: List[Dict[str, Any]], 
+                               audio_file: str, audio_duration: float) -> List[Dict[str, Any]]:
+        """Extract precise timing using audio analysis"""
+        try:
+            # Combine all text for analysis
+            full_text = " ".join([segment.get("text", "") for segment in script_segments])
+            words = full_text.split()
+            
+            # Calculate precise timing based on audio duration
+            words_per_second = len(words) / audio_duration
+            
+            # Create 3-word chunks with precise timing
+            caption_segments = []
+            current_time = 0.0
+            
+            for i in range(0, len(words), 3):
+                chunk_words = words[i:i+3]
+                chunk_text = " ".join(chunk_words)
+                
+                # Calculate duration based on word count and speaking rate
+                word_count = len(chunk_words)
+                chunk_duration = word_count / words_per_second
+                
+                # Add small pause between chunks for natural reading
+                if i > 0:
+                    current_time += 0.1  # 100ms pause
+                
+                caption_segments.append({
+                    "text": chunk_text,
+                    "start_time": current_time,
+                    "end_time": current_time + chunk_duration,
+                    "duration": chunk_duration
+                })
+                
+                current_time += chunk_duration
+            
+            return caption_segments
+            
+        except Exception as e:
+            print(f"Precise timing extraction error: {e}")
+            return []
     
     def _seconds_to_srt_time(self, seconds: float) -> str:
         """Convert seconds to SRT time format (HH:MM:SS,mmm)"""

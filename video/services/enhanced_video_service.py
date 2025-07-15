@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from config.settings import settings
 from video.caption.caption_generator import caption_generator
+from video.caption.precise_sync_generator import precise_sync_generator
 from video.audio.enhanced_audio_processor import enhanced_audio_processor
 from video.scenes.dynamic_scene_planner import dynamic_scene_planner
 from ai.planners.video_planner import video_planner
@@ -67,10 +68,11 @@ class EnhancedVideoService:
             scene_videos = self._create_scene_backgrounds(scene_plans)
             
             if progress_callback:
-                progress_callback(60, "Generating synchronized captions...")
+                progress_callback(60, "Generating precisely synchronized captions...")
             
-            # Step 6: Generate captions
-            caption_segments = caption_generator.generate_captions(script_segments, audio_file)
+            # Step 6: Generate precise captions
+            full_text = " ".join([segment["text"] for segment in script_segments])
+            caption_segments = precise_sync_generator.generate_precise_captions(full_text, audio_file)
             
             if progress_callback:
                 progress_callback(75, "Assembling final video with captions...")
@@ -224,9 +226,10 @@ class EnhancedVideoService:
             cmd = [
                 "ffmpeg", "-y",
                 "-f", "lavfi",
-                "-i", f"color=c={colors[0].replace('#', '0x')}:s=1920x1080:d={duration}",
+                "-i", f"color=c={colors[0].replace('#', '0x')}:s=1080x1920:d={duration}",
                 "-c:v", "libx264",
                 "-pix_fmt", "yuv420p",
+                "-aspect", "9:16",
                 str(output_path)
             ]
             
@@ -262,8 +265,9 @@ class EnhancedVideoService:
                 cmd = [
                     "ffmpeg", "-y",
                     "-f", "lavfi",
-                    "-i", f"color=c=0x1a1a2e:s=1920x1080:d={duration}",
+                    "-i", f"color=c=0x1a1a2e:s=1080x1920:d={duration}",
                     "-c:v", "libx264",
+                    "-aspect", "9:16",
                     str(temp_video)
                 ]
                 
@@ -288,11 +292,11 @@ class EnhancedVideoService:
             if result.returncode != 0:
                 return None
             
-            # Add captions
+            # Add precise captions
             final_output = self.output_dir / f"enhanced_{brand_info.get('brand_name', 'video')}_{int(time.time())}.mp4"
             
             if caption_segments:
-                success = caption_generator.add_captions_to_video(
+                success = precise_sync_generator.add_precise_captions(
                     str(video_with_audio), caption_segments, str(final_output)
                 )
                 
@@ -360,12 +364,12 @@ class EnhancedVideoService:
             # Combine all text
             full_text = " ".join([segment["text"] for segment in script_segments])
             
-            # Generate audio with OpenAI
+            # Generate audio with OpenAI (reluctant reading style)
             response = client.audio.speech.create(
                 model="tts-1-hd",
-                voice="alloy",
+                voice="onyx",  # Deeper, more monotone voice
                 input=full_text,
-                speed=0.85  # Slower for more natural delivery
+                speed=0.75  # Slower for reluctant reading
             )
             
             output_file = self.output_dir / "audio" / f"fallback_{int(time.time())}.mp3"

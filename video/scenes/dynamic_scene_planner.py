@@ -88,7 +88,8 @@ class DynamicScenePlanner:
                 "-c:v", "libx264",
                 "-pix_fmt", "yuv420p",
                 "-r", "30",
-                "-s", "1920x1080",
+                "-s", "1080x1920",  # 9:16 aspect ratio
+                "-aspect", "9:16",
                 output_path
             ]
             
