@@ -162,7 +162,7 @@ def verify_video(video_file):
 
 def main():
     """Run complete video generation test"""
-    print("REELFORGE COMPLETE VIDEO GENERATION TEST")
+    print("RELICON COMPLETE VIDEO GENERATION TEST")
     print("=" * 60)
     
     # Test data

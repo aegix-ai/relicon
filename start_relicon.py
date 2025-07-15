@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ReelForge Startup Script
+Relicon Startup Script
 """
 import subprocess
 import sys

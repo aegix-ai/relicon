@@ -1,8 +1,8 @@
-# ReelForge AI Video Generator
+# Relicon AI Video Generator
 
 ## Overview
 
-ReelForge is an autonomous AI-powered video generation platform that creates short-form promotional videos. The system combines multiple AI technologies to automatically generate creative concepts, write scripts, synthesize voiceovers, source stock footage, and assemble final videos using a microkernel architecture.
+Relicon is an autonomous AI-powered video generation platform that creates short-form promotional videos. The system combines multiple AI technologies to automatically generate creative concepts, write scripts, synthesize voiceovers, source stock footage, and assemble final videos using a microkernel architecture.
 
 ## System Architecture
 

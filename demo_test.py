@@ -118,7 +118,7 @@ def test_server_health():
         return False
 
 if __name__ == "__main__":
-    print("🧪 ReelForge Demo Test\n")
+    print("🧪 Relicon Demo Test\n")
     
     # Test server health first
     if not test_server_health():
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     
     if success:
         print("\n🎊 Demo completed successfully!")
-        print("💫 ReelForge is creating dynamic short-form ads with AI!")
+        print("💫 Relicon is creating dynamic short-form ads with AI!")
     else:
         print("\n⚠️  Demo encountered issues. Check the server logs.")
     

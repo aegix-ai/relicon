@@ -185,7 +185,7 @@ def test_realistic_scenario():
         return False
 
 if __name__ == "__main__":
-    print("🎬 ReelForge Realistic Scenario Debug")
+    print("🎬 Relicon Realistic Scenario Debug")
     print("="*50)
     
     if test_realistic_scenario():

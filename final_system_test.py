@@ -119,7 +119,7 @@ def test_optimized_system():
 
 def main():
     """Run final system test"""
-    print("REELFORGE FINAL SYSTEM VALIDATION")
+    print("RELICON FINAL SYSTEM VALIDATION")
     print("Testing complete pipeline with cost optimizations")
     print("-" * 50)
     

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Navbar from "@/components/navbar"
 import HeroSection from "@/components/hero-section"
-import WhyReelForge from "@/components/why-reelforge"
+import WhyRelicon from "@/components/why-relicon"
 import HowItWorks from "@/components/how-it-works"
 import VideoSamples from "@/components/video-samples"
 import Pricing from "@/components/pricing"
@@ -24,7 +24,7 @@ export default function Home() {
     <main className="min-h-screen bg-white dark:bg-black transition-colors duration-300">
       <Navbar onEnterPanel={() => setShowDashboard(true)} />
       <HeroSection onEnterPanel={() => setShowDashboard(true)} />
-      <WhyReelForge />
+      <WhyRelicon />
       <HowItWorks />
       <VideoSamples />
       <Pricing />

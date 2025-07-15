@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple ReelForge Server - Serves both API and frontend on one port
+Simple Relicon Server - Serves both API and frontend on one port
 """
 import os
 import json

@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "ReelForge | AI-Powered Video Ad Engine",
+  title: "Relicon | AI-Powered Video Ad Engine",
   description: "Create. Learn. Perform. Ads built by agentic intelligence, tailored for your business.",
     generator: 'v0.dev'
 }
@@ -25,7 +25,7 @@ export default function RootLayout({
           defaultTheme="light"
           enableSystem={false}
           disableTransitionOnChange={false}
-          storageKey="reelforge-theme"
+          storageKey="relicon-theme"
         >
           {children}
         </ThemeProvider>

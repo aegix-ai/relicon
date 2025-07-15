@@ -53,7 +53,7 @@ def create_bulletproof_video():
         return False
 
 if __name__ == "__main__":
-    print("🎬 ReelForge Bulletproof Test")
+    print("🎬 Relicon Bulletproof Test")
     print("="*40)
     
     if create_bulletproof_video():

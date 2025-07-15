@@ -33,12 +33,12 @@ const features = [
   },
 ]
 
-export default function WhyReelForge() {
+export default function WhyRelicon() {
   return (
     <section id="why" className="py-20 bg-white dark:bg-black">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-black dark:text-white">Why Choose ReelForge?</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-black dark:text-white">Why Choose Relicon?</h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
             Powered by cutting-edge AI agents that revolutionize how you create, test, and optimize video ads.
           </p>

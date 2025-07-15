@@ -10,7 +10,7 @@ from openai import OpenAI
 def test_full_pipeline():
     """Test the complete video generation pipeline"""
     
-    print("=== Testing ReelForge Video Generation Pipeline ===")
+    print("=== Testing Relicon Video Generation Pipeline ===")
     
     # Test 1: OpenAI Connection
     print("\n1. Testing OpenAI connection...")

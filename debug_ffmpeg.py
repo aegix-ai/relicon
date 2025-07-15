@@ -103,7 +103,7 @@ def test_transitions():
         return False
 
 if __name__ == "__main__":
-    print("🎬 ReelForge FFmpeg Debug Suite")
+    print("🎬 Relicon FFmpeg Debug Suite")
     print("="*50)
     
     success_count = 0

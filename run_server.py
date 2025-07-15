@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simplified ReelForge Server
+Simplified Relicon Server
 Run this to start the video generation API
 """
 import os
@@ -187,7 +187,7 @@ async def ai_video_generation(job_id: str, request_data: dict):
 async def api_root():
     """API root endpoint"""
     return {
-        "message": "ReelForge AI Video Generator API",
+        "message": "Relicon AI Video Generator API",
         "status": "running",
         "version": "1.0.0",
         "description": "Autonomous AI-powered video ad generation"
