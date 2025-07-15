@@ -115,7 +115,7 @@ async function aiVideoGeneration(jobId: string, requestData: any) {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
   app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', message: 'ReelForge API is running' });
+    res.json({ status: 'ok', message: 'Relicon API is running' });
   });
 
   // Generate video endpoint
@@ -212,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ReelForge | AI-Powered Video Ad Engine</title>
+    <title>Relicon | AI-Powered Video Ad Engine</title>
     <meta name="description" content="Create. Learn. Perform. Ads built by agentic intelligence, tailored for your business.">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -296,11 +296,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                             <div class="w-8 h-8 bg-[#FF5C00] rounded-lg flex items-center justify-center">
                                 <span class="text-white font-bold text-sm">R</span>
                             </div>
-                            <span class="text-xl font-bold text-black dark:text-white">ReelForge</span>
+                            <span class="text-xl font-bold text-black dark:text-white">Relicon</span>
                         </div>
                         
                         <div class="hidden md:flex items-center space-x-8">
-                            <a href="#why" class="text-gray-600 dark:text-gray-300 hover:text-[#FF5C00] transition-colors">Why ReelForge</a>
+                            <a href="#why" class="text-gray-600 dark:text-gray-300 hover:text-[#FF5C00] transition-colors">Why Relicon</a>
                             <a href="#how" class="text-gray-600 dark:text-gray-300 hover:text-[#FF5C00] transition-colors">How It Works</a>
                             <a href="#samples" class="text-gray-600 dark:text-gray-300 hover:text-[#FF5C00] transition-colors">Samples</a>
                             <a href="#pricing" class="text-gray-600 dark:text-gray-300 hover:text-[#FF5C00] transition-colors">Pricing</a>
@@ -354,11 +354,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 </div>
             </section>
 
-            <!-- Why ReelForge Section -->
+            <!-- Why Relicon Section -->
             <section id="why" class="py-24 bg-gray-50 dark:bg-gray-900">
                 <div class="container mx-auto px-6">
                     <h2 class="text-4xl md:text-5xl font-bold text-center mb-16 text-black dark:text-white">
-                        Why Choose <span class="text-[#FF5C00]">ReelForge</span>?
+                        Why Choose <span class="text-[#FF5C00]">Relicon</span>?
                     </h2>
                     
                     <div class="grid md:grid-cols-3 gap-8">
@@ -551,7 +551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                                 <div class="w-8 h-8 bg-[#FF5C00] rounded-lg flex items-center justify-center">
                                     <span class="text-white font-bold text-sm">R</span>
                                 </div>
-                                <span class="text-xl font-bold">ReelForge</span>
+                                <span class="text-xl font-bold">Relicon</span>
                             </div>
                             <p class="text-gray-400 mb-4">AI-powered video ad engine for modern businesses.</p>
                         </div>
@@ -581,7 +581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         </div>
                     </div>
                     <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-                        <p>&copy; 2025 ReelForge. All rights reserved.</p>
+                        <p>&copy; 2025 Relicon. All rights reserved.</p>
                     </div>
                 </div>
             </footer>
@@ -596,7 +596,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         <div class="w-8 h-8 bg-[#FF5C00] rounded-lg flex items-center justify-center">
                             <span class="text-white font-bold text-sm">R</span>
                         </div>
-                        <span class="text-xl font-bold">ReelForge</span>
+                        <span class="text-xl font-bold">Relicon</span>
                         <i data-lucide="arrow-left" class="w-4 h-4 text-gray-400"></i>
                     </div>
                     
@@ -1090,7 +1090,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                                     Connect Your Accounts
                                 </h2>
                                 <p class="text-gray-300 text-lg">
-                                    Integrate your advertising and sales platforms to unlock the full power of ReelForge AI
+                                    Integrate your advertising and sales platforms to unlock the full power of Relicon AI
                                 </p>
                             </div>
 
