@@ -435,11 +435,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         <!-- Landing Page Content -->
         <div id="landing-page" class="min-h-screen">
             <!-- Navbar -->
-            <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
-                <div class="container mx-auto px-6 py-4">
+            <nav class="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-b border-gray-800">
+                <div class="container mx-auto px-6 py-6">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
-                            <img src="/static/relicon-logo.png" alt="Relicon" class="h-12 w-auto">
+                            <img src="/static/relicon-logo.png" alt="Relicon" class="h-20 w-auto opacity-90 filter brightness-0 invert mr-4">
+                            <span class="text-4xl font-bold text-white tracking-wide">Relicon</span>
                         </div>
                         
                         <div class="hidden md:flex items-center space-x-8">
@@ -731,10 +732,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             <!-- Dashboard Header -->
             <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
                 <div class="flex items-center justify-between">
-                    <button onclick="showLandingPage()" class="flex items-center space-x-3 px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-all">
-                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
-                        <span>Back</span>
-                    </button>
+                    <div class="flex items-center space-x-6">
+                        <button onclick="showLandingPage()" class="flex items-center space-x-3 px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-all">
+                            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                            <span>Back</span>
+                        </button>
+                        
+                        <div class="flex items-center">
+                            <img src="/static/relicon-logo.png" alt="Relicon" class="h-12 w-auto opacity-90 filter brightness-0 invert mr-3">
+                            <span class="text-2xl font-bold text-white tracking-wide">Relicon</span>
+                        </div>
+                    </div>
                     
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center space-x-2">
