@@ -273,13 +273,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
         }
         .bg-gradient { 
-            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%); 
-        }
-        .dark .bg-gradient { 
             background: linear-gradient(135deg, #111827 0%, #000000 100%); 
         }
         .transition-theme { 
-            transition: background-color 0.3s ease, color 0.3s ease; 
+            transition: all 0.3s ease; 
+        }
+        
+        /* Enhanced button animations */
+        .btn-primary {
+            background: linear-gradient(135deg, #FF5C00 0%, #E64A00 100%);
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(255, 92, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 92, 0, 0.4);
+        }
+        
+        /* Enhanced card styles */
+        .card-enhanced {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(75, 85, 99, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .card-enhanced:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 92, 0, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Enhanced dashboard cards */
+        .dashboard-card {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border: 1px solid rgba(75, 85, 99, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 92, 0, 0.05), transparent);
+            transition: left 0.8s ease;
+        }
+        
+        .dashboard-card:hover::before {
+            left: 100%;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 92, 0, 0.4);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Enhanced form inputs */
+        .form-input {
+            background: rgba(17, 24, 39, 0.6);
+            border: 1px solid rgba(75, 85, 99, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            background: rgba(17, 24, 39, 0.8);
+            border-color: #FF5C00;
+            box-shadow: 0 0 0 3px rgba(255, 92, 0, 0.1);
+        }
+        
+        /* Enhanced stats animation */
+        .stat-number {
+            background: linear-gradient(135deg, #FF5C00 0%, #E64A00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+        }
+        
+        /* Enhanced scroll bar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #FF5C00 0%, #E64A00 100%);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #E64A00 0%, #CC3F00 100%);
         }
         @media (prefers-color-scheme: dark) {
           html { color-scheme: dark; }
@@ -356,11 +450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         </div>
                         
                         <div class="flex items-center space-x-4">
-                            <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
-                                <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
-                                <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
-                            </button>
-                            <button id="enter-panel-btn" class="bg-[#FF5C00] hover:bg-[#E64A00] text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                            <button id="enter-panel-btn" class="btn-primary text-white px-6 py-2 rounded-lg font-semibold">
                                 Enter Panel
                             </button>
                         </div>
@@ -641,23 +731,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             <!-- Dashboard Header -->
             <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4 cursor-pointer hover:opacity-80 transition-opacity" onclick="showLandingPage()">
-                        <div class="w-8 h-8 bg-[#FF5C00] rounded-lg flex items-center justify-center">
-                            <span class="text-white font-bold text-sm">R</span>
-                        </div>
-                        <span class="text-xl font-bold">Relicon</span>
-                        <i data-lucide="arrow-left" class="w-4 h-4 text-gray-400"></i>
-                    </div>
+                    <button onclick="showLandingPage()" class="flex items-center space-x-3 px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-all">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                        <span>Back</span>
+                    </button>
                     
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center space-x-2">
                             <div class="w-8 h-8 bg-gray-600 rounded-full"></div>
                             <span class="text-sm">User</span>
                         </div>
-                        <button id="dashboard-theme-toggle" class="p-2 rounded-lg bg-gray-700 text-gray-300">
-                            <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
-                            <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
-                        </button>
                     </div>
                 </div>
             </header>
@@ -687,6 +770,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
                 <!-- Dashboard Content -->
                 <main class="flex-1 p-8">
+                    <!-- Default Dashboard Overview -->
+                    <div id="overview-panel">
+                        <h1 class="text-3xl font-bold mb-8 flex items-center text-white">
+                            <i data-lucide="layout-dashboard" class="w-8 h-8 mr-3 text-[#FF5C00]"></i>
+                            Dashboard Overview
+                        </h1>
+                        
+                        <div class="grid md:grid-cols-3 gap-6 mb-8">
+                            <div class="dashboard-card rounded-xl p-6 shadow-lg">
+                                <div class="flex items-center justify-between mb-4">
+                                    <i data-lucide="video" class="w-8 h-8 text-[#FF5C00]"></i>
+                                    <div class="flex items-center text-green-400">
+                                        <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                                        <span class="text-sm">+12%</span>
+                                    </div>
+                                </div>
+                                <div class="text-3xl font-bold text-white mb-1 stat-number">24</div>
+                                <div class="text-gray-400">Videos Created</div>
+                                <p class="text-gray-500 text-sm mt-2">From last month</p>
+                            </div>
+                            <div class="dashboard-card rounded-xl p-6 shadow-lg">
+                                <div class="flex items-center justify-between mb-4">
+                                    <i data-lucide="eye" class="w-8 h-8 text-[#FF5C00]"></i>
+                                    <div class="flex items-center text-green-400">
+                                        <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                                        <span class="text-sm">+25%</span>
+                                    </div>
+                                </div>
+                                <div class="text-3xl font-bold text-white mb-1 stat-number">1.2K</div>
+                                <div class="text-gray-400">Total Views</div>
+                                <p class="text-gray-500 text-sm mt-2">From last month</p>
+                            </div>
+                            <div class="dashboard-card rounded-xl p-6 shadow-lg">
+                                <div class="flex items-center justify-between mb-4">
+                                    <i data-lucide="target" class="w-8 h-8 text-[#FF5C00]"></i>
+                                    <div class="flex items-center text-green-400">
+                                        <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                                        <span class="text-sm">+8%</span>
+                                    </div>
+                                </div>
+                                <div class="text-3xl font-bold text-white mb-1 stat-number">4.8%</div>
+                                <div class="text-gray-400">Conversion Rate</div>
+                                <p class="text-gray-500 text-sm mt-2">From last month</p>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card rounded-xl p-6 shadow-lg mb-8">
+                            <h3 class="text-xl font-semibold mb-6 flex items-center text-white">
+                                <i data-lucide="zap" class="w-5 h-5 mr-2 text-[#FF5C00]"></i>
+                                Quick Actions
+                            </h3>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <button onclick="showDashboardTab('ai-engine')" class="btn-primary text-white p-6 rounded-lg text-left hover:scale-105 shadow-lg">
+                                    <i data-lucide="brain" class="w-8 h-8 mb-3"></i>
+                                    <div class="font-semibold text-lg">Create New Video</div>
+                                    <div class="text-sm opacity-90 mt-1">Generate AI-powered video ads</div>
+                                </button>
+                                <button onclick="showDashboardTab('performance')" class="dashboard-card text-white p-6 rounded-lg text-left hover:scale-105 shadow-lg">
+                                    <i data-lucide="bar-chart-3" class="w-8 h-8 mb-3"></i>
+                                    <div class="font-semibold text-lg">View Analytics</div>
+                                    <div class="text-sm opacity-90 mt-1">Track video performance</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card rounded-xl p-6 shadow-lg">
+                            <h3 class="text-xl font-semibold mb-6 flex items-center text-white">
+                                <i data-lucide="activity" class="w-5 h-5 mr-2 text-[#FF5C00]"></i>
+                                Recent Activity
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                                    <div class="w-10 h-10 bg-[#FF5C00] rounded-full flex items-center justify-center">
+                                        <i data-lucide="video" class="w-5 h-5 text-white"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="text-white font-medium">New video created</div>
+                                        <div class="text-sm text-gray-400">Fitness Brand TikTok Ad - 30s</div>
+                                    </div>
+                                    <div class="text-sm text-gray-400">2 hours ago</div>
+                                </div>
+                                <div class="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i data-lucide="trending-up" class="w-5 h-5 text-white"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="text-white font-medium">Performance milestone</div>
+                                        <div class="text-sm text-gray-400">Reached 1K total views</div>
+                                    </div>
+                                    <div class="text-sm text-gray-400">1 day ago</div>
+                                </div>
+                                <div class="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                                        <i data-lucide="link" class="w-5 h-5 text-white"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="text-white font-medium">Account connected</div>
+                                        <div class="text-sm text-gray-400">TikTok Ads Manager linked</div>
+                                    </div>
+                                    <div class="text-sm text-gray-400">3 days ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- AI Engine Panel - EXACT FRONTEND IMPLEMENTATION -->
                     <div id="ai-engine-panel" class="hidden">
                         <div class="p-6 space-y-8 bg-gray-900 min-h-screen">
@@ -1566,26 +1754,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let selectedPlatforms = [];
         let aiPollInterval;
 
-        // Theme management
-        function initTheme() {
-            const isDark = localStorage.getItem('theme') === 'dark' || 
-                          (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            
-            if (isDark) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        }
-
-        function toggleTheme() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-        }
-
-        // Theme toggle buttons
-        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-        document.getElementById('dashboard-theme-toggle').addEventListener('click', toggleTheme);
+        // Set dark mode permanently
+        document.documentElement.classList.add('dark');
 
         // Navigation functions
         function showDashboard() {
@@ -2005,8 +2175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }, 5000);
         }
 
-        // Initialize theme on page load
-        initTheme();
+        // Dark mode is permanently enabled
         
         // Initialize icons when page loads
         document.addEventListener('DOMContentLoaded', () => {
