@@ -1,4 +1,4 @@
-import { type Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer } from "ws";
 import { join } from "path";
@@ -200,9 +200,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Static file serving for logos
+  app.use('/static', express.static(join(process.cwd(), 'client/public')));
+
   // Root route - serve the complete landing page
   app.get('/', (req, res) => {
     res.redirect('/dashboard');
+  });
+
+  // OAuth callback routes
+  app.get('/auth/meta/callback', (req, res) => {
+    const { code, error } = req.query;
+    
+    if (error) {
+      return res.redirect('/dashboard?error=meta_auth_failed');
+    }
+    
+    if (code) {
+      // TODO: Exchange code for access token and store in database
+      // For now, just redirect back to dashboard with success
+      return res.redirect('/dashboard?success=meta_connected');
+    }
+    
+    res.redirect('/dashboard?error=meta_auth_failed');
+  });
+
+  app.get('/auth/tiktok/callback', (req, res) => {
+    const { code, error } = req.query;
+    
+    if (error) {
+      return res.redirect('/dashboard?error=tiktok_auth_failed');
+    }
+    
+    if (code) {
+      // TODO: Exchange code for access token and store in database
+      // For now, just redirect back to dashboard with success
+      return res.redirect('/dashboard?success=tiktok_connected');
+    }
+    
+    res.redirect('/dashboard?error=tiktok_auth_failed');
+  });
+
+  app.get('/auth/shopify/callback', (req, res) => {
+    const { code, error, shop } = req.query;
+    
+    if (error) {
+      return res.redirect('/dashboard?error=shopify_auth_failed');
+    }
+    
+    if (code && shop) {
+      // TODO: Exchange code for access token and store in database
+      // For now, just redirect back to dashboard with success
+      return res.redirect('/dashboard?success=shopify_connected');
+    }
+    
+    res.redirect('/dashboard?error=shopify_auth_failed');
   });
 
   // Dashboard route - serve the complete frontend
@@ -293,9 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 <div class="container mx-auto px-6 py-4">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
-                            <div class="w-8 h-8 bg-[#FF5C00] rounded-lg flex items-center justify-center">
-                                <span class="text-white font-bold text-sm">R</span>
-                            </div>
+                            <img src="/static/relicon-logo.png" alt="Relicon" class="w-8 h-8 rounded-lg">
                             <span class="text-xl font-bold text-black dark:text-white">Relicon</span>
                         </div>
                         
@@ -1089,60 +1139,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
                                     <i data-lucide="link" class="w-8 h-8 mr-3 text-[#FF5C00]"></i>
                                     Connect Your Accounts
                                 </h2>
-                                <p class="text-gray-300 text-lg">
-                                    Integrate your advertising and sales platforms to unlock the full power of Relicon AI
+                                <p class="text-gray-300 text-lg max-w-2xl mx-auto">
+                                    Connect your essential platforms to enable automatic performance tracking and ROI analysis
                                 </p>
                             </div>
 
                             <!-- Overview Stats -->
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-lg">
                                     <div class="flex items-center justify-between mb-2">
                                         <i data-lucide="link" class="w-6 h-6 text-[#FF5C00]"></i>
-                                        <span class="px-2 py-1 text-xs border border-green-500 text-green-400 rounded">2 Connected</span>
+                                        <span class="px-2 py-1 text-xs border border-green-500 text-green-400 rounded" id="connected-count">0/3 Connected</span>
                                     </div>
-                                    <div class="text-2xl font-bold text-white">2/6</div>
-                                    <div class="text-gray-400 text-sm">Ad Platforms</div>
+                                    <div class="text-2xl font-bold text-white" id="connected-number">0</div>
+                                    <div class="text-gray-400 text-sm">Connected Platforms</div>
                                 </div>
 
                                 <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-lg">
                                     <div class="flex items-center justify-between mb-2">
-                                        <i data-lucide="shopping-bag" class="w-6 h-6 text-blue-500"></i>
-                                        <span class="px-2 py-1 text-xs border border-blue-500 text-blue-400 rounded">2 Connected</span>
+                                        <i data-lucide="trending-up" class="w-6 h-6 text-blue-500"></i>
+                                        <span class="px-2 py-1 text-xs border border-blue-500 text-blue-400 rounded" id="ad-platforms-count">0 Active</span>
                                     </div>
-                                    <div class="text-2xl font-bold text-white">2/6</div>
-                                    <div class="text-gray-400 text-sm">Sales Platforms</div>
+                                    <div class="text-2xl font-bold text-white">Ad Tracking</div>
+                                    <div class="text-gray-400 text-sm">Performance Analytics</div>
                                 </div>
 
                                 <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-lg">
                                     <div class="flex items-center justify-between mb-2">
-                                        <i data-lucide="dollar-sign" class="w-6 h-6 text-red-500"></i>
-                                        <i data-lucide="trending-up" class="w-4 h-4 text-red-400"></i>
+                                        <i data-lucide="shopping-bag" class="w-6 h-6 text-green-500"></i>
+                                        <span class="px-2 py-1 text-xs border border-green-500 text-green-400 rounded" id="sales-platforms-count">0 Active</span>
                                     </div>
-                                    <div class="text-2xl font-bold text-white">$6,040</div>
-                                    <div class="text-gray-400 text-sm">Total Ad Spend</div>
-                                </div>
-
-                                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-lg">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <i data-lucide="trending-up" class="w-6 h-6 text-green-500"></i>
-                                        <i data-lucide="trending-up" class="w-4 h-4 text-green-400"></i>
-                                    </div>
-                                    <div class="text-2xl font-bold text-white">$60,600</div>
-                                    <div class="text-gray-400 text-sm">Total Revenue</div>
+                                    <div class="text-2xl font-bold text-white">Sales Tracking</div>
+                                    <div class="text-gray-400 text-sm">Revenue Analytics</div>
                                 </div>
                             </div>
 
-                            <!-- Ad Platforms Section -->
+                            <!-- Platform Connections Section -->
                             <div class="space-y-6">
                                 <div class="flex items-center space-x-3">
                                     <i data-lucide="link" class="w-6 h-6 text-[#FF5C00]"></i>
-                                    <h3 class="text-2xl font-bold text-white">Advertising Platforms</h3>
+                                    <h3 class="text-2xl font-bold text-white">Platform Connections</h3>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    <!-- TikTok - Connected -->
-                                    <div class="bg-gray-800 rounded-xl p-6 border border-green-500 shadow-lg transition-all hover:scale-105">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <!-- Meta (Facebook & Instagram) -->
+                                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-[#FF5C00] transition-all shadow-lg hover:scale-105" id="meta-card">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <div class="flex items-center space-x-3">
+                                                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                                                    <span class="text-white font-bold">M</span>
+                                                </div>
+                                                <div>
+                                                    <h3 class="text-lg font-semibold text-white">Meta</h3>
+                                                    <div class="flex items-center space-x-2">
+                                                        <i data-lucide="alert-circle" class="w-4 h-4 text-gray-400" id="meta-status-icon"></i>
+                                                        <span class="text-sm text-gray-400" id="meta-status-text">Not Connected</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button class="px-3 py-1 border border-gray-600 text-gray-300 rounded text-sm hover:bg-gray-700 transition-colors" id="meta-settings" style="display: none;">
+                                                <i data-lucide="settings" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                        <p class="text-gray-300 text-sm mb-4">Connect your Meta Business Manager for Facebook and Instagram ads tracking</p>
+                                        <div class="grid grid-cols-3 gap-2 mb-4 text-center" id="meta-stats" style="display: none;">
+                                            <div>
+                                                <div class="text-lg font-bold text-white">0</div>
+                                                <div class="text-xs text-gray-400">Campaigns</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-lg font-bold text-white">$0</div>
+                                                <div class="text-xs text-gray-400">Spend</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-lg font-bold text-[#FF5C00]">0x</div>
+                                                <div class="text-xs text-gray-400">ROAS</div>
+                                            </div>
+                                        </div>
+                                        <button class="w-full bg-[#FF5C00] hover:bg-[#E64A00] text-white py-2 rounded-lg font-medium transition-colors" id="meta-connect-btn" onclick="connectMeta()">
+                                            Connect Meta
+                                        </button>
+                                    </div>
+
+                                    <!-- TikTok -->
+                                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-[#FF5C00] transition-all shadow-lg hover:scale-105" id="tiktok-card">
                                         <div class="flex items-center justify-between mb-4">
                                             <div class="flex items-center space-x-3">
                                                 <div class="w-10 h-10 bg-pink-500 rounded-lg flex items-center justify-center">
@@ -1151,162 +1231,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
                                                 <div>
                                                     <h3 class="text-lg font-semibold text-white">TikTok</h3>
                                                     <div class="flex items-center space-x-2">
-                                                        <i data-lucide="check-circle" class="w-4 h-4 text-green-500"></i>
-                                                        <span class="text-sm text-green-400">Active</span>
+                                                        <i data-lucide="alert-circle" class="w-4 h-4 text-gray-400" id="tiktok-status-icon"></i>
+                                                        <span class="text-sm text-gray-400" id="tiktok-status-text">Not Connected</span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <button class="px-3 py-1 border border-gray-600 text-gray-300 rounded text-sm hover:bg-gray-700 transition-colors">
+                                            <button class="px-3 py-1 border border-gray-600 text-gray-300 rounded text-sm hover:bg-gray-700 transition-colors" id="tiktok-settings" style="display: none;">
                                                 <i data-lucide="settings" class="w-4 h-4"></i>
                                             </button>
                                         </div>
-                                        <p class="text-gray-300 text-sm mb-4">Connect your TikTok Ads Manager for automated campaign management</p>
-                                        <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+                                        <p class="text-gray-300 text-sm mb-4">Connect your TikTok Ads Manager for campaign performance tracking</p>
+                                        <div class="grid grid-cols-3 gap-2 mb-4 text-center" id="tiktok-stats" style="display: none;">
                                             <div>
-                                                <div class="text-lg font-bold text-white">12</div>
+                                                <div class="text-lg font-bold text-white">0</div>
                                                 <div class="text-xs text-gray-400">Campaigns</div>
                                             </div>
                                             <div>
-                                                <div class="text-lg font-bold text-white">$2,840</div>
+                                                <div class="text-lg font-bold text-white">$0</div>
                                                 <div class="text-xs text-gray-400">Spend</div>
                                             </div>
                                             <div>
-                                                <div class="text-lg font-bold text-[#FF5C00]">4.2x</div>
+                                                <div class="text-lg font-bold text-[#FF5C00]">0x</div>
                                                 <div class="text-xs text-gray-400">ROAS</div>
                                             </div>
                                         </div>
-                                        <button class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium transition-colors">Connected ✓</button>
+                                        <button class="w-full bg-[#FF5C00] hover:bg-[#E64A00] text-white py-2 rounded-lg font-medium transition-colors" id="tiktok-connect-btn" onclick="connectTikTok()">
+                                            Connect TikTok
+                                        </button>
                                     </div>
 
-                                    <!-- Meta - Connected -->
-                                    <div class="bg-gray-800 rounded-xl p-6 border border-green-500 shadow-lg transition-all hover:scale-105">
-                                        <div class="flex items-center justify-between mb-4">
-                                            <div class="flex items-center space-x-3">
-                                                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                                                    <span class="text-white font-bold">M</span>
-                                                </div>
-                                                <div>
-                                                    <h3 class="text-lg font-semibold text-white">Meta (Facebook & Instagram)</h3>
-                                                    <div class="flex items-center space-x-2">
-                                                        <i data-lucide="check-circle" class="w-4 h-4 text-green-500"></i>
-                                                        <span class="text-sm text-green-400">Active</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <button class="px-3 py-1 border border-gray-600 text-gray-300 rounded text-sm hover:bg-gray-700 transition-colors">
-                                                <i data-lucide="settings" class="w-4 h-4"></i>
-                                            </button>
-                                        </div>
-                                        <p class="text-gray-300 text-sm mb-4">Sync with Meta Business Manager for Facebook and Instagram ads</p>
-                                        <div class="grid grid-cols-3 gap-2 mb-4 text-center">
-                                            <div>
-                                                <div class="text-lg font-bold text-white">8</div>
-                                                <div class="text-xs text-gray-400">Campaigns</div>
-                                            </div>
-                                            <div>
-                                                <div class="text-lg font-bold text-white">$3,200</div>
-                                                <div class="text-xs text-gray-400">Spend</div>
-                                            </div>
-                                            <div>
-                                                <div class="text-lg font-bold text-[#FF5C00]">3.8x</div>
-                                                <div class="text-xs text-gray-400">ROAS</div>
-                                            </div>
-                                        </div>
-                                        <button class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium transition-colors">Connected ✓</button>
-                                    </div>
-
-                                    <!-- YouTube - Not Connected -->
-                                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-[#FF5C00] transition-all shadow-lg hover:scale-105">
-                                        <div class="flex items-center justify-between mb-4">
-                                            <div class="flex items-center space-x-3">
-                                                <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
-                                                    <span class="text-white font-bold">Y</span>
-                                                </div>
-                                                <div>
-                                                    <h3 class="text-lg font-semibold text-white">YouTube</h3>
-                                                    <div class="flex items-center space-x-2">
-                                                        <i data-lucide="alert-circle" class="w-4 h-4 text-gray-400"></i>
-                                                        <span class="text-sm text-gray-400">Not Connected</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <p class="text-gray-300 text-sm mb-4">Connect YouTube Ads for video advertising campaigns</p>
-                                        <button class="w-full bg-[#FF5C00] hover:bg-[#E64A00] text-white py-2 rounded-lg font-medium transition-colors">Connect Account</button>
-                                    </div>
-
-                                    <!-- Google Ads - Not Connected -->
-                                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-[#FF5C00] transition-all shadow-lg hover:scale-105">
+                                    <!-- Shopify -->
+                                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-[#FF5C00] transition-all shadow-lg hover:scale-105" id="shopify-card">
                                         <div class="flex items-center justify-between mb-4">
                                             <div class="flex items-center space-x-3">
                                                 <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                                                    <span class="text-white font-bold">G</span>
-                                                </div>
-                                                <div>
-                                                    <h3 class="text-lg font-semibold text-white">Google Ads</h3>
-                                                    <div class="flex items-center space-x-2">
-                                                        <i data-lucide="alert-circle" class="w-4 h-4 text-gray-400"></i>
-                                                        <span class="text-sm text-gray-400">Not Connected</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <p class="text-gray-300 text-sm mb-4">Integrate Google Ads for search and display campaigns</p>
-                                        <button class="w-full bg-[#FF5C00] hover:bg-[#E64A00] text-white py-2 rounded-lg font-medium transition-colors">Connect Account</button>
-                                    </div>
-
-                                    <!-- Snapchat - Not Connected -->
-                                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-[#FF5C00] transition-all shadow-lg hover:scale-105">
-                                        <div class="flex items-center justify-between mb-4">
-                                            <div class="flex items-center space-x-3">
-                                                <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
                                                     <span class="text-white font-bold">S</span>
                                                 </div>
                                                 <div>
-                                                    <h3 class="text-lg font-semibold text-white">Snapchat</h3>
+                                                    <h3 class="text-lg font-semibold text-white">Shopify</h3>
                                                     <div class="flex items-center space-x-2">
-                                                        <i data-lucide="alert-circle" class="w-4 h-4 text-gray-400"></i>
-                                                        <span class="text-sm text-gray-400">Not Connected</span>
+                                                        <i data-lucide="alert-circle" class="w-4 h-4 text-gray-400" id="shopify-status-icon"></i>
+                                                        <span class="text-sm text-gray-400" id="shopify-status-text">Not Connected</span>
                                                     </div>
                                                 </div>
                                             </div>
+                                            <button class="px-3 py-1 border border-gray-600 text-gray-300 rounded text-sm hover:bg-gray-700 transition-colors" id="shopify-settings" style="display: none;">
+                                                <i data-lucide="settings" class="w-4 h-4"></i>
+                                            </button>
                                         </div>
-                                        <p class="text-gray-300 text-sm mb-4">Connect Snapchat Ads Manager for Gen Z targeting</p>
-                                        <button class="w-full bg-[#FF5C00] hover:bg-[#E64A00] text-white py-2 rounded-lg font-medium transition-colors">Connect Account</button>
-                                    </div>
-
-                                    <!-- Pinterest - Not Connected -->
-                                    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-[#FF5C00] transition-all shadow-lg hover:scale-105">
-                                        <div class="flex items-center justify-between mb-4">
-                                            <div class="flex items-center space-x-3">
-                                                <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
-                                                    <span class="text-white font-bold">P</span>
-                                                </div>
-                                                <div>
-                                                    <h3 class="text-lg font-semibold text-white">Pinterest</h3>
-                                                    <div class="flex items-center space-x-2">
-                                                        <i data-lucide="alert-circle" class="w-4 h-4 text-gray-400"></i>
-                                                        <span class="text-sm text-gray-400">Not Connected</span>
-                                                    </div>
-                                                </div>
+                                        <p class="text-gray-300 text-sm mb-4">Connect your Shopify store for sales tracking and conversion attribution</p>
+                                        <div class="grid grid-cols-3 gap-2 mb-4 text-center" id="shopify-stats" style="display: none;">
+                                            <div>
+                                                <div class="text-lg font-bold text-white">0</div>
+                                                <div class="text-xs text-gray-400">Orders</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-lg font-bold text-white">$0</div>
+                                                <div class="text-xs text-gray-400">Revenue</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-lg font-bold text-[#FF5C00]">0%</div>
+                                                <div class="text-xs text-gray-400">Conv. Rate</div>
                                             </div>
                                         </div>
-                                        <p class="text-gray-300 text-sm mb-4">Integrate Pinterest Business for visual discovery ads</p>
-                                        <button class="w-full bg-[#FF5C00] hover:bg-[#E64A00] text-white py-2 rounded-lg font-medium transition-colors">Connect Account</button>
+                                        <button class="w-full bg-[#FF5C00] hover:bg-[#E64A00] text-white py-2 rounded-lg font-medium transition-colors" id="shopify-connect-btn" onclick="connectShopify()">
+                                            Connect Shopify
+                                        </button>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Sales Platforms Section -->
+                            <!-- Setup Instructions Section -->
                             <div class="space-y-6">
                                 <div class="flex items-center space-x-3">
-                                    <i data-lucide="shopping-bag" class="w-6 h-6 text-[#FF5C00]"></i>
-                                    <h3 class="text-2xl font-bold text-white">Sales & E-commerce Platforms</h3>
+                                    <i data-lucide="info" class="w-6 h-6 text-[#FF5C00]"></i>
+                                    <h3 class="text-2xl font-bold text-white">Setup Instructions</h3>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    <!-- Shopify - Connected -->
-                                    <div class="bg-gray-800 rounded-xl p-6 border border-green-500 shadow-lg transition-all hover:scale-105">
+                                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-lg">
+                                    <div class="space-y-4">
+                                        <div class="flex items-start space-x-3">
+                                            <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
+                                            <div>
+                                                <h4 class="text-white font-semibold">Meta Business Manager</h4>
+                                                <p class="text-gray-300 text-sm">Connect your Meta Business Manager account to track Facebook and Instagram ad performance</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start space-x-3">
+                                            <div class="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
+                                            <div>
+                                                <h4 class="text-white font-semibold">TikTok Ads Manager</h4>
+                                                <p class="text-gray-300 text-sm">Connect your TikTok Ads Manager account to track campaign performance and metrics</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start space-x-3">
+                                            <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">3</div>
+                                            <div>
+                                                <h4 class="text-white font-semibold">Shopify Store</h4>
+                                                <p class="text-gray-300 text-sm">Connect your Shopify store to track sales conversions and calculate accurate ROAS</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                         <div class="flex items-center justify-between mb-4">
                                             <div class="flex items-center space-x-3">
                                                 <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
@@ -1625,6 +1651,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
             document.getElementById('ai-duration-value').textContent = value;
         }
 
+        // OAuth connection functions
+        async function connectMeta() {
+            try {
+                // Update UI to show connecting state
+                const btn = document.getElementById('meta-connect-btn');
+                const icon = document.getElementById('meta-status-icon');
+                const text = document.getElementById('meta-status-text');
+                
+                btn.textContent = 'Connecting...';
+                btn.disabled = true;
+                
+                // Redirect to Meta OAuth
+                const clientId = 'YOUR_META_CLIENT_ID'; // Replace with actual client ID
+                const redirectUri = encodeURIComponent(window.location.origin + '/auth/meta/callback');
+                const scope = 'ads_read,ads_management,business_management';
+                
+                const authUrl = \`https://www.facebook.com/v18.0/dialog/oauth?client_id=\${clientId}&redirect_uri=\${redirectUri}&scope=\${scope}&response_type=code\`;
+                
+                window.location.href = authUrl;
+            } catch (error) {
+                console.error('Meta connection failed:', error);
+                alert('Failed to connect to Meta. Please try again.');
+            }
+        }
+
+        async function connectTikTok() {
+            try {
+                // Update UI to show connecting state
+                const btn = document.getElementById('tiktok-connect-btn');
+                const icon = document.getElementById('tiktok-status-icon');
+                const text = document.getElementById('tiktok-status-text');
+                
+                btn.textContent = 'Connecting...';
+                btn.disabled = true;
+                
+                // Redirect to TikTok OAuth
+                const clientId = 'YOUR_TIKTOK_CLIENT_ID'; // Replace with actual client ID
+                const redirectUri = encodeURIComponent(window.location.origin + '/auth/tiktok/callback');
+                const scope = 'business_management,ads_read,ads_management';
+                
+                const authUrl = \`https://business-api.tiktok.com/portal/auth?client_id=\${clientId}&redirect_uri=\${redirectUri}&scope=\${scope}&response_type=code\`;
+                
+                window.location.href = authUrl;
+            } catch (error) {
+                console.error('TikTok connection failed:', error);
+                alert('Failed to connect to TikTok. Please try again.');
+            }
+        }
+
+        async function connectShopify() {
+            try {
+                // Update UI to show connecting state
+                const btn = document.getElementById('shopify-connect-btn');
+                const icon = document.getElementById('shopify-status-icon');
+                const text = document.getElementById('shopify-status-text');
+                
+                btn.textContent = 'Connecting...';
+                btn.disabled = true;
+                
+                // Redirect to Shopify OAuth
+                const shopDomain = prompt('Enter your Shopify store domain (e.g., mystore.myshopify.com):');
+                if (!shopDomain) {
+                    btn.textContent = 'Connect Shopify';
+                    btn.disabled = false;
+                    return;
+                }
+                
+                const clientId = 'YOUR_SHOPIFY_CLIENT_ID'; // Replace with actual client ID
+                const redirectUri = encodeURIComponent(window.location.origin + '/auth/shopify/callback');
+                const scope = 'read_orders,read_products,read_customers';
+                
+                const authUrl = \`https://\${shopDomain}/admin/oauth/authorize?client_id=\${clientId}&scope=\${scope}&redirect_uri=\${redirectUri}&response_type=code\`;
+                
+                window.location.href = authUrl;
+            } catch (error) {
+                console.error('Shopify connection failed:', error);
+                alert('Failed to connect to Shopify. Please try again.');
+            }
+        }
+
+        // Update connection status
+        function updateConnectionStatus(platform, isConnected) {
+            const card = document.getElementById(\`\${platform}-card\`);
+            const icon = document.getElementById(\`\${platform}-status-icon\`);
+            const text = document.getElementById(\`\${platform}-status-text\`);
+            const btn = document.getElementById(\`\${platform}-connect-btn\`);
+            const stats = document.getElementById(\`\${platform}-stats\`);
+            const settings = document.getElementById(\`\${platform}-settings\`);
+            
+            if (isConnected) {
+                card.classList.remove('border-gray-700');
+                card.classList.add('border-green-500');
+                icon.setAttribute('data-lucide', 'check-circle');
+                icon.className = 'w-4 h-4 text-green-500';
+                text.textContent = 'Connected';
+                text.className = 'text-sm text-green-400';
+                btn.textContent = 'Connected ✓';
+                btn.className = 'w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium transition-colors';
+                stats.style.display = 'block';
+                settings.style.display = 'block';
+            } else {
+                card.classList.remove('border-green-500');
+                card.classList.add('border-gray-700');
+                icon.setAttribute('data-lucide', 'alert-circle');
+                icon.className = 'w-4 h-4 text-gray-400';
+                text.textContent = 'Not Connected';
+                text.className = 'text-sm text-gray-400';
+                btn.textContent = \`Connect \${platform.charAt(0).toUpperCase() + platform.slice(1)}\`;
+                btn.className = 'w-full bg-[#FF5C00] hover:bg-[#E64A00] text-white py-2 rounded-lg font-medium transition-colors';
+                stats.style.display = 'none';
+                settings.style.display = 'none';
+            }
+            
+            // Update icons
+            lucide.createIcons();
+            
+            // Update overview counts
+            updateOverviewCounts();
+        }
+
+        function updateOverviewCounts() {
+            const connections = ['meta', 'tiktok', 'shopify'];
+            let connectedCount = 0;
+            
+            connections.forEach(platform => {
+                const text = document.getElementById(\`\${platform}-status-text\`);
+                if (text && text.textContent === 'Connected') {
+                    connectedCount++;
+                }
+            });
+            
+            document.getElementById('connected-count').textContent = \`\${connectedCount}/3 Connected\`;
+            document.getElementById('connected-number').textContent = connectedCount;
+        }
+
         // AI Video Generation
         const aiSteps = [
             "Analyzing brand tone and audience",
@@ -1778,12 +1939,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
         document.getElementById('enter-panel-btn').addEventListener('click', showDashboard);
         document.getElementById('hero-enter-panel').addEventListener('click', showDashboard);
 
+        // Handle OAuth callback results
+        function handleOAuthCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const success = urlParams.get('success');
+            const error = urlParams.get('error');
+            
+            if (success) {
+                if (success === 'meta_connected') {
+                    updateConnectionStatus('meta', true);
+                    showNotification('Meta connected successfully!', 'success');
+                } else if (success === 'tiktok_connected') {
+                    updateConnectionStatus('tiktok', true);
+                    showNotification('TikTok connected successfully!', 'success');
+                } else if (success === 'shopify_connected') {
+                    updateConnectionStatus('shopify', true);
+                    showNotification('Shopify connected successfully!', 'success');
+                }
+                
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            
+            if (error) {
+                let message = 'Connection failed. Please try again.';
+                if (error === 'meta_auth_failed') {
+                    message = 'Meta connection failed. Please check your permissions and try again.';
+                } else if (error === 'tiktok_auth_failed') {
+                    message = 'TikTok connection failed. Please check your permissions and try again.';
+                } else if (error === 'shopify_auth_failed') {
+                    message = 'Shopify connection failed. Please check your store domain and try again.';
+                }
+                
+                showNotification(message, 'error');
+                
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        // Simple notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = \`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full\`;
+            
+            if (type === 'success') {
+                notification.className += ' bg-green-600 text-white';
+            } else if (type === 'error') {
+                notification.className += ' bg-red-600 text-white';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 5000);
+        }
+
         // Initialize theme on page load
         initTheme();
         
         // Initialize icons when page loads
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
+            handleOAuthCallback(); // Check for OAuth callback on page load
+            updateOverviewCounts(); // Update connection counts
         });
     </script>
 </body>
