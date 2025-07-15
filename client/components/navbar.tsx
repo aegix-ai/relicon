@@ -57,7 +57,7 @@ export default function Navbar({ onEnterPanel }: NavbarProps) {
             className="flex items-center cursor-pointer"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
-            <img src="/relicon-icon.png" alt="Relicon Logo" className="w-10 h-10 mr-3" />
+            <img src="/relicon-logo.png" alt="Relicon Logo" className="w-10 h-10 mr-3 object-contain" />
             <span className="text-xl font-bold text-black dark:text-white">Relicon</span>
           </div>
 
