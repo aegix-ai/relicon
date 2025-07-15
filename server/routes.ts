@@ -344,9 +344,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
                 <div class="container mx-auto px-6 py-4">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <img src="/static/relicon-logo.png" alt="Relicon" class="w-8 h-8 rounded-lg">
-                            <span class="text-xl font-bold text-black dark:text-white">Relicon</span>
+                        <div class="flex items-center">
+                            <img src="/static/relicon-logo.png" alt="Relicon" class="h-12 w-auto">
                         </div>
                         
                         <div class="hidden md:flex items-center space-x-8">
