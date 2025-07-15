@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relicon - Redirecting...</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #000;
+            color: #fff;
+        }
+        .loading {
+            text-align: center;
+        }
+        .spinner {
+            border: 2px solid #333;
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading">
+        <div class="spinner"></div>
+        <h2>Starting Relicon...</h2>
+        <p>Loading the AI video generation platform...</p>
+    </div>
+    
+    <script>
+        // Check if Next.js is running and redirect
+        let attempts = 0;
+        const maxAttempts = 30;
+        
+        function startNextJs() {
+            fetch('/api/start-nextjs', { method: 'POST' })
+                .then(response => response.json())
+                .then(() => {
+                    // Wait for Next.js to be ready then redirect
+                    checkNextJsReady();
+                })
+                .catch(() => {
+                    // Fallback: try to redirect directly after a delay
+                    setTimeout(checkNextJsReady, 3000);
+                });
+        }
+        
+        function checkNextJsReady() {
+            if (attempts >= maxAttempts) {
+                document.body.innerHTML = '<div class="loading"><h2>Error</h2><p>Unable to start frontend. Please refresh the page.</p></div>';
+                return;
+            }
+            
+            attempts++;
+            
+            fetch('http://localhost:3000')
+                .then(() => {
+                    // Next.js is ready, redirect
+                    window.location.href = 'http://localhost:3000';
+                })
+                .catch(() => {
+                    // Not ready yet, try again
+                    setTimeout(checkNextJsReady, 1000);
+                });
+        }
+        
+        // Start the process
+        startNextJs();
+    </script>
+</body>
+</html>
