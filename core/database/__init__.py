@@ -1,8 +1,5 @@
-"""Database module for Relicon AI"""
-from .models import Ads, Sales, MetricsMeta, MetricsTT
+"""Database module"""
 from .connection import get_db, init_db, db_manager
+from .models import Sales, Ads, MetricsMeta, MetricsTT, Base
 
-__all__ = [
-    "Ads", "Sales", "MetricsMeta", "MetricsTT",
-    "get_db", "init_db", "db_manager"
-]
+__all__ = ['get_db', 'init_db', 'db_manager', 'Sales', 'Ads', 'MetricsMeta', 'MetricsTT', 'Base']

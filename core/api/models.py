@@ -1,96 +1,83 @@
-"""
-API models and schemas for Relicon AI Video Generation Platform
-Defines all request/response models for the FastAPI application
-"""
-from pydantic import BaseModel
+"""API models for request/response validation"""
 from typing import Dict, Any, List, Optional
-
-class ShopifyWebhookData(BaseModel):
-    """Shopify webhook data model"""
-    id: int
-    total_price: str
-    customer: Dict[str, Any] = {}
-    line_items: List[Dict[str, Any]] = []
-    note_attributes: List[Dict[str, Any]] = []
-
-class MetaPlatformData(BaseModel):
-    """Meta platform webhook data model"""
-    object: str
-    entry: List[Dict[str, Any]]
-
-class TikTokWebhookData(BaseModel):
-    """TikTok webhook data model"""
-    event: str
-    data: Dict[str, Any]
+from pydantic import BaseModel, Field
 
 class VideoGenerationRequest(BaseModel):
-    """Video generation request model"""
-    brand_name: str
-    brand_description: str
-    duration: int = 30
-    platform: str = "universal"
-    target_audience: Optional[str] = None
-    style: Optional[str] = None
+    """Request model for video generation"""
+    brand_name: str = Field(..., description="Brand name")
+    brand_description: str = Field(..., description="Brand description")
+    duration: int = Field(30, ge=5, le=120, description="Video duration in seconds")
+    platform: str = Field("universal", description="Target platform")
+    target_audience: Optional[str] = Field(None, description="Target audience")
+    style: Optional[str] = Field(None, description="Video style")
 
 class VideoGenerationResponse(BaseModel):
-    """Video generation response model"""
+    """Response model for video generation"""
     success: bool
     message: str
     video_url: Optional[str] = None
     job_id: Optional[str] = None
     error: Optional[str] = None
 
-class MetricsRequest(BaseModel):
-    """Metrics collection request model"""
-    platform: str
-    ad_ids: List[str]
-    date_range: int = 7
-
-class MetricsResponse(BaseModel):
-    """Metrics collection response model"""
-    success: bool
-    platform: str
-    processed: int
-    failed: int
-    errors: List[str] = []
-
 class HookGenerationRequest(BaseModel):
-    """Hook generation request model"""
-    ad_id: str
-    platform: Optional[str] = None
-    target_audience: Optional[str] = None
+    """Request model for hook generation"""
+    winner_ads: List[Dict[str, Any]]
+    current_ad: Dict[str, Any]
 
 class HookGenerationResponse(BaseModel):
-    """Hook generation response model"""
+    """Response model for hook generation"""
     success: bool
-    hooks: List[Dict[str, Any]] = []
+    hooks: List[Dict[str, Any]]
     analysis_summary: Optional[str] = None
-    winning_patterns: List[str] = []
+    error: Optional[str] = None
+
+class MetricsRequest(BaseModel):
+    """Request model for metrics collection"""
+    platform: str = Field(..., description="Platform (meta, tiktok)")
+    ad_ids: List[str] = Field(..., description="Ad IDs to collect metrics for")
+    date_range: int = Field(7, description="Date range in days")
+
+class MetricsResponse(BaseModel):
+    """Response model for metrics collection"""
+    success: bool
+    platform: str
+    metrics_collected: int
     error: Optional[str] = None
 
 class EvaluationRequest(BaseModel):
-    """Creative evaluation request model"""
-    days: int = 30
-    platform: Optional[str] = None
+    """Request model for creative evaluation"""
+    days: int = Field(30, description="Days to evaluate")
+    platform: Optional[str] = Field(None, description="Platform filter")
 
 class EvaluationResponse(BaseModel):
-    """Creative evaluation response model"""
+    """Response model for creative evaluation"""
     success: bool
-    period: str
     total_ads: int
     winners: int
-    summary: Dict[str, Any] = {}
-    top_performers: List[Dict[str, Any]] = []
+    performance_summary: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
 
-class ProgressUpdate(BaseModel):
-    """Progress update model for real-time updates"""
-    progress: int
-    message: str
-    timestamp: Optional[str] = None
-
 class ErrorResponse(BaseModel):
-    """Standard error response model"""
-    success: bool = False
+    """Standard error response"""
     error: str
-    details: Optional[Dict[str, Any]] = None
+    message: str
+    status_code: int
+
+class ShopifyWebhookData(BaseModel):
+    """Shopify webhook data"""
+    order_id: str
+    total_price: float
+    line_items: List[Dict[str, Any]]
+    customer: Dict[str, Any]
+
+class MetaPlatformData(BaseModel):
+    """Meta platform webhook data"""
+    ad_id: str
+    campaign_id: str
+    metrics: Dict[str, Any]
+
+class TikTokWebhookData(BaseModel):
+    """TikTok webhook data"""
+    ad_id: str
+    campaign_id: str
+    metrics: Dict[str, Any]

@@ -14,7 +14,7 @@ from ai.planners import video_planner, script_generator
 from video.generation import video_generator, audio_processor
 from external.apis import luma_client, openai_client
 
-class VideoGenerationService:
+class VideoService:
     """Main service for orchestrating video generation"""
     
     def __init__(self):
@@ -227,7 +227,8 @@ class VideoGenerationService:
                 "background_color": "#1a1a2e"
             }]
             
-            success = self.video_gen.create_video_from_segments(segments, str(output_path))
+            video_path = self.video_gen.create_simple_video(brand_info, [audio_file])
+            success = video_path is not None
             
             if success:
                 return {
@@ -254,7 +255,7 @@ class VideoGenerationService:
         }
 
 # Global video generation service
-video_service = VideoGenerationService()
+video_service = VideoService()
 
 # Legacy functions for backwards compatibility
 def create_enhanced_video_generation(brand_info: Dict[str, Any], 

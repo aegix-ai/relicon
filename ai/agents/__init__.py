@@ -1,4 +1,4 @@
-"""AI Agents module for Relicon AI"""
-from .hook_generator import HookGenerator, generate_next_gen_hooks, hook_generator
+"""AI agents module"""
+from .hook_generator import generate_next_gen_hooks
 
-__all__ = ["HookGenerator", "generate_next_gen_hooks", "hook_generator"]
+__all__ = ['generate_next_gen_hooks']

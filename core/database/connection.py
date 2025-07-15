@@ -2,7 +2,7 @@
 Database connection and session management
 Handles database initialization and provides session management
 """
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from config.settings import settings
 from .models import Base
