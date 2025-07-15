@@ -54,7 +54,8 @@ class VideoGenerator:
     def create_simple_video(self, brand_info: Dict[str, Any], audio_files: List[str]) -> Optional[str]:
         """Create simple video with audio"""
         try:
-            output_path = Path(settings.OUTPUT_DIR) / f"simple_{brand_info.get('brand_name', 'brand')}.mp4"
+            output_filename = f"simple_{brand_info.get('brand_name', 'brand')}.mp4"
+            output_path = Path(settings.OUTPUT_DIR) / output_filename
             
             # Create a simple black video with audio
             if audio_files and os.path.exists(audio_files[0]):

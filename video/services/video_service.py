@@ -230,11 +230,11 @@ class VideoService:
             video_path = self.video_gen.create_simple_video(brand_info, [audio_file])
             success = video_path is not None
             
-            if success:
+            if success and video_path:
                 return {
                     "success": True,
-                    "video_path": str(output_path),
-                    "video_url": f"/outputs/{output_filename}",
+                    "video_path": video_path,
+                    "video_url": f"/outputs/{os.path.basename(video_path)}",
                     "duration": duration,
                     "type": "simple"
                 }
