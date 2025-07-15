@@ -31,21 +31,17 @@ async function aiVideoGeneration(jobId: string, requestData: any) {
   try {
     await updateJobStatus(jobId, 'processing', 10, 'Analyzing brand tone and audience');
     
-    // Create the video generation command
-    const pythonScript = join(process.cwd(), 'enhanced_video_generator.py');
+    // Call the Python video generation script directly
+    const pythonScript = join(process.cwd(), 'generate_video_direct.py');
     const outputPath = join(process.cwd(), 'outputs', `${jobId}.mp4`);
     
     // Prepare the arguments for the Python script
     const args = [
       pythonScript,
-      '--brand-name', requestData.brand_name || 'Sample Brand',
-      '--brand-description', requestData.brand_description || 'A revolutionary product that changes everything',
-      '--target-audience', requestData.target_audience || 'young professionals',
-      '--duration', (requestData.duration || 30).toString(),
-      '--tone', requestData.tone || 'professional',
-      '--call-to-action', requestData.call_to_action || 'Take action now',
-      '--output', outputPath,
-      '--job-id', jobId
+      requestData.brand_name || 'Sample Brand',
+      requestData.brand_description || 'A revolutionary product that changes everything',
+      (requestData.duration || 30).toString(),
+      outputPath
     ];
 
     await updateJobStatus(jobId, 'processing', 20, 'Generating AI script with natural pacing');
@@ -53,7 +49,7 @@ async function aiVideoGeneration(jobId: string, requestData: any) {
     // Execute the Python video generation script
     const pythonProcess = spawn('python3', args, {
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env }
+      env: { ...process.env, PYTHONPATH: process.cwd() }
     });
 
     let stdout = '';
@@ -72,6 +68,17 @@ async function aiVideoGeneration(jobId: string, requestData: any) {
             const progress = parseInt(progressMatch[1]);
             const message = progressMatch[2];
             updateJobStatus(jobId, 'processing', progress, message);
+          }
+        } else if (line.includes('SUCCESS:')) {
+          const successMatch = line.match(/SUCCESS:(.+)/);
+          if (successMatch) {
+            const videoUrl = `/api/video/${jobId}.mp4`;
+            updateJobStatus(jobId, 'completed', 100, 'Video generation completed successfully!', { video_url: videoUrl });
+          }
+        } else if (line.includes('ERROR:')) {
+          const errorMatch = line.match(/ERROR:(.+)/);
+          if (errorMatch) {
+            updateJobStatus(jobId, 'failed', 0, `Video generation failed: ${errorMatch[1]}`);
           }
         }
       }
