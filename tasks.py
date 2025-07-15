@@ -213,7 +213,7 @@ def evaluate_creatives(self):
                     COUNT(DISTINCT CASE WHEN mm.ad_id IS NOT NULL THEN mm.date END) as meta_days,
                     COUNT(DISTINCT CASE WHEN mt.ad_id IS NOT NULL THEN mt.date END) as tt_days
                 FROM ads a
-                LEFT JOIN metrics_meta mm ON CAST(a.ad_id AS INTEGER) = mm.ad_id AND a.platform = 'meta'
+                LEFT JOIN metrics_meta mm ON CAST(a.ad_id AS TEXT) = CAST(mm.ad_id AS TEXT) AND a.platform = 'meta'
                 LEFT JOIN metrics_tt mt ON a.ad_id = mt.ad_id AND a.platform = 'tiktok'
                 WHERE a.created_at >= NOW() - INTERVAL '30 days'
                 GROUP BY a.ad_id, a.platform
