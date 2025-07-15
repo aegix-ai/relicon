@@ -8,6 +8,7 @@ from video.caption.caption_generator import caption_generator
 from video.caption.precise_sync_generator import precise_sync_generator
 from video.audio.enhanced_audio_processor import enhanced_audio_processor
 from video.scenes.dynamic_scene_planner import dynamic_scene_planner
+from video.timing.timing_manager import timing_manager
 from ai.planners.video_planner import video_planner
 
 class EnhancedVideoService:
@@ -35,20 +36,36 @@ class EnhancedVideoService:
                 return {"success": False, "error": "Failed to create video plan"}
             
             if progress_callback:
-                progress_callback(15, "Generating human-like script...")
+                progress_callback(15, "Generating perfectly timed script...")
             
-            # Step 2: Generate script segments
+            # Step 2: Generate script segments with perfect timing
             script_segments = self._generate_enhanced_script(brand_info, master_plan)
             if not script_segments:
                 return {"success": False, "error": "Failed to generate script"}
             
-            if progress_callback:
-                progress_callback(25, "Creating natural human voiceover...")
+            # Step 2.1: Calculate perfect timing for all components
+            timing_result = timing_manager.calculate_perfect_timing(
+                brand_info.get("duration", 30), script_segments
+            )
+            if not timing_result.get("success"):
+                return {"success": False, "error": "Failed to calculate timing"}
             
-            # Step 3: Generate human-like audio
-            audio_file = self._create_human_audio(script_segments, brand_info)
+            # Use timing-adjusted segments
+            script_segments = timing_result["adjusted_segments"]
+            
+            if progress_callback:
+                progress_callback(25, "Creating synchronized premium audio...")
+            
+            # Step 3: Generate perfectly timed audio
+            full_text = " ".join([segment["text"] for segment in script_segments])
+            target_duration = brand_info.get("duration", 30)
+            
+            audio_file = timing_manager.create_synchronized_audio(
+                full_text, target_duration, enhanced_audio_processor
+            )
+            
             if not audio_file:
-                print("Enhanced audio failed, creating fallback audio...")
+                print("Synchronized audio failed, creating fallback audio...")
                 audio_file = self._create_fallback_audio(script_segments, brand_info)
                 if not audio_file:
                     return {"success": False, "error": "Failed to generate audio"}
@@ -68,16 +85,15 @@ class EnhancedVideoService:
             scene_videos = self._create_scene_backgrounds(scene_plans)
             
             if progress_callback:
-                progress_callback(60, "Generating precisely synchronized captions...")
+                progress_callback(60, "Generating perfectly synchronized captions...")
             
-            # Step 6: Generate precise captions
-            full_text = " ".join([segment["text"] for segment in script_segments])
-            caption_segments = precise_sync_generator.generate_precise_captions(full_text, audio_file)
+            # Step 6: Generate captions using timing manager
+            caption_segments = timing_result["caption_timing"]
             
             if progress_callback:
                 progress_callback(75, "Assembling final video with captions...")
             
-            # Step 7: Assemble final video
+            # Step 7: Assemble final video with perfect timing
             final_video = self._assemble_enhanced_video(
                 scene_videos, audio_file, caption_segments, brand_info
             )
@@ -130,24 +146,21 @@ class EnhancedVideoService:
             return []
     
     def _humanize_script_text(self, text: str) -> str:
-        """Make script text more natural and human-like"""
-        # Remove overly promotional language
-        humanized = text.replace("revolutionary", "great")
-        humanized = humanized.replace("amazing", "really good")
-        humanized = humanized.replace("incredible", "impressive")
+        """Make script text natural and professional"""
+        # Clean and professional text
+        humanized = text
         
-        # Add natural speech patterns
+        # Normalize punctuation
         humanized = humanized.replace("!", ".")
         humanized = humanized.replace("?", ".")
         
-        # Add conversational elements
-        if not humanized.startswith(("So", "Well", "Now", "You know")):
-            humanized = "So " + humanized
-        
-        # Make it sound more casual
+        # Make contractions natural
         humanized = humanized.replace("you will", "you'll")
         humanized = humanized.replace("it is", "it's")
         humanized = humanized.replace("we are", "we're")
+        
+        # Ensure proper sentence structure
+        humanized = ' '.join(humanized.split())
         
         return humanized
     
@@ -175,14 +188,14 @@ class EnhancedVideoService:
         brand_style = brand_info.get("style", "professional").lower()
         
         style_mapping = {
-            "professional": "professional",
+            "professional": "premium",
             "casual": "conversational",
             "friendly": "warm",
             "energetic": "natural",
-            "corporate": "professional"
+            "corporate": "premium"
         }
         
-        return style_mapping.get(brand_style, "natural")
+        return style_mapping.get(brand_style, "premium")
     
     def _create_scene_backgrounds(self, scene_plans: List[Dict[str, Any]]) -> List[str]:
         """Create dynamic background videos for each scene"""
@@ -364,12 +377,12 @@ class EnhancedVideoService:
             # Combine all text
             full_text = " ".join([segment["text"] for segment in script_segments])
             
-            # Generate audio with OpenAI (reluctant reading style)
+            # Generate audio with OpenAI (professional quality)
             response = client.audio.speech.create(
                 model="tts-1-hd",
-                voice="onyx",  # Deeper, more monotone voice
+                voice="alloy",  # Clear, professional voice
                 input=full_text,
-                speed=0.75  # Slower for reluctant reading
+                speed=1.0  # Normal speed for clarity
             )
             
             output_file = self.output_dir / "audio" / f"fallback_{int(time.time())}.mp3"

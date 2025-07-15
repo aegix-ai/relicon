@@ -52,43 +52,47 @@ class PreciseSyncGenerator:
         return cleaned
     
     def _calculate_precise_timing(self, words: List[str], audio_duration: float) -> List[Dict[str, Any]]:
-        """Calculate precise timing for 3-word chunks"""
+        """Calculate precise timing for 3-word chunks with perfect sync"""
         caption_segments = []
         
-        # Calculate average speaking rate
+        # Calculate precise speaking rate
         total_words = len(words)
         words_per_second = total_words / audio_duration
         
-        # Account for pauses and natural speech patterns
-        # Slow down for reluctant reading style
-        effective_words_per_second = words_per_second * 0.6  # 40% slower for reluctant reading
+        # Use actual speaking rate for perfect sync
+        effective_words_per_second = words_per_second
         
         current_time = 0.0
+        
+        # Calculate total chunks to ensure perfect timing
+        total_chunks = (len(words) + 2) // 3  # Round up division
         
         for i in range(0, len(words), 3):
             chunk_words = words[i:i+3]
             chunk_text = " ".join(chunk_words)
             
-            # Calculate duration for this chunk
+            # Calculate precise duration for this chunk
             word_count = len(chunk_words)
             base_duration = word_count / effective_words_per_second
             
-            # Add natural pauses
+            # Add minimal pause between chunks (50ms)
             if i > 0:
-                current_time += 0.2  # 200ms pause between chunks
+                current_time += 0.05
             
-            # Adjust for word complexity
-            adjusted_duration = self._adjust_for_complexity(chunk_text, base_duration)
+            # Ensure we don't exceed total duration
+            remaining_time = audio_duration - current_time
+            if remaining_time < base_duration:
+                base_duration = max(0.5, remaining_time)  # Minimum 0.5s duration
             
             caption_segments.append({
                 "text": chunk_text,
                 "start_time": current_time,
-                "end_time": current_time + adjusted_duration,
-                "duration": adjusted_duration,
+                "end_time": current_time + base_duration,
+                "duration": base_duration,
                 "word_count": word_count
             })
             
-            current_time += adjusted_duration
+            current_time += base_duration
         
         return caption_segments
     

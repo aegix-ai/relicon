@@ -203,31 +203,49 @@ class DynamicScenePlanner:
         return effects
     
     def _build_dynamic_filter(self, colors: List[str], animation: Dict[str, Any], duration: float) -> str:
-        """Build FFmpeg filter for dynamic background"""
+        """Build FFmpeg filter for dynamic colorful background"""
         animation_type = animation.get("type", "gradient")
         
         if animation_type == "gradient":
-            # Create flowing gradient
+            # Create vibrant flowing gradient
+            color1 = colors[0].replace("#", "0x")
+            color2 = colors[1] if len(colors) > 1 else colors[0].replace("#", "0x")
+            color3 = colors[2] if len(colors) > 2 else color2
+            
+            return (
+                f"color=c={color1}:s=1080x1920:d={duration}[base];"
+                f"color=c={color2}:s=1080x1920:d={duration}[overlay1];"
+                f"color=c={color3}:s=1080x1920:d={duration}[overlay2];"
+                "[base][overlay1]blend=all_mode=overlay:all_opacity=0.6[tmp];"
+                "[tmp][overlay2]blend=all_mode=screen:all_opacity=0.4"
+            )
+        
+        elif animation_type == "particles":
+            # Create animated particle effect
+            return (
+                f"color=c={colors[0].replace('#', '0x')}:s=1080x1920:d={duration}[base];"
+                f"color=c={colors[1].replace('#', '0x')}:s=50x50:d={duration}[particle];"
+                "[base][particle]overlay=x='200+100*sin(t*2)':y='300+150*cos(t*3)'"
+            )
+        
+        elif animation_type == "color_transition":
+            # Create smooth color transitions
             color1 = colors[0].replace("#", "0x")
             color2 = colors[1] if len(colors) > 1 else colors[0].replace("#", "0x")
             
             return (
-                f"color=c={color1}:s=1920x1080:d={duration}[base];"
-                f"color=c={color2}:s=1920x1080:d={duration}[overlay];"
-                "[base][overlay]blend=all_mode=overlay:all_opacity=0.5"
-            )
-        
-        elif animation_type == "particles":
-            # Create particle effect
-            return (
-                f"color=c=black:s=1920x1080:d={duration}[base];"
-                f"color=c={colors[0].replace('#', '0x')}:s=20x20:d={duration}[particle];"
-                "[base][particle]overlay=x='if(gte(t,0),100*sin(t*2),0)':y='if(gte(t,0),100*cos(t*2),0)'"
+                f"color=c={color1}:s=1080x1920:d={duration}[c1];"
+                f"color=c={color2}:s=1080x1920:d={duration}[c2];"
+                "[c1][c2]blend=all_mode=overlay:all_opacity='0.5+0.5*sin(t*2)'"
             )
         
         else:
-            # Default gradient
-            return f"color=c={colors[0].replace('#', '0x')}:s=1920x1080:d={duration}"
+            # Vibrant default with animation
+            return (
+                f"color=c={colors[0].replace('#', '0x')}:s=1080x1920:d={duration}[base];"
+                f"color=c={colors[1].replace('#', '0x') if len(colors) > 1 else colors[0].replace('#', '0x')}:s=1080x1920:d={duration}[overlay];"
+                "[base][overlay]blend=all_mode=multiply:all_opacity=0.7"
+            )
 
 # Global instance
 dynamic_scene_planner = DynamicScenePlanner()

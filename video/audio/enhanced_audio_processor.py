@@ -15,21 +15,22 @@ class EnhancedAudioProcessor:
         self.output_dir = Path(settings.OUTPUT_DIR) / "audio"
         self.output_dir.mkdir(exist_ok=True)
         
-        # Human-like voice settings for ElevenLabs (reluctant reading style)
+        # Premium voice settings for ElevenLabs (high quality)
         self.voice_settings = {
-            "stability": 0.3,       # Low stability for reluctant, hesitant speech
-            "similarity_boost": 0.6,  # Moderate similarity
-            "style": 0.2,           # Low style for monotone, reluctant delivery
-            "use_speaker_boost": False
+            "stability": 0.75,      # High stability for clear speech
+            "similarity_boost": 0.85,  # High similarity for quality
+            "style": 0.6,           # Moderate style for natural delivery
+            "use_speaker_boost": True
         }
         
-        # Best ElevenLabs voices for human-like speech
+        # Best ElevenLabs voices for high-quality speech
         self.voices = {
             "professional": "21m00Tcm4TlvDq8ikWAM",  # Rachel - Professional female
             "conversational": "29vD33N1CtxCmqQRPOHJ",  # Drew - Conversational male
             "warm": "EXAVITQu4vr4xnSDxMaL",           # Bella - Warm female
             "casual": "VR6AewLTigWG4xSOukaG",         # Arnold - Casual male
-            "natural": "pNInz6obpgDQGcFmaJgB",        # Adam - Natural male
+            "natural": "pNInz6obpgDQGcFmaJgB",        # Adam - Natural male (BEST MODEL)
+            "premium": "21m00Tcm4TlvDq8ikWAM",        # Rachel - Premium quality
         }
     
     def create_human_voiceover(self, text: str, voice_style: str = "natural") -> Optional[str]:
@@ -70,7 +71,7 @@ class EnhancedAudioProcessor:
             
             data = {
                 "text": humanized_text,
-                "model_id": "eleven_multilingual_v2",
+                "model_id": "eleven_turbo_v2",  # Best model for quality
                 "voice_settings": self.voice_settings
             }
             
@@ -100,9 +101,9 @@ class EnhancedAudioProcessor:
             
             response = client.audio.speech.create(
                 model="tts-1-hd",
-                voice="onyx",  # Deeper, more monotone voice
+                voice="alloy",  # Clear, professional voice
                 input=humanized_text,
-                speed=0.7  # Much slower for reluctant reading
+                speed=1.0  # Normal speed for clarity
             )
             
             output_file = self.output_dir / f"openai_human_{int(time.time())}.mp3"
@@ -117,29 +118,22 @@ class EnhancedAudioProcessor:
             return None
     
     def _humanize_text(self, text: str) -> str:
-        """Make text sound like reluctant reading"""
-        # Make text sound like someone reading reluctantly
+        """Make text sound natural and professional"""
+        # Clean and natural text processing
         humanized = text
         
-        # Add hesitation markers
-        humanized = humanized.replace(',', '... uh... ')
+        # Add natural pauses
+        humanized = humanized.replace(',', ', ')
+        humanized = humanized.replace('.', '. ')
         
-        # Add reluctant pauses
-        humanized = humanized.replace('.', '... ')
-        
-        # Make it sound monotone and hesitant
+        # Normalize punctuation
         humanized = humanized.replace('!', '.')
         humanized = humanized.replace('?', '.')
         
-        # Add "um" and "uh" for reluctant reading
-        words = humanized.split()
-        if len(words) > 3:
-            # Insert hesitation every few words
-            for i in range(2, len(words), 4):
-                if i < len(words):
-                    words[i] = "um... " + words[i]
+        # Remove extra spaces
+        humanized = ' '.join(humanized.split())
         
-        return " ".join(words)
+        return humanized
     
     def _enhance_human_qualities(self, audio_file: str) -> Optional[str]:
         """Enhance audio to sound more human and less robotic"""
