@@ -102,7 +102,7 @@ export default function Contact() {
                 <Mail className="w-6 h-6 text-[#FF5C00] mr-3" />
                 <h4 className="text-lg font-semibold text-black dark:text-white">Email Us</h4>
               </div>
-              <p className="text-gray-600 dark:text-gray-300 mb-2">team.reelforge@gmail.com</p>
+              <p className="text-gray-600 dark:text-gray-300 mb-2">team.relicon@gmail.com</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">We respond within 24 hours</p>
             </div>
 
