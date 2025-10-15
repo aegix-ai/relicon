@@ -23,6 +23,8 @@ export default function JoinWaitlistPage() {
   const [submitted, setSubmitted] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,10 +38,32 @@ export default function JoinWaitlistPage() {
     window.scrollTo(0, 0)
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Waitlist form submitted:", formData)
-    setSubmitted(true)
+    setLoading(true)
+    setError("")
+
+    try {
+      const response = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to join waitlist')
+      }
+
+      setSubmitted(true)
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -232,9 +256,14 @@ export default function JoinWaitlistPage() {
                             onChange={(e) => setFormData({ ...formData, primaryGoal: e.target.value })}
                           />
                         </div>
-                        <Button type="submit" className="w-full rounded-full" size="lg">
-                          Join Waitlist
-                          <ArrowRight className="ml-2 size-4" />
+                        {error && (
+                          <div className="text-sm text-red-500 p-3 bg-red-500/10 rounded-lg">
+                            {error}
+                          </div>
+                        )}
+                        <Button type="submit" className="w-full rounded-full" size="lg" disabled={loading}>
+                          {loading ? "Joining..." : "Join Waitlist"}
+                          {!loading && <ArrowRight className="ml-2 size-4" />}
                         </Button>
                       </form>
 
