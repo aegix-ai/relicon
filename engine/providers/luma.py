@@ -60,7 +60,7 @@ class LumaProvider(VideoGenerator):
         payload = {
             "prompt": enhanced_prompt,
             "aspect_ratio": aspect_ratio,
-            "model": "ray-2",  # Highest quality model for cinematic results
+            "model": "ray-3",  # Latest and best Luma model for highest quality results
             "resolution": "720p",  # Cost-optimized resolution: 720p = $0.4 vs 1080p = $0.9 per 5s
             "duration": "5s"  # Optimal duration for 3-scene structure (compatible with both Luma and Hailuo)
         }
