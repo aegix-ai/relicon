@@ -232,7 +232,7 @@ export default function LandingPage() {
                 {/* Dashboard screenshot */}
                 <div className="bg-zinc-950">
                   <Image
-                    src="/images/design-mode/relicon-dashboard-screenshot.png"
+                    src="/images/dashboard-screenshot.png"
                     width={1440}
                     height={720}
                     alt="Relicon dashboard showing performance analytics"

@@ -10,6 +10,12 @@ This is a Next.js 14 application using the App Router, TypeScript, and Tailwind 
 
 ## Recent Changes
 
+### October 15, 2025 - Landing Page Dashboard Screenshot Update
+- Updated landing page macOS UI section with new dashboard screenshot
+- Shows Performance Overview chart with ROAS, Conversions, Spend, CTR metrics
+- Displays actual dashboard interface with sidebar navigation
+- Removed old design-mode screenshot folder
+
 ### October 15, 2025 - Codebase Cleanup & Optimization
 - Cleaned up codebase from 1.6GB to 1.5GB by removing:
   - Duplicate engine code in attached_assets/
