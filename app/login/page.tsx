@@ -21,6 +21,8 @@ export default function LoginPage() {
   })
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,7 +38,18 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Login form submitted:", formData)
+    setError("")
+    setLoading(true)
+
+    const VALID_EMAIL = "team@getrelicon.com"
+    const VALID_PASSWORD = "Relicon123456"
+
+    if (formData.email !== VALID_EMAIL || formData.password !== VALID_PASSWORD) {
+      setError("Invalid email or password. Please try again.")
+      setLoading(false)
+      return
+    }
+
     router.push("/dashboard")
   }
 
@@ -196,9 +209,14 @@ export default function LoginPage() {
                         Forgot password?
                       </Link>
                     </div>
-                    <Button type="submit" className="w-full rounded-full" size="lg">
-                      Sign In
-                      <ArrowRight className="ml-2 size-4" />
+                    {error && (
+                      <div className="text-sm text-red-500 p-3 bg-red-500/10 rounded-lg">
+                        {error}
+                      </div>
+                    )}
+                    <Button type="submit" className="w-full rounded-full" size="lg" disabled={loading}>
+                      {loading ? "Signing in..." : "Sign In"}
+                      {!loading && <ArrowRight className="ml-2 size-4" />}
                     </Button>
                   </form>
 
