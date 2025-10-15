@@ -40,7 +40,7 @@ class VideoService:
         # Generate video for each scene
         video_logger.video_generation_start(
             job_id=architecture.get('job_id', 'unknown'),
-            provider=self.provider_manager.get_video_provider().__class__.__name__,
+            provider=self.provider_manager.get_video_generator().__class__.__name__,
             prompt_length=len(str(scenes))
         )
         generated_videos = []
