@@ -52,7 +52,7 @@ export default function ContactPage() {
             className="flex items-center gap-3"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
-            <Image src="/relicon-logo.png" alt="Relicon" width={120} height={32} className="h-7 w-auto" />
+            <Image src="/relicon-full-logo.png" alt="Relicon" width={120} height={32} className="h-7 w-auto" />
           </Link>
           <nav className="hidden md:flex gap-8">
             <Link
