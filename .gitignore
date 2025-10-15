@@ -25,3 +25,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# replit files (do not ignore these)
+# .replit and replit.nix are kept in version control
