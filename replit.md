@@ -10,6 +10,20 @@ This is a Next.js 14 application using the App Router, TypeScript, and Tailwind 
 
 ## Recent Changes
 
+### October 15, 2025 - Database & Authentication Implementation
+- Created PostgreSQL database for waitlist signups with table schema:
+  - Stores: name, email, company, monthly_ad_spend, primary_goal, created_at
+  - Email uniqueness constraint to prevent duplicate signups
+- Connected waitlist form to database via API route (`/api/waitlist`)
+  - Form validates and saves all signups to database
+  - Error handling for duplicate emails and server errors
+  - Loading states and user feedback
+- Implemented login authentication with specific credentials:
+  - Valid email: team@getrelicon.com
+  - Valid password: Relicon123456
+  - Prevents unauthorized access to dashboard
+- Updated all page logos to use `relicon-full-logo.png` (navbar and footer)
+
 ### October 15, 2025 - Dashboard Implementation
 - Implemented complete Relicon advertising dashboard at `/dashboard`
 - Created dashboard components:
@@ -44,6 +58,8 @@ This is a Next.js 14 application using the App Router, TypeScript, and Tailwind 
 ```
 ├── app/                    # Next.js App Router pages
 │   ├── about/             # About page
+│   ├── api/               # API routes
+│   │   └── waitlist/     # Waitlist signup API
 │   ├── contact/           # Contact page
 │   ├── dashboard/         # Dashboard section (requires login)
 │   │   ├── ads/          # Ads archive page
@@ -51,8 +67,8 @@ This is a Next.js 14 application using the App Router, TypeScript, and Tailwind 
 │   │   ├── studio/       # Creative studio page
 │   │   ├── layout.tsx    # Dashboard layout with sidebar
 │   │   └── page.tsx      # Main dashboard
-│   ├── join-waitlist/     # Waitlist page
-│   ├── login/             # Login page (redirects to /dashboard)
+│   ├── join-waitlist/     # Waitlist page (saves to database)
+│   ├── login/             # Login page (authenticated access)
 │   ├── globals.css        # Global styles
 │   ├── layout.tsx         # Root layout
 │   └── page.tsx           # Home page
@@ -79,6 +95,7 @@ This is a Next.js 14 application using the App Router, TypeScript, and Tailwind 
 - **Frontend:** React 18, Next.js 14 (App Router)
 - **Styling:** Tailwind CSS with custom components
 - **UI Components:** Radix UI primitives, Shadcn/ui
+- **Database:** PostgreSQL (Replit-managed)
 - **Forms:** React Hook Form with Zod validation
 - **Animation:** Framer Motion
 - **Icons:** Lucide React
@@ -139,9 +156,21 @@ The project is configured for Replit's autoscale deployment:
 - Stateless website suitable for autoscaling
 
 ## Environment Variables
-No environment variables are currently configured. If you need to add API keys or secrets:
-1. Use Replit's Secrets management in the Tools panel
-2. Access them in your code via `process.env.VARIABLE_NAME`
+The following environment variables are automatically configured:
+- `DATABASE_URL`: PostgreSQL connection string
+- `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`: Database connection details
+
+## Authentication
+- **Login Credentials:**
+  - Email: team@getrelicon.com
+  - Password: Relicon123456
+- Only these credentials grant access to the dashboard
+
+## Database
+The project uses PostgreSQL for data storage:
+- **Waitlist Signups Table:** Stores all join waitlist form submissions
+  - Fields: id, name, email, company, monthly_ad_spend, primary_goal, created_at
+  - Email has unique constraint to prevent duplicate signups
 
 ## User Preferences
 No specific user preferences documented yet.
