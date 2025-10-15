@@ -99,6 +99,8 @@ export default function StudioPage() {
 
         if (status.current_step) {
           setCurrentStep(status.current_step)
+        } else if (status.message) {
+          setCurrentStep(status.message)
         }
 
         if (status.status === "completed" && status.video_url) {

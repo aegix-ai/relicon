@@ -101,7 +101,7 @@ class JobManager:
                     self.update_job_status(
                         job_id, "completed", 100, 
                         f"Video generated successfully in {result['duration']:.1f}s",
-                        video_url=f"/api/video/{job_id}.mp4"
+                        video_url=f"/api/engine/video/{job_id}.mp4"
                     )
                 else:
                     # Generation failed
