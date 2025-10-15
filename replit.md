@@ -10,12 +10,21 @@ This is a Next.js 14 application using the App Router, TypeScript, and Tailwind 
 
 ## Recent Changes
 
+### October 15, 2025 - Codebase Cleanup & Optimization
+- Cleaned up codebase from 1.6GB to 1.5GB by removing:
+  - Duplicate engine code in attached_assets/
+  - Unused placeholder images (6 files)
+  - Build caches (.next/cache, __pycache__)
+  - Reorganized images folder structure
+- Verified system integrity: all features working correctly
+- Updated documentation with proper README
+
 ### October 15, 2025 - AI Ad Generation Engine Integration
 - Integrated FastAPI/LangChain ad generation engine with Creative Studio
 - Removed engine's standalone frontend, kept only backend functionality
 - **Engine Features:**
   - AI-powered ad generation using GPT-4o, LangChain
-  - Video generation with Luma AI Ray 3 (primary) and Hailuo-02 fallback
+  - Video generation with Luma AI Ray 2 (Ray-3 not yet available via API)
   - Professional voiceover via ElevenLabs TTS
   - Background music generation
   - Cost-optimized 720p resolution (~$1.40 per 18-second video)

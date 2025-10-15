@@ -1,122 +1,125 @@
 """
-  Job Manager for Enterprise Relicon System
-  Handles video generation job tracking and status updates
+Job Manager for Relicon Ad Generation
+Manages job lifecycle, status tracking, and async generation
 """
 
-import uuid
 import time
-import threading
-import sys
+import asyncio
 from typing import Dict, Any, Optional
-from dataclasses import dataclass, asdict
 from datetime import datetime
-from pathlib import Path
+import threading
 
-@dataclass 
-class JobStatus:
-    job_id: str
-    status: str
-    progress: int
-    message: str
-    created_at: str
-    completed_at: Optional[str] = None
-    video_url: Optional[str] = None
-    
+from core.orchestrator import VideoOrchestrator
+from core.logger import get_logger
+
+logger = get_logger("job_manager")
+
+
 class JobManager:
-    """Enterprise job management system"""
+    """Enterprise job manager for video generation jobs"""
     
     def __init__(self):
-        self.jobs: Dict[str, JobStatus] = {}
-        print("Enterprise Relicon job manager initialized")
+        self.jobs: Dict[str, Dict[str, Any]] = {}
+        self.orchestrator = VideoOrchestrator()
+        logger.info("Enterprise Relicon job manager initialized")
     
     def create_job(self, request_data: Dict[str, Any]) -> str:
-        """Create a new video generation job"""
-        job_id = f"job_{int(time.time())}_{uuid.uuid4().hex[:8]}"
+        """Create a new job"""
+        import random
+        import string
         
-        job_status = JobStatus(
-            job_id=job_id,
-            status="queued",
-            progress=0,
-            message="Job created successfully",
-            created_at=datetime.now().isoformat()
-        )
+        timestamp = int(time.time())
+        job_id = f"job_{timestamp}_{''.join(random.choices(string.hexdigits[:16], k=8))}"
         
-        self.jobs[job_id] = job_status
+        self.jobs[job_id] = {
+            "job_id": job_id,
+            "status": "queued",
+            "progress": 0,
+            "message": "Job created",
+            "created_at": datetime.utcnow().isoformat(),
+            "completed_at": None,
+            "video_url": None,
+            "request_data": request_data
+        }
+        
         print(f"Created job {job_id}")
         return job_id
     
-    def update_job_status(self, job_id: str, status: str, progress: int, message: str, **extras):
+    def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
+        """Get current job status"""
+        job = self.jobs.get(job_id)
+        if not job:
+            return None
+        
+        return {
+            "job_id": job["job_id"],
+            "status": job["status"],
+            "progress": job["progress"],
+            "message": job.get("message", ""),
+            "created_at": job["created_at"],
+            "completed_at": job.get("completed_at"),
+            "video_url": job.get("video_url"),
+            "current_step": job.get("current_step")
+        }
+    
+    def update_job(self, job_id: str, updates: Dict[str, Any]):
         """Update job status"""
         if job_id in self.jobs:
-            job = self.jobs[job_id]
-            job.status = status
-            job.progress = progress
-            job.message = message
+            self.jobs[job_id].update(updates)
             
-            if status == "completed":
-                job.completed_at = datetime.now().isoformat()
-                
-            for key, value in extras.items():
-                setattr(job, key, value)
-                
-            print(f"Job {job_id}: {status} ({progress}%) - {message}")
+            progress = updates.get('progress', self.jobs[job_id].get('progress', 0))
+            message = updates.get('message', self.jobs[job_id].get('message', ''))
+            print(f"Job {job_id}: {updates.get('status', 'processing')} ({progress}%) - {message}")
     
-    def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
-        """Get job status"""
-        if job_id in self.jobs:
-            return asdict(self.jobs[job_id])
-        return None
-    
-    def start_generation(self, job_id: str, brand_info: dict = None):
-        """Start video generation process using enterprise orchestrator"""
-        self.update_job_status(job_id, "processing", 5, "Initializing enterprise video generation...")
-        
-        def real_generation():
+    def start_generation(self, job_id: str, request_data: Dict[str, Any]):
+        """Start async video generation"""
+        def run_generation():
             try:
-                # Import the enterprise orchestrator
-                relicon_root = Path(__file__).parent.parent.parent
-                sys.path.insert(0, str(relicon_root))
+                self.update_job(job_id, {
+                    "status": "processing",
+                    "progress": 5,
+                    "message": "Initializing enterprise video generation...",
+                    "current_step": "Initializing..."
+                })
                 
-                from core.orchestrator import VideoOrchestrator
+                video_path = self.orchestrator.generate_video_ad(
+                    brand_name=request_data.get("brand_name", ""),
+                    brand_description=request_data.get("brand_description", ""),
+                    product_name=request_data.get("product_name", ""),
+                    product_description=request_data.get("product_description", ""),
+                    target_audience=request_data.get("target_audience", "general audience"),
+                    tone=request_data.get("tone", "professional"),
+                    duration=request_data.get("duration", 18),
+                    call_to_action=request_data.get("call_to_action", "Learn more"),
+                    creative_style=request_data.get("creative_style", "modern"),
+                    progress_callback=lambda progress, message, step: self.update_job(job_id, {
+                        "progress": progress,
+                        "message": message,
+                        "current_step": step
+                    })
+                )
                 
-                # Create output path
-                output_filename = f"{job_id}.mp4"
-                output_path = f"outputs/{output_filename}"
-                
-                # Initialize orchestrator
-                orchestrator = VideoOrchestrator()
-                
-                # Update status
-                self.update_job_status(job_id, "processing", 10, "Creating video architecture...")
-                
-                # Progress callback to update job status in real-time
-                def progress_callback(progress: int, message: str):
-                    self.update_job_status(job_id, "processing", progress, message)
-                
-                # Generate video using enterprise system
-                result = orchestrator.create_complete_video(brand_info, output_path, progress_callback)
-                
-                if result['success']:
-                    # Video generated successfully
-                    self.update_job_status(
-                        job_id, "completed", 100, 
-                        f"Video generated successfully in {result['duration']:.1f}s",
-                        video_url=f"/api/engine/video/{job_id}.mp4"
-                    )
+                if video_path:
+                    import os
+                    filename = os.path.basename(video_path)
+                    self.update_job(job_id, {
+                        "status": "completed",
+                        "progress": 100,
+                        "message": "Video generation completed successfully!",
+                        "completed_at": datetime.utcnow().isoformat(),
+                        "video_url": f"/api/engine/video/{filename}"
+                    })
                 else:
-                    # Generation failed
-                    self.update_job_status(
-                        job_id, "failed", 0, 
-                        f"Video generation failed: {result.get('error', 'Unknown error')}"
-                    )
+                    raise Exception("Video generation failed: No output file created")
                     
             except Exception as e:
-                print(f"Generation error for job {job_id}: {e}")
-                self.update_job_status(
-                    job_id, "failed", 0, 
-                    f"Generation failed: {str(e)}"
-                )
+                logger.error(f"Job {job_id} failed: {str(e)}")
+                self.update_job(job_id, {
+                    "status": "failed",
+                    "progress": 0,
+                    "message": f"Video generation failed: {str(e)}",
+                    "completed_at": datetime.utcnow().isoformat()
+                })
         
-        # Start generation in background thread
-        thread = threading.Thread(target=real_generation, daemon=True)
+        thread = threading.Thread(target=run_generation, daemon=True)
         thread.start()
