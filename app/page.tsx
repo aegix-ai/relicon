@@ -87,7 +87,7 @@ export default function LandingPage() {
             className="flex items-center gap-3"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
-            <Image src="/relicon-full-logo.png" alt="Relicon" width={120} height={32} className="h-7 w-auto" />
+            <Image src="/relicon-full-logo.png" alt="Relicon" width={120} height={32} className="h-11 w-auto" />
           </Link>
           <nav className="hidden md:flex gap-8">
             <Link
@@ -677,7 +677,7 @@ export default function LandingPage() {
           <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
             <div className="space-y-4">
               <Link href="/" className="flex items-center gap-3">
-                <Image src="/relicon-full-logo.png" alt="Relicon" width={120} height={32} className="h-8 w-auto" />
+                <Image src="/relicon-full-logo.png" alt="Relicon" width={120} height={32} className="h-12 w-auto" />
               </Link>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Influence, engineered. Your advertising learns, adapts, and compounds for guaranteed growth.
