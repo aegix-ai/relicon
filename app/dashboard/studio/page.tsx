@@ -1,24 +1,134 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, Heart, MessageCircle, Share2, Bookmark } from "lucide-react"
+import { Loader2, Heart, MessageCircle, Share2, Bookmark, Play, Pause } from "lucide-react"
 import Image from "next/image"
+import { toast } from "sonner"
+
+interface FormData {
+  productName: string
+  productDescription: string
+  campaignType: string
+  targetAudience: string
+  creativeStyle: string
+}
+
+interface JobStatus {
+  status: string
+  progress?: number
+  message?: string
+  video_url?: string
+  current_step?: string
+}
 
 export default function StudioPage() {
   const [isGenerating, setIsGenerating] = useState(false)
+  const [jobId, setJobId] = useState<string | null>(null)
+  const [progress, setProgress] = useState(0)
+  const [currentStep, setCurrentStep] = useState("")
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null)
 
-  const handleCreate = () => {
+  const [formData, setFormData] = useState<FormData>({
+    productName: "",
+    productDescription: "",
+    campaignType: "",
+    targetAudience: "",
+    creativeStyle: ""
+  })
+
+  const handleCreate = async () => {
+    if (!formData.productName || !formData.productDescription) {
+      toast.error("Please fill in product name and description")
+      return
+    }
+
     setIsGenerating(true)
-    // Simulate generation
-    setTimeout(() => {
+    setProgress(0)
+    setCurrentStep("Initializing...")
+
+    try {
+      const response = await fetch("/api/engine/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand_name: "Relicon",
+          brand_description: "AI-powered advertising platform",
+          product_name: formData.productName,
+          product_description: formData.productDescription,
+          target_audience: formData.targetAudience || "general audience",
+          tone: "professional",
+          duration: 18,
+          call_to_action: "Learn more",
+          creative_style: formData.creativeStyle || "modern"
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to start generation")
+      }
+
+      const data = await response.json()
+      setJobId(data.job_id)
+      toast.success("Ad generation started!")
+    } catch (error) {
+      console.error("Generation error:", error)
+      toast.error("Failed to start ad generation")
       setIsGenerating(false)
-    }, 3000)
+    }
+  }
+
+  useEffect(() => {
+    if (!jobId || !isGenerating) return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/engine/status/${jobId}`)
+        const status: JobStatus = await response.json()
+
+        if (status.progress) {
+          setProgress(status.progress)
+        }
+
+        if (status.current_step) {
+          setCurrentStep(status.current_step)
+        }
+
+        if (status.status === "completed" && status.video_url) {
+          setVideoUrl(status.video_url)
+          setIsGenerating(false)
+          setProgress(100)
+          toast.success("Ad generated successfully!")
+          clearInterval(pollInterval)
+        } else if (status.status === "failed") {
+          setIsGenerating(false)
+          toast.error(status.message || "Generation failed")
+          clearInterval(pollInterval)
+        }
+      } catch (error) {
+        console.error("Status check error:", error)
+      }
+    }, 2000)
+
+    return () => clearInterval(pollInterval)
+  }, [jobId, isGenerating])
+
+  const togglePlayPause = () => {
+    if (!videoElement) return
+
+    if (isPlaying) {
+      videoElement.pause()
+    } else {
+      videoElement.play()
+    }
+    setIsPlaying(!isPlaying)
   }
 
   return (
@@ -40,6 +150,8 @@ export default function StudioPage() {
                 id="product-name"
                 type="text"
                 placeholder="Enter product name..."
+                value={formData.productName}
+                onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
                 className="rounded-md bg-[#0a0a0a] border-[#252525] text-white placeholder:text-gray-600"
               />
             </div>
@@ -52,6 +164,8 @@ export default function StudioPage() {
               <Textarea
                 id="description"
                 placeholder="Describe your product or service..."
+                value={formData.productDescription}
+                onChange={(e) => setFormData({ ...formData, productDescription: e.target.value })}
                 className="rounded-md min-h-24 resize-none bg-[#0a0a0a] border-[#252525] text-white placeholder:text-gray-600"
               />
             </div>
@@ -61,7 +175,7 @@ export default function StudioPage() {
               <Label htmlFor="campaign-type" className="text-sm font-medium text-gray-300">
                 Campaign Type
               </Label>
-              <Select>
+              <Select value={formData.campaignType} onValueChange={(value) => setFormData({ ...formData, campaignType: value })}>
                 <SelectTrigger id="campaign-type" className="rounded-md bg-[#0a0a0a] border-[#252525] text-white">
                   <SelectValue placeholder="Select campaign type" />
                 </SelectTrigger>
@@ -82,6 +196,8 @@ export default function StudioPage() {
               <Textarea
                 id="audience"
                 placeholder="Describe your target audience..."
+                value={formData.targetAudience}
+                onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
                 className="rounded-md min-h-20 resize-none bg-[#0a0a0a] border-[#252525] text-white placeholder:text-gray-600"
               />
             </div>
@@ -91,7 +207,7 @@ export default function StudioPage() {
               <Label htmlFor="tuning" className="text-sm font-medium text-gray-300">
                 Creative Tuning
               </Label>
-              <Select>
+              <Select value={formData.creativeStyle} onValueChange={(value) => setFormData({ ...formData, creativeStyle: value })}>
                 <SelectTrigger id="tuning" className="rounded-md bg-[#0a0a0a] border-[#252525] text-white">
                   <SelectValue placeholder="Select creative style" />
                 </SelectTrigger>
@@ -115,14 +231,14 @@ export default function StudioPage() {
                   Generating...
                 </>
               ) : (
-                "Create"
+                "Create Ad"
               )}
             </Button>
           </div>
         </Card>
 
+        {/* Right Panel - TikTok Preview */}
         <div className="relative">
-          {/* Cinematic Frame with Black Gradient Borders */}
           <div className="relative w-full bg-black overflow-hidden h-full min-h-[500px] sm:min-h-[640px]">
             {/* Left Gradient Border */}
             <div className="absolute left-0 top-0 bottom-0 w-6 sm:w-12 bg-gradient-to-r from-black to-transparent z-10" />
@@ -138,10 +254,14 @@ export default function StudioPage() {
                     <div className="absolute inset-0 flex items-center justify-center bg-[#0a0a0a]">
                       <div className="text-center">
                         <Loader2 className="w-12 h-12 mx-auto mb-3 text-white animate-spin" />
-                        <p className="text-sm text-gray-400">Creating your ad...</p>
+                        <p className="text-sm text-gray-400 mb-2">{currentStep || "Creating your ad..."}</p>
                         <div className="mt-4 w-48 mx-auto bg-[#161616] rounded-full h-2 overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-gray-400 to-white animate-pulse w-2/3" />
+                          <div 
+                            className="h-full bg-gradient-to-r from-gray-400 to-white transition-all duration-500" 
+                            style={{ width: `${progress}%` }}
+                          />
                         </div>
+                        <p className="text-xs text-gray-500 mt-2">{progress}%</p>
                       </div>
                     </div>
                   ) : (
@@ -157,14 +277,36 @@ export default function StudioPage() {
                         </div>
                       </div>
 
-                      {/* Main Content - Ad Image */}
-                      <div className="absolute inset-0">
-                        <Image
-                          src="/modern-product-advertisement-vertical-format.jpg"
-                          alt="Ad Content"
-                          fill
-                          className="object-cover"
-                        />
+                      {/* Main Content - Video or Placeholder */}
+                      <div className="absolute inset-0" onClick={togglePlayPause}>
+                        {videoUrl ? (
+                          <video
+                            ref={setVideoElement}
+                            src={videoUrl}
+                            className="w-full h-full object-cover"
+                            loop
+                            playsInline
+                          />
+                        ) : (
+                          <Image
+                            src="/modern-product-advertisement-vertical-format.jpg"
+                            alt="Ad Content"
+                            fill
+                            className="object-cover"
+                          />
+                        )}
+                        
+                        {videoUrl && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className={`bg-black/50 rounded-full p-4 transition-opacity ${isPlaying ? 'opacity-0' : 'opacity-100'}`}>
+                              {isPlaying ? (
+                                <Pause className="w-12 h-12 text-white" />
+                              ) : (
+                                <Play className="w-12 h-12 text-white" />
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Right Side Actions */}
@@ -208,20 +350,20 @@ export default function StudioPage() {
                       <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pb-20">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-white font-semibold text-sm">@YourBrand</span>
+                            <span className="text-white font-semibold text-sm">@{formData.productName || "YourBrand"}</span>
                             <span className="text-xs text-gray-300 bg-white/20 px-2 py-0.5 rounded">Sponsored</span>
                           </div>
                           <p className="text-white text-sm leading-relaxed">
-                            Check out our amazing product! Limited time offer 🔥
+                            {formData.productDescription || "Check out our amazing product! Limited time offer 🔥"}
                           </p>
                           <div className="flex items-center gap-2 text-white text-xs">
                             <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
                               <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
                             </svg>
-                            <span>Original Sound - Artist Name</span>
+                            <span>Original Sound - Relicon AI</span>
                           </div>
                           <button className="w-full bg-white text-black font-semibold py-2.5 rounded-lg text-sm mt-2">
-                            Download
+                            Learn More
                           </button>
                         </div>
                       </div>
@@ -278,7 +420,7 @@ export default function StudioPage() {
               </div>
               <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 shadow-xl">
                 <p className="text-[9px] sm:text-[10px] text-gray-300 mb-0.5 text-center">Duration</p>
-                <p className="text-[10px] sm:text-xs font-medium text-white text-center whitespace-nowrap">15-30s</p>
+                <p className="text-[10px] sm:text-xs font-medium text-white text-center whitespace-nowrap">18s</p>
               </div>
             </div>
           </div>

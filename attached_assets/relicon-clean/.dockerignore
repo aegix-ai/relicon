@@ -1,0 +1,18 @@
+# Docker ignore file for Relicon
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.env
+.venv
+venv/
+.git
+.gitignore
+README.md
+.pytest_cache
+outputs/*.mp4
+*.log
+node_modules/
+.DS_Store
+Thumbs.db
