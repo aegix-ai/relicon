@@ -17,7 +17,7 @@ class Settings:
     HAILUO_API_KEY: str = os.environ.get("HAILUO_API_KEY", "")
     
     # Provider Configuration
-    VIDEO_PROVIDER: str = os.environ.get("VIDEO_PROVIDER", "hailuo")  # hailuo, luma
+    VIDEO_PROVIDER: str = os.environ.get("VIDEO_PROVIDER", "luma")  # luma (Ray 3 primary), hailuo (fallback)
     AUDIO_PROVIDER: str = os.environ.get("AUDIO_PROVIDER", "elevenlabs")  # elevenlabs
     TEXT_PROVIDER: str = os.environ.get("TEXT_PROVIDER", "openai")  # openai
     

@@ -15,7 +15,7 @@ This is a Next.js 14 application using the App Router, TypeScript, and Tailwind 
 - Removed engine's standalone frontend, kept only backend functionality
 - **Engine Features:**
   - AI-powered ad generation using GPT-4o, LangChain
-  - Video generation with Hailuo-02 (MiniMax) and Luma AI fallback
+  - Video generation with Luma AI Ray 3 (primary) and Hailuo-02 fallback
   - Professional voiceover via ElevenLabs TTS
   - Background music generation
   - Cost-optimized 720p resolution (~$1.40 per 18-second video)
@@ -210,7 +210,7 @@ The `/dashboard` route contains a complete advertising management system:
   - Sponsored tag and CTA button
 - **Ad Generation Pipeline:**
   1. AI Planning (GPT-4o analyzes product & creates scenes)
-  2. Video Generation (Hailuo-02 primary, Luma AI fallback)
+  2. Video Generation (Luma AI Ray 3 primary, Hailuo-02 fallback)
   3. Voiceover (ElevenLabs professional TTS)
   4. Background Music (ElevenLabs music generation)
   5. Assembly (FFmpeg combines all elements)
@@ -243,7 +243,7 @@ The following environment variables are required:
   - `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`: Database connection details
 - **AI Services (for Ad Generation):**
   - `OPENAI_API_KEY`: OpenAI GPT-4o for creative planning
-  - `LUMA_API_KEY`: Luma AI for video generation (fallback)
+  - `LUMA_API_KEY`: Luma AI Ray 3 for video generation (primary)
   - `ELEVENLABS_API_KEY`: ElevenLabs for voiceover and music
 
 ## Authentication
@@ -265,7 +265,7 @@ The AI ad generation engine creates professional TikTok ads:
 - **Modern Ad Structure:** Hook → Problem/Solution → Resolution/CTA (3 scenes × 6 seconds)
 - **Cost Optimized:** ~$1.40 per 18-second video at 720p resolution
 - **AI-Powered:** GPT-4o for creative planning and scene generation
-- **Multi-Provider:** Hailuo-02 primary, Luma AI fallback for reliability
+- **Multi-Provider:** Luma AI Ray 3 primary, Hailuo-02 fallback for reliability
 - **Professional Audio:** ElevenLabs TTS + background music at 15% volume
 
 ### Generation Flow
