@@ -2,6 +2,11 @@
 
 An AI-powered advertising platform that generates professional TikTok video ads using GPT-4o, ElevenLabs, and Luma AI.
 
+<p align="center">
+  <img src="public/images/relicon-website-screenshot02.png" alt="Relicon Website Preview" width="100%">
+</p>
+
+
 ## Features
 
 - 🎨 **Landing Page** - Modern marketing website with product showcase
