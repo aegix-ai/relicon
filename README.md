@@ -1,4 +1,4 @@
-# Relicon - AI Ad Director Platform
+# Relicon - AI Advertising Director
 
 <p align="center">
   <img src="public/images/relicon-website-screenshot02.png" alt="Relicon Website Preview" width="100%">
