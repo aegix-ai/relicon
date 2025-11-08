@@ -470,16 +470,16 @@ export default function LandingPage() {
                 {[
                   {
                     name: "Starter",
-                    price: "$99",
-                    period: "10 Growth Loops",
-                    description: "10 rounds of compounding ad growth through Relicon's self-improving engine.",
+                    price: "$149",
+                    period: "4 self improving ads",
+                    description: "4 rounds of compounding ad growth through Relicon's self-improving engine.",
                     features: ["Self-Improving Ads", "Outcome-Based Optimization", "Basic Analytics", "Email Support"],
                     cta: "Get Started",
                   },
                   {
                     name: "Professional",
                     price: "$299",
-                    period: "30 Growth Loops",
+                    period: "10 self improving ads",
                     description: "Accelerated growth with advanced optimization and priority support.",
                     features: [
                       "Self-Improving Ads",
@@ -494,7 +494,7 @@ export default function LandingPage() {
                   {
                     name: "Enterprise",
                     price: "Custom",
-                    period: "Unlimited Growth Loops",
+                    period: "Unlimited self improving ads",
                     description: "Full-scale ad engine with dedicated support and custom solutions.",
                     features: [
                       "Self-Improving Ads",
@@ -588,11 +588,6 @@ export default function LandingPage() {
               <Accordion type="single" collapsible className="w-full">
                 {[
                   {
-                    question: "What are Growth Loops?",
-                    answer:
-                      "Growth Loops are cycles of learning and optimization. Each loop represents a round where our ad engine analyzes performance, learns from the data, and improves your campaigns. The more loops you run, the smarter your advertising becomes.",
-                  },
-                  {
                     question: "How does the self-improving engine work?",
                     answer:
                       "Relicon uses advanced machine learning to analyze your campaign performance in real-time. It identifies patterns, tests variations, and automatically optimizes for your specific outcomes. Unlike traditional tools, it gets better with every interaction.",
@@ -600,7 +595,7 @@ export default function LandingPage() {
                   {
                     question: "Can I upgrade my plan later?",
                     answer:
-                      "Yes, you can upgrade your plan at any time. If you upgrade, you'll get immediate access to additional Growth Loops and features. Your unused loops from the previous plan will be credited to your account.",
+                      "Yes, you can upgrade your plan at any time. If you upgrade, you'll get immediate access to additional features. Your unused loops from the previous plan will be credited to your account.",
                   },
                   {
                     question: "What outcomes can I optimize for?",

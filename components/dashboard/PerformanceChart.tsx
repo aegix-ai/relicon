@@ -2,21 +2,73 @@
 
 import { Card } from "@/components/ui/card"
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart } from "recharts"
+import { useEffect, useState } from "react"
 
-const data = [
-  { month: "Jan", roas: 2.8, performance: 55 },
-  { month: "Feb", roas: 3.2, performance: 62 },
-  { month: "Mar", roas: 2.5, performance: 68 },
-  { month: "Apr", roas: 4.1, performance: 74 },
-  { month: "May", roas: 3.6, performance: 80 },
-  { month: "Jun", roas: 4.8, performance: 86 },
-  { month: "Jul", roas: 4.2, performance: 92 },
-  { month: "Aug", roas: 5.3, performance: 98 },
-  { month: "Sep", roas: 4.7, performance: 104 },
-  { month: "Oct", roas: 5.8, performance: 110 },
-]
+interface ChartData {
+  date: string
+  roas: number
+  conversions: number
+  spend: number
+}
 
 export function PerformanceChart() {
+  const [data, setData] = useState<ChartData[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchChartData() {
+      try {
+        const response = await fetch('/api/analytics/chart-data')
+        if (response.ok) {
+          const chartData = await response.json()
+          setData(chartData)
+        } else {
+          // Fallback to sample data if no real data
+          setData([
+            { date: "7 days ago", roas: 0, conversions: 0, spend: 0 },
+            { date: "6 days ago", roas: 0, conversions: 0, spend: 0 },
+            { date: "5 days ago", roas: 0, conversions: 0, spend: 0 },
+            { date: "4 days ago", roas: 0, conversions: 0, spend: 0 },
+            { date: "3 days ago", roas: 0, conversions: 0, spend: 0 },
+            { date: "2 days ago", roas: 0, conversions: 0, spend: 0 },
+            { date: "Yesterday", roas: 0, conversions: 0, spend: 0 },
+            { date: "Today", roas: 0, conversions: 0, spend: 0 },
+          ])
+        }
+      } catch (error) {
+        console.error('Failed to fetch chart data:', error)
+        // Use empty data as fallback
+        setData([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchChartData()
+  }, [])
+
+  if (loading) {
+    return (
+      <Card className="p-4 sm:p-6 bg-[#0f0f0f] border border-[#252525] rounded-xl shadow-2xl">
+        <h3 className="text-sm sm:text-base font-medium text-white mb-3 sm:mb-4">Performance Overview</h3>
+        <div className="h-64 sm:h-80 flex items-center justify-center">
+          <p className="text-gray-400">Loading chart data...</p>
+        </div>
+      </Card>
+    )
+  }
+
+  if (data.length === 0) {
+    return (
+      <Card className="p-4 sm:p-6 bg-[#0f0f0f] border border-[#252525] rounded-xl shadow-2xl">
+        <h3 className="text-sm sm:text-base font-medium text-white mb-3 sm:mb-4">Performance Overview</h3>
+        <div className="h-64 sm:h-80 flex items-center justify-center">
+          <p className="text-gray-400">No performance data available yet. Start running campaigns to see analytics!</p>
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <Card className="p-4 sm:p-6 bg-[#0f0f0f] border border-[#252525] rounded-xl shadow-2xl">
       <h3 className="text-sm sm:text-base font-medium text-white mb-3 sm:mb-4">Performance Overview</h3>
@@ -28,57 +80,51 @@ export function PerformanceChart() {
                 <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.4} />
                 <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.05} />
               </linearGradient>
-              <linearGradient id="performanceGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.05} />
+              <linearGradient id="conversionsGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
               </linearGradient>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                <feMerge>
-                  <feMergeNode in="coloredBlur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
-            <XAxis dataKey="month" stroke="#6b7280" style={{ fontSize: "10px" }} tick={{ fontSize: 10 }} />
-            <YAxis yAxisId="left" stroke="#7c3aed" style={{ fontSize: "10px" }} tick={{ fontSize: 10 }} />
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              stroke="#06b6d4"
-              style={{ fontSize: "10px" }}
-              tick={{ fontSize: 10 }}
+            <CartesianGrid strokeDasharray="3 3" stroke="#252525" />
+            <XAxis 
+              dataKey="date" 
+              stroke="#666" 
+              fontSize={10}
+              tickLine={false}
+              axisLine={false}
             />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#0a0a0a",
-                border: "1px solid #252525",
-                borderRadius: "8px",
-                color: "#ffffff",
-                fontSize: "12px",
+            <YAxis 
+              stroke="#666" 
+              fontSize={10}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: '#1f1f1f', 
+                border: '1px solid #333',
+                borderRadius: '8px',
+                color: '#fff'
               }}
             />
-            <Legend wrapperStyle={{ color: "#9ca3af", fontSize: "11px" }} />
+            <Legend />
             <Area
-              yAxisId="left"
               type="monotone"
               dataKey="roas"
               stroke="#7c3aed"
-              strokeWidth={2}
+              fillOpacity={1}
               fill="url(#roasGradient)"
+              strokeWidth={2}
               name="ROAS"
-              dot={{ fill: "#7c3aed", r: 3, strokeWidth: 2, stroke: "#0a0a0a" }}
             />
             <Area
-              yAxisId="right"
               type="monotone"
-              dataKey="performance"
-              stroke="#06b6d4"
+              dataKey="conversions"
+              stroke="#10b981"
+              fillOpacity={1}
+              fill="url(#conversionsGradient)"
               strokeWidth={2}
-              fill="url(#performanceGradient)"
-              name="Ads Performance"
-              dot={{ fill: "#06b6d4", r: 3, strokeWidth: 2, stroke: "#0a0a0a" }}
+              name="Conversions"
             />
           </AreaChart>
         </ResponsiveContainer>

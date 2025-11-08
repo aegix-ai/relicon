@@ -65,11 +65,24 @@ class LumaProvider(VideoGenerator):
             "duration": "5s"  # Optimal duration for 3-scene structure (compatible with both Luma and Hailuo)
         }
         
-        if image_url:
-            # Luma keyframes structure for initial frame input
-            payload["keyframes"] = {"frame0": {"type": "image", "url": image_url}}
+        # Add realism validation for all prompts
+        realism_suffix = ", realistic technology with complete components, no floating parts, physically accurate interactions"
+        enhanced_prompt_with_realism = f"{enhanced_prompt}{realism_suffix}"
         
-        print(f"Starting Luma generation with prompt: {enhanced_prompt[:100]}...")
+        if image_url:
+            # Enhanced Luma keyframes structure for better product integration
+            payload["keyframes"] = {"frame0": {"type": "image", "url": image_url}}
+            
+            # Override prompt for better product showcase when using image
+            product_prompt = f"Transform this product image into dynamic commercial video, {enhanced_prompt_with_realism}, maintaining product visibility and focus throughout, smooth camera movement showcasing product details, professional product demonstration"
+            payload["prompt"] = product_prompt
+            
+            print(f"Using product image keyframe with enhanced prompt for better integration")
+        else:
+            # Use enhanced prompt with realism validation
+            payload["prompt"] = enhanced_prompt_with_realism
+        
+        print(f"Starting Luma generation with prompt: {payload['prompt'][:100]}...")
         print(f"Luma payload: {payload}")
         
         response = requests.post(self.base_url, json=payload, headers=self.headers)

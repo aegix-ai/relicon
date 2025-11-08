@@ -7,6 +7,7 @@ import { Send, Paperclip, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { CubeIcon } from "@/components/icons/CubeIcon"
+import { toast } from "sonner"
 
 interface Message {
   role: "user" | "assistant"
@@ -18,9 +19,19 @@ const initialMessages: Message[] = [
   {
     role: "assistant",
     content:
-      "Hello! I'm Relicon AI, your creative advertising assistant. I can help you plan campaigns, generate ad creatives, analyze performance, and answer any questions about your advertising strategy. How can I assist you today?",
+      "Hello! I'm Relicon AI, your creative advertising assistant. I can help you:\n\n• Analyze your ad performance (CTR, ROAS, conversions)\n• Identify top-performing campaigns\n• Optimize your budget allocation\n• Understand advertising metrics\n• Get recommendations to improve ROI\n\nI have access to your real-time analytics data. What would you like to know?",
     timestamp: new Date(),
   },
+]
+
+// Suggested questions for quick access
+const suggestedQuestions = [
+  "How are my campaigns performing?",
+  "What's my best ROAS campaign?",
+  "How can I improve my CTR?",
+  "Which platform is performing best?",
+  "Should I increase my budget?",
+  "What's a good ROAS benchmark?",
 ]
 
 export default function ChatPage() {
@@ -30,6 +41,9 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  // TODO: Get user ID from authentication
+  const userId = null // Replace with auth.user?.id when auth is implemented
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
@@ -38,8 +52,8 @@ export default function ChatPage() {
     scrollToBottom()
   }, [messages])
 
-  const handleSend = () => {
-    if (!input.trim()) return
+  const handleSend = async () => {
+    if (!input.trim() || isTyping) return
 
     const userMessage: Message = {
       role: "user",
@@ -47,20 +61,67 @@ export default function ChatPage() {
       timestamp: new Date(),
     }
 
+    // Add user message immediately
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsTyping(true)
 
-    setTimeout(() => {
+    try {
+      // Prepare conversation history (exclude initial greeting for API)
+      const conversationHistory = messages
+        .slice(1) // Skip the initial greeting
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }))
+
+      // Add current user message
+      conversationHistory.push({
+        role: userMessage.role,
+        content: userMessage.content
+      })
+
+      // Call chat API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: conversationHistory,
+          userId: userId
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get response')
+      }
+
+      // Add AI response
       const aiMessage: Message = {
         role: "assistant",
-        content:
-          "I understand you're looking for help with that. In the full version, I would provide detailed insights, campaign suggestions, and creative recommendations based on your needs. Feel free to ask me anything about your advertising strategy!",
+        content: data.message,
         timestamp: new Date(),
       }
+
       setMessages((prev) => [...prev, aiMessage])
+    } catch (error: any) {
+      console.error('Chat error:', error)
+
+      // Add error message
+      const errorMessage: Message = {
+        role: "assistant",
+        content: "I apologize, but I encountered an error processing your request. Please make sure your OpenAI API key is configured and try again.",
+        timestamp: new Date(),
+      }
+
+      setMessages((prev) => [...prev, errorMessage])
+      toast.error('Failed to send message: ' + error.message)
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -112,6 +173,24 @@ export default function ChatPage() {
               )}
             </div>
           ))}
+
+          {/* Suggested Questions - Show only if conversation just started */}
+          {messages.length === 1 && !isTyping && (
+            <div className="space-y-3 mt-6">
+              <p className="text-gray-400 text-sm font-medium px-2">Suggested questions:</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {suggestedQuestions.map((question, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setInput(question)}
+                    className="text-left p-3 rounded-lg bg-[#161616] border border-[#252525] hover:border-[#404040] hover:bg-[#1a1a1a] transition-colors text-gray-300 text-sm"
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {isTyping && (
             <div className="flex gap-4 justify-start">

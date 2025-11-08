@@ -1,80 +1,61 @@
-"use client"
+'use client'
 
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Search, Filter, ArrowUpDown } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import Image from "next/image"
-
-const adsData = [
-  {
-    name: "Summer Sale Hero",
-    campaignType: "Conversion",
-    roas: "4.2x",
-    ctr: "6.8%",
-    status: "active",
-    thumbnail: "/summer-sale-tiktok-ad.jpg",
-  },
-  {
-    name: "Product Launch Video",
-    campaignType: "Awareness",
-    roas: "3.8x",
-    ctr: "5.2%",
-    status: "active",
-    thumbnail: "/product-launch-tiktok-ad.jpg",
-  },
-  {
-    name: "Retargeting Banner",
-    campaignType: "Conversion",
-    roas: "5.1x",
-    ctr: "7.3%",
-    status: "active",
-    thumbnail: "/retargeting-tiktok-ad.jpg",
-  },
-  {
-    name: "Brand Story",
-    campaignType: "Engagement",
-    roas: "2.9x",
-    ctr: "4.1%",
-    status: "paused",
-    thumbnail: "/brand-story-tiktok-ad.jpg",
-  },
-  {
-    name: "Holiday Special",
-    campaignType: "Conversion",
-    roas: "4.7x",
-    ctr: "6.5%",
-    status: "completed",
-    thumbnail: "/holiday-special-tiktok-ad.jpg",
-  },
-  {
-    name: "New Collection Teaser",
-    campaignType: "Traffic",
-    roas: "3.2x",
-    ctr: "5.8%",
-    status: "active",
-    thumbnail: "/collection-teaser-tiktok-ad.jpg",
-  },
-  {
-    name: "Flash Sale Alert",
-    campaignType: "Conversion",
-    roas: "6.3x",
-    ctr: "8.9%",
-    status: "completed",
-    thumbnail: "/flash-sale-tiktok-ad.jpg",
-  },
-  {
-    name: "Customer Testimonial",
-    campaignType: "Awareness",
-    roas: "2.4x",
-    ctr: "3.7%",
-    status: "active",
-    thumbnail: "/testimonial-tiktok-ad.jpg",
-  },
-]
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/lib/auth'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Search, Filter, Play, Download, Share2 } from 'lucide-react'
 
 export default function AdsPage() {
+  const { user, loading } = useAuth()
+  const [ads, setAds] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!loading && user) {
+      fetchAds()
+    } else if (!loading && !user) {
+      setIsLoading(false)
+    }
+  }, [user, loading])
+
+  const fetchAds = async () => {
+    try {
+      const response = await fetch(`/api/videos?userId=${user.id}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setAds(data.videos)
+      } else {
+        setError('Failed to load ads')
+      }
+    } catch (err) {
+      setError('Failed to load ads')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (loading || isLoading) {
+    return <div className="p-6 text-white">Loading...</div>
+  }
+
+  if (!user) {
+    return (
+      <div className="p-6 bg-[#0a0a0a] min-h-screen">
+        <Card className="bg-[#111111] border-[#252525]">
+          <CardContent className="p-8 text-center">
+            <h3 className="text-lg font-medium text-white mb-2">Authentication Required</h3>
+            <p className="text-gray-400">Please sign in to view your ads</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="p-4 sm:p-6 xl:px-8 xl:py-6 bg-[#0a0a0a] min-h-screen">
       <div className="mb-4 sm:mb-6">
@@ -88,92 +69,79 @@ export default function AdsPage() {
               className="pl-10 rounded-md bg-[#0a0a0a] border-[#252525] text-white placeholder:text-gray-600 h-10 sm:h-auto"
             />
           </div>
-          <Button
-            variant="outline"
-            className="rounded-md gap-2 bg-[#0a0a0a] border-[#252525] text-gray-300 hover:bg-[#141414] hover:text-white h-10 sm:h-auto"
-          >
-            <Filter className="w-4 h-4" />
-            <span className="hidden sm:inline">Filter</span>
+          <Button variant="outline" className="border-[#252525] text-white hover:bg-[#252525] h-10 sm:h-auto">
+            <Filter className="w-4 h-4 mr-2" />
+            Filter
           </Button>
         </div>
       </div>
 
-      <Card className="bg-[#0f0f0f] border border-[#252525] rounded-xl shadow-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-[#0a0a0a] border-b border-[#252525]">
-              <tr>
-                <th className="text-left py-2 sm:py-3 px-3 sm:px-6 text-xs sm:text-sm font-medium text-gray-300">
-                  Thumbnail
-                </th>
-                <th className="text-left py-2 sm:py-3 px-3 sm:px-6 text-xs sm:text-sm font-medium text-gray-300">
-                  <button className="flex items-center gap-1 hover:text-white whitespace-nowrap">
-                    Ad Name
-                    <ArrowUpDown className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  </button>
-                </th>
-                <th className="text-left py-2 sm:py-3 px-3 sm:px-6 text-xs sm:text-sm font-medium text-gray-300">
-                  <button className="flex items-center gap-1 hover:text-white whitespace-nowrap">
-                    Campaign
-                    <ArrowUpDown className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  </button>
-                </th>
-                <th className="text-left py-2 sm:py-3 px-3 sm:px-6 text-xs sm:text-sm font-medium text-gray-300">
-                  <button className="flex items-center gap-1 hover:text-white">
-                    ROAS
-                    <ArrowUpDown className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  </button>
-                </th>
-                <th className="text-left py-2 sm:py-3 px-3 sm:px-6 text-xs sm:text-sm font-medium text-gray-300">
-                  <button className="flex items-center gap-1 hover:text-white">
-                    CTR
-                    <ArrowUpDown className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  </button>
-                </th>
-                <th className="text-left py-2 sm:py-3 px-3 sm:px-6 text-xs sm:text-sm font-medium text-gray-300">
-                  <button className="flex items-center gap-1 hover:text-white">
-                    Status
-                    <ArrowUpDown className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  </button>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {adsData.map((ad, index) => (
-                <tr key={index} className="border-b border-[#1f1f1f] hover:bg-[#141414] transition-colors">
-                  <td className="py-3 sm:py-4 px-3 sm:px-6">
-                    <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-[#0a0a0a] border border-[#252525]">
-                      <Image src={ad.thumbnail || "/placeholder.svg"} alt={ad.name} fill className="object-cover" />
-                    </div>
-                  </td>
-                  <td className="py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm font-medium text-white whitespace-nowrap">
-                    {ad.name}
-                  </td>
-                  <td className="py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm text-gray-400 whitespace-nowrap">
-                    {ad.campaignType}
-                  </td>
-                  <td className="py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm font-medium text-white">{ad.roas}</td>
-                  <td className="py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm text-gray-400">{ad.ctr}</td>
-                  <td className="py-3 sm:py-4 px-3 sm:px-6">
-                    <Badge
-                      variant={ad.status === "active" ? "default" : "secondary"}
-                      className={
-                        ad.status === "active"
-                          ? "bg-green-500/20 text-green-400 hover:bg-green-500/20 border-green-500/30 text-xs"
-                          : ad.status === "paused"
-                            ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20 border-yellow-500/30 text-xs"
-                            : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20 border-gray-500/30 text-xs"
-                      }
-                    >
-                      {ad.status}
-                    </Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {error && (
+        <div className="mb-4 p-4 bg-red-900/20 border border-red-500 rounded text-red-400">
+          {error}
         </div>
-      </Card>
+      )}
+
+      {ads.length === 0 ? (
+        <Card className="bg-[#111111] border-[#252525]">
+          <CardContent className="p-8 text-center">
+            <Play className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-white mb-2">No ads created yet</h3>
+            <p className="text-gray-400 mb-4">Start creating video ads in the Studio</p>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              Go to Studio
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          {ads.map((ad: any) => (
+            <Card key={ad.id} className="bg-[#111111] border-[#252525] overflow-hidden group hover:border-[#404040] transition-colors">
+              <div className="aspect-[9/16] bg-[#1a1a1a] relative overflow-hidden">
+                {ad.video_url ? (
+                  <video 
+                    className="w-full h-full object-cover"
+                    poster={ad.thumbnail_url}
+                    preload="metadata"
+                  >
+                    <source src={ad.video_url} type="video/mp4" />
+                  </video>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Play className="w-8 h-8 text-gray-500" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <Button size="sm" className="bg-white/20 hover:bg-white/30 text-white border-0">
+                    <Play className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-medium text-white text-sm truncate flex-1 mr-2">
+                    {ad.product_name}
+                  </h3>
+                  <Badge variant={ad.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
+                    {ad.status}
+                  </Badge>
+                </div>
+                <p className="text-xs text-gray-400 mb-3 line-clamp-2">
+                  {ad.campaign_type}
+                </p>
+                <div className="flex items-center gap-1">
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-gray-400 hover:text-white">
+                    <Download className="w-3 h-3" />
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-gray-400 hover:text-white">
+                    <Share2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

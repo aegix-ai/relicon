@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, FolderOpen, Settings, Plus } from "lucide-react"
+import { LayoutDashboard, FolderOpen, Settings, Plus, TrendingUp, Target, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { SettingsModal } from "@/components/modals/SettingsModal"
 import { ProfileModal } from "@/components/modals/ProfileModal"
 import Image from "next/image"
 import { CubeIcon } from "@/components/icons/CubeIcon"
+import { useAuth } from "@/lib/auth"
 
 const navItems = [
   {
@@ -20,6 +21,16 @@ const navItems = [
     name: "Creative Studio",
     href: "/dashboard/studio",
     icon: Plus,
+  },
+  {
+    name: "Analytics",
+    href: "/dashboard/analytics",
+    icon: TrendingUp,
+  },
+  {
+    name: "Campaigns",
+    href: "/dashboard/campaigns",
+    icon: Target,
   },
   {
     name: "Ads Archive",
@@ -35,6 +46,7 @@ const navItems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const { signOut } = useAuth()
   const [isExpanded, setIsExpanded] = useState(false)
   const [showExpandedLogo, setShowExpandedLogo] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -131,14 +143,19 @@ export function AppSidebar() {
         </nav>
 
         <div className="px-2 space-y-3 border-t border-[#1f1f1f] pt-4">
-          <button
-            onClick={() => setShowSettings(true)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm text-gray-400 hover:text-gray-200 hover:bg-[#161616]"
+          <Link
+            href="/dashboard/settings"
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm",
+              pathname === "/dashboard/settings"
+                ? "bg-[#1a1a1a] text-white"
+                : "text-gray-400 hover:text-gray-200 hover:bg-[#161616]"
+            )}
             title="Settings"
           >
             <Settings className="w-5 h-5 shrink-0" />
             {isExpanded && <span className="text-sm whitespace-nowrap">Settings</span>}
-          </button>
+          </Link>
 
           <button
             onClick={() => setShowProfile(true)}
@@ -149,6 +166,15 @@ export function AppSidebar() {
               <Image src="/professional-business-person.png" alt="Profile" fill className="object-cover" sizes="20px" />
             </div>
             {isExpanded && <span className="text-sm whitespace-nowrap">Profile</span>}
+          </button>
+
+          <button
+            onClick={signOut}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm text-gray-400 hover:text-gray-200 hover:bg-[#161616]"
+            title="Logout"
+          >
+            <LogOut className="w-5 h-5 shrink-0" />
+            {isExpanded && <span className="text-sm whitespace-nowrap">Logout</span>}
           </button>
         </div>
       </aside>
