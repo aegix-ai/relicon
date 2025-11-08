@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    const response = await fetch('http://localhost:8000/health');
+    const engineUrl = process.env.ENGINE_URL || 'http://localhost:8000';
+    const response = await fetch(`${engineUrl}/health`);
 
     if (!response.ok) {
       return NextResponse.json({ error: 'Engine not available' }, { status: 503 });

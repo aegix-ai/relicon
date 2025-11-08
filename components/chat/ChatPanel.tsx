@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { CubeIcon } from "@/components/icons/CubeIcon"
+import { toast } from "sonner"
 
 interface Message {
   role: "user" | "assistant"
@@ -15,7 +16,7 @@ interface Message {
 const sampleMessages: Message[] = [
   {
     role: "assistant",
-    content: "Hi! I'm Relicon AI. How can I help you optimize your ad campaigns today?",
+    content: "Hi! I'm Relicon AI. I can help you analyze your ad performance, answer questions about your campaigns, and provide insights on CTR, ROAS, conversions, and more. What would you like to know?",
   },
 ]
 
@@ -26,6 +27,10 @@ export function ChatPanel() {
   const [messages, setMessages] = useState<Message[]>(sampleMessages)
   const [input, setInput] = useState("")
   const [barInput, setBarInput] = useState("")
+  const [isTyping, setIsTyping] = useState(false)
+
+  // TODO: Get user ID from authentication
+  const userId = null // Replace with auth.user?.id when auth is implemented
 
   useEffect(() => {
     const checkMobile = () => {
@@ -41,42 +46,127 @@ export function ChatPanel() {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  const handleSend = () => {
-    if (!input.trim()) return
+  const handleSend = async () => {
+    if (!input.trim() || isTyping) return
 
-    setMessages([...messages, { role: "user", content: input }])
+    const userMessage = { role: "user" as const, content: input }
+    setMessages([...messages, userMessage])
     setInput("")
+    setIsTyping(true)
 
-    setTimeout(() => {
+    try {
+      // Prepare conversation history
+      const conversationHistory = messages
+        .slice(1) // Skip initial greeting
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }))
+
+      conversationHistory.push({
+        role: userMessage.role,
+        content: userMessage.content
+      })
+
+      // Call chat API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: conversationHistory,
+          userId: userId
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get response')
+      }
+
+      // Add AI response
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "I'm a UI placeholder. In the full version, I'd help you analyze campaigns and generate insights!",
+          content: data.message,
         },
       ])
-    }, 1000)
+    } catch (error: any) {
+      console.error('Chat error:', error)
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "I apologize, but I encountered an error. Please make sure your OpenAI API key is configured and try again.",
+        },
+      ])
+      toast.error('Failed to send message')
+    } finally {
+      setIsTyping(false)
+    }
   }
 
-  const handleBarSend = () => {
-    if (!barInput.trim()) return
+  const handleBarSend = async () => {
+    if (!barInput.trim() || isTyping) return
 
-    const newMessages = [...messages, { role: "user", content: barInput }]
-    setMessages(newMessages)
-
+    const userMessage = { role: "user" as const, content: barInput }
+    setMessages([...messages, userMessage])
     setIsPanelOpen(true)
-
     setBarInput("")
+    setIsTyping(true)
 
-    setTimeout(() => {
+    try {
+      // Prepare conversation history
+      const conversationHistory = messages
+        .slice(1) // Skip initial greeting
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }))
+
+      conversationHistory.push({
+        role: userMessage.role,
+        content: userMessage.content
+      })
+
+      // Call chat API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: conversationHistory,
+          userId: userId
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get response')
+      }
+
+      // Add AI response
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "I'm a UI placeholder. In the full version, I'd help you analyze campaigns and generate insights!",
+          content: data.message,
         },
       ])
-    }, 1000)
+    } catch (error: any) {
+      console.error('Chat error:', error)
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "I apologize, but I encountered an error. Please try again.",
+        },
+      ])
+      toast.error('Failed to send message')
+    } finally {
+      setIsTyping(false)
+    }
   }
 
   const handleCollapsedClick = () => {
@@ -168,6 +258,19 @@ export function ChatPanel() {
               </div>
             </div>
           ))}
+
+          {/* Typing Indicator */}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-[#161616] border border-[#2a2a2a] rounded-xl px-4 py-2.5">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="p-4 border-t border-[#2a2a2a]">
@@ -175,14 +278,16 @@ export function ChatPanel() {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              onKeyDown={(e) => e.key === "Enter" && !isTyping && handleSend()}
               placeholder="Ask anything..."
+              disabled={isTyping}
               className="rounded-lg bg-[#161616] border-[#2a2a2a] text-gray-200 placeholder:text-gray-500"
             />
             <Button
               onClick={handleSend}
+              disabled={!input.trim() || isTyping}
               size="icon"
-              className="bg-[#1a1a1a] hover:bg-[#252525] border border-[#2a2a2a] text-white rounded-lg shrink-0"
+              className="bg-[#1a1a1a] hover:bg-[#252525] border border-[#2a2a2a] text-white rounded-lg shrink-0 disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
             </Button>

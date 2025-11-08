@@ -16,8 +16,8 @@ class AssemblyService:
     def __init__(self):
         pass
     
-    def assemble_final_video(self, video_files: List[str], audio_file: str, 
-                           output_path: str, target_duration: float = 18.0) -> bool:
+    def assemble_final_video(self, video_files: List[str], audio_file: str,
+                           output_path: str, target_duration: float = 15.0) -> bool:
         """
         Assemble final video from video scenes and audio track.
         
@@ -217,7 +217,7 @@ class AssemblyService:
             print(f"Video-audio combination error: {e}")
             return False
     
-    def validate_video_output(self, video_path: str, expected_duration: float = 18.0) -> Dict[str, Any]:
+    def validate_video_output(self, video_path: str, expected_duration: float = 15.0) -> Dict[str, Any]:
         """
         Validate the final video output.
         

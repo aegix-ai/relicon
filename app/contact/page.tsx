@@ -35,10 +35,40 @@ export default function ContactPage() {
     window.scrollTo(0, 0)
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Form submitted:", formData)
-    // Handle form submission
+    setIsSubmitting(true)
+    setSubmitStatus('idle')
+    setErrorMessage('')
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSubmitStatus('success')
+        setFormData({ name: '', email: '', subject: '', message: '' })
+      } else {
+        setSubmitStatus('error')
+        setErrorMessage(data.details || data.error || 'Failed to send message')
+        console.error('Contact form error:', data)
+      }
+    } catch (error) {
+      setSubmitStatus('error')
+      setErrorMessage('Network error. Please check your connection and try again.')
+      console.error('Contact form submission error:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -226,10 +256,18 @@ export default function ContactPage() {
                           required
                         />
                       </div>
-                      <Button type="submit" className="w-full rounded-full" size="lg">
-                        Send Message
+                      <Button type="submit" className="w-full rounded-full" size="lg" disabled={isSubmitting}>
+                        {isSubmitting ? 'Sending...' : 'Send Message'}
                         <Send className="ml-2 size-4" />
                       </Button>
+                      {submitStatus === 'success' && (
+                        <p className="text-green-600 text-sm text-center">Message sent successfully!</p>
+                      )}
+                      {submitStatus === 'error' && (
+                        <p className="text-red-600 text-sm text-center">
+                          {errorMessage || 'Failed to send message. Please try again.'}
+                        </p>
+                      )}
                     </form>
                   </CardContent>
                 </Card>

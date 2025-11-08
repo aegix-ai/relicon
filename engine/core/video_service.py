@@ -1,181 +1,194 @@
 """
-  High-level video generation service.
-  Orchestrates video creation using abstracted providers.
+Enhanced Video Service with improved product image integration
 """
 
 import os
 import time
 from typing import Dict, Any, List, Optional
 from pathlib import Path
-from core.provider_manager import provider_manager
-from core.logger import video_logger
-from config.settings import settings
 
+from providers.luma import LumaProvider
+from providers.hailuo import HailuoProvider
+from providers.mock_video import MockVideoProvider
+from core.logger import get_logger
+
+logger = get_logger("video_service")
 
 class VideoService:
-    """High-level video generation orchestration service."""
+    """Enhanced video generation service with better product image integration"""
     
     def __init__(self):
-        self.provider_manager = provider_manager
-    
-    def generate_video_from_architecture(self, architecture: Dict[str, Any], output_dir: str, 
-                                       progress_callback: callable = None) -> Dict[str, Any]:
-        """
-        Generate complete video from architectural plan.
+        self.providers = {
+            'luma': LumaProvider(),
+            'hailuo': HailuoProvider(),
+            'mock': MockVideoProvider()
+        }
         
-        Args:
-            architecture: Video architecture from planning service
-            output_dir: Directory to save generated videos
-            
-        Returns:
-            Dictionary with generation results and file paths
-        """
-        scenes = architecture.get('scene_architecture', {}).get('scenes', [])
-        if not scenes:
-            raise ValueError("No scenes found in architecture")
+        # Provider priority order
+        self.provider_order = ['luma', 'hailuo', 'mock']
+        
+        # Check if we're in mock mode
+        self.mock_mode = os.getenv('MOCK_MODE', 'false').lower() == 'true'
+        if self.mock_mode:
+            self.provider_order = ['mock']
+            logger.info("Video service running in mock mode")
+    
+    def generate_scene_video(self, scene: Dict[str, Any], temp_dir: str, 
+                           product_image_url: Optional[str] = None) -> Optional[str]:
+        """Generate video for a single scene with enhanced product image integration"""
+        
+        scene_number = scene.get('scene_number', 1)
+        
+        # Get architecture for product context
+        architecture = scene.get('architecture', {})
+        if not product_image_url:
+            product_image_url = architecture.get('product_image_url')
         
         # Create output directory
+        output_dir = os.path.join(temp_dir, "videos")
         os.makedirs(output_dir, exist_ok=True)
         
-        # Generate video for each scene
-        video_logger.video_generation_start(
-            job_id=architecture.get('job_id', 'unknown'),
-            provider=self.provider_manager.get_video_generator().__class__.__name__,
-            prompt_length=len(str(scenes))
-        )
         generated_videos = []
-        video_generator = self.provider_manager.get_video_generator()
         
-        for i, scene in enumerate(scenes):
-            scene_number = i + 1
-            print(f"Generating scene {scene_number}/{len(scenes)}: {scene.get('purpose', 'Unknown')}")
-            
-            # Update progress for each scene (25% to 70% divided by number of scenes)
-            scene_progress = 25 + int((45 / len(scenes)) * i)
-            if progress_callback:
-                progress_callback(scene_progress, f"Generating Scene {scene_number}/{len(scenes)}...")
-            
-            # Get appropriate prompt based on provider
-            provider_name = getattr(settings, 'VIDEO_PROVIDER', 'hailuo').lower()
-            if provider_name == 'hailuo':
-                prompt = scene.get('hailuo_prompt', scene.get('visual_concept', ''))
-            else:
-                prompt = scene.get('luma_prompt', scene.get('visual_concept', ''))
-            
-            if not prompt:
-                print(f"Warning: No prompt found for scene {scene_number}")
-                continue
-            
+        # Get prompt from scene
+        if 'luma_prompt' in scene:
+            prompt = scene['luma_prompt']
+        elif 'visual_concept' in scene:
+            prompt = scene['visual_concept']
+        else:
+            prompt = scene.get('luma_prompt', scene.get('visual_concept', ''))
+        
+        if not prompt:
+            logger.warning(f"No prompt found for scene {scene_number}")
+            return None
+        
+        # Enhanced product image integration
+        image_url = None
+        enhanced_prompt = prompt
+        
+        if product_image_url:
+            if scene_number == 1:
+                # Use product image as keyframe for first scene
+                image_url = product_image_url
+                
+                # Enhance prompt for better product integration
+                product_focused_prompt = (
+                    f"Professional product showcase starting with the exact product shown in the image, "
+                    f"{prompt}, emphasizing product features and benefits, commercial photography style, "
+                    f"product-centric composition, high-quality product demonstration"
+                )
+                enhanced_prompt = product_focused_prompt
+                logger.info(f"Scene 1: Using product image as keyframe with enhanced prompt")
+                
+            elif scene_number == 2:
+                # For second scene, add realism validation and product consistency
+                realism_rules = "complete laptop with screen visible, realistic technology interaction, no floating components"
+                enhanced_prompt = (
+                    f"{prompt}, featuring the same product from previous scene, "
+                    f"maintaining visual consistency, product demonstration focus, "
+                    f"seamless transition from product showcase, {realism_rules}"
+                )
+                logger.info(f"Scene 2: Enhanced prompt for product consistency with realism rules")
+                
+            elif scene_number == 3:
+                # For third scene, focus on product benefits and call-to-action
+                enhanced_prompt = (
+                    f"{prompt}, showcasing the product benefits and results, "
+                    f"compelling call-to-action presentation, product satisfaction focus"
+                )
+                logger.info(f"Scene 3: Enhanced prompt for product benefits")
+        
+        # Try each provider in order
+        for provider_name in self.provider_order:
             try:
-                # Generate video with primary provider
+                video_generator = self.providers[provider_name]
+                logger.info(f"Attempting scene {scene_number} generation with {provider_name}")
+                
+                # Generate video with enhanced prompt and product image
                 video_url = video_generator.generate_video(
-                    prompt=prompt,
+                    prompt=enhanced_prompt,
                     aspect_ratio="9:16",
+                    image_url=image_url,
                     force_unique=True
                 )
+                
+                if not video_url:
+                    logger.warning(f"{provider_name} returned no video URL for scene {scene_number}")
+                    continue
                 
                 # Download video
                 output_filename = f"scene_{scene_number:02d}_{int(time.time())}.mp4"
                 output_path = os.path.join(output_dir, output_filename)
                 
                 if video_generator.download_video(video_url, output_path):
-                    generated_videos.append({
-                        'scene_number': scene_number,
-                        'file_path': output_path,
-                        'duration': scene.get('duration', 5),
-                        'prompt': prompt,
-                        'url': video_url
-                    })
-                    print(f"Scene {scene_number} completed: {output_filename}")
-                    
-                    # Update progress after scene completion
-                    scene_complete_progress = 25 + int((45 / len(scenes)) * (i + 1))
-                    if progress_callback:
-                        progress_callback(scene_complete_progress, f"Scene {scene_number}/{len(scenes)} completed")
+                    logger.info(f"Scene {scene_number} generated successfully with {provider_name}")
+                    return output_path
                 else:
-                    print(f"Failed to download scene {scene_number}")
+                    logger.warning(f"Failed to download video from {provider_name} for scene {scene_number}")
+                    continue
                     
             except Exception as e:
-                print(f"Scene {scene_number} generation failed: {e}")
-                
-                # Try fallback to Luma if primary provider fails or times out
-                if provider_name == 'hailuo':
-                    try:
-                        print(f"Attempting fallback to Luma for scene {scene_number}...")
-                        from providers.luma import LumaProvider
-                        fallback_generator = LumaProvider()
-                        
-                        fallback_prompt = scene.get('luma_prompt', scene.get('visual_concept', ''))
-                        if fallback_prompt:
-                            video_url = fallback_generator.generate_video(
-                                prompt=fallback_prompt,
-                                aspect_ratio="9:16"
-                            )
-                            
-                            output_filename = f"scene_{scene_number:02d}_luma_{int(time.time())}.mp4"
-                            output_path = os.path.join(output_dir, output_filename)
-                            
-                            if fallback_generator.download_video(video_url, output_path):
-                                generated_videos.append({
-                                    'scene_number': scene_number,
-                                    'file_path': output_path,
-                                    'duration': scene.get('duration', 5),
-                                    'prompt': fallback_prompt,
-                                    'url': video_url,
-                                    'provider': 'luma_fallback'
-                                })
-                                print(f"Scene {scene_number} completed with Luma fallback: {output_filename}")
-                            else:
-                                print(f"Fallback also failed to download scene {scene_number}")
-                    except Exception as fallback_error:
-                        print(f"Fallback to Luma also failed: {fallback_error}")
+                logger.error(f"Error with {provider_name} for scene {scene_number}: {str(e)}")
                 continue
         
-        return {
-            'total_scenes': len(scenes),
-            'generated_scenes': len(generated_videos),
-            'videos': generated_videos,
-            'success_rate': len(generated_videos) / len(scenes) if scenes else 0
-        }
+        logger.error(f"All providers failed for scene {scene_number}")
+        return None
     
-    def generate_single_video(self, prompt: str, output_path: str, **kwargs) -> bool:
-        """
-        Generate a single video from prompt.
+    def generate_videos_for_architecture(self, architecture: Dict[str, Any], 
+                                       temp_dir: str) -> Dict[str, str]:
+        """Generate videos for all scenes in architecture with product image integration"""
         
-        Args:
-            prompt: Text description for video
-            output_path: Local path to save video
-            **kwargs: Additional parameters
+        scenes = architecture.get('scenes', [])
+        if not scenes:
+            logger.error("No scenes found in architecture")
+            return {}
+        
+        # Get product image URL from architecture
+        product_image_url = architecture.get('product_image_url')
+        if product_image_url:
+            logger.info(f"Product image available for video generation: {product_image_url}")
+        
+        # Create output directory
+        output_dir = os.path.join(temp_dir, "videos")
+        os.makedirs(output_dir, exist_ok=True)
+        
+        generated_videos = {}
+        
+        for i, scene in enumerate(scenes, 1):
+            scene_number = scene.get('scene_number', i)
             
-        Returns:
-            True if successful, False otherwise
-        """
-        try:
-            video_generator = self.provider_manager.get_video_generator()
+            logger.info(f"Generating video for scene {scene_number}/{len(scenes)}")
             
-            video_url = video_generator.generate_video(
-                prompt=prompt,
-                aspect_ratio=kwargs.get('aspect_ratio', '9:16'),
-                image_url=kwargs.get('image_url'),
-                **kwargs
+            # Add scene number and architecture to scene data
+            scene_with_context = {
+                **scene,
+                'scene_number': scene_number,
+                'architecture': architecture
+            }
+            
+            video_path = self.generate_scene_video(
+                scene_with_context, 
+                temp_dir, 
+                product_image_url
             )
             
-            return video_generator.download_video(video_url, output_path)
-            
-        except Exception as e:
-            print(f"Single video generation failed: {e}")
-            return False
-    
-    def switch_provider(self, provider_name: str) -> None:
-        """
-        Switch video generation provider at runtime.
+            if video_path:
+                generated_videos[f"scene_{scene_number}"] = video_path
+                logger.info(f"Scene {scene_number} completed: {video_path}")
+            else:
+                logger.error(f"Failed to generate scene {scene_number}")
+                # Continue with other scenes even if one fails
         
-        Args:
-            provider_name: Name of the provider ('hailuo', 'luma', etc.)
-        """
-        try:
-            self.provider_manager.set_video_provider(provider_name)
-            print(f"Switched to {provider_name} video provider")
-        except Exception as e:
-            print(f"Failed to switch to {provider_name}: {e}")
-            raise
+        logger.info(f"Video generation completed: {len(generated_videos)}/{len(scenes)} scenes successful")
+        return generated_videos
+    
+    def get_provider_status(self) -> Dict[str, bool]:
+        """Get status of all video providers"""
+        status = {}
+        for name, provider in self.providers.items():
+            try:
+                # Simple health check - try to access the provider
+                status[name] = hasattr(provider, 'generate_video')
+            except Exception:
+                status[name] = False
+        return status

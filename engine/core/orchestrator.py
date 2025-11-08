@@ -1,14 +1,16 @@
 """
-  Main orchestration service for complete video generation pipeline.
-  Enterprise-grade coordination of all services and providers.
+Improved Video Orchestrator with performance optimizations and reliability
 """
 
 import os
 import time
 import tempfile
 import uuid
-from typing import Dict, Any, List, Optional
+import asyncio
+from typing import Dict, Any, List, Optional, TypedDict, Annotated, Callable
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
 
 from core.planning_service import PlanningService
 from core.video_service import VideoService
@@ -18,261 +20,443 @@ from core.cost_tracker import cost_tracker
 from core.logger import orchestrator_logger, set_trace_context
 from config.settings import settings
 
+logger = logging.getLogger("orchestrator_improved")
+
+class VideoGenerationState(TypedDict):
+    """Enhanced state for video generation workflow"""
+    brand_info: Dict[str, Any]
+    output_path: str
+    progress_callback: Optional[Callable[[int, str], None]]
+    architecture: Dict[str, Any]
+    video_results: Dict[str, Any]
+    audio_path: str
+    temp_dir: str
+    success: bool
+    error: Optional[str]
+    generation_id: str
+    start_time: float
+    checkpoints: Dict[str, Any]
 
 class VideoOrchestrator:
-    """Enterprise-grade video generation orchestrator."""
-    
+    """Enhanced video orchestrator with performance and reliability improvements"""
+
     def __init__(self):
         self.planning_service = PlanningService()
         self.video_service = VideoService()
         self.audio_service = AudioService()
         self.assembly_service = AssemblyService()
-    
-    def create_complete_video(self, brand_info: Dict[str, Any], output_path: str, 
-                           progress_callback: callable = None) -> Dict[str, Any]:
-        """
-        Create a complete video from brand information.
         
-        Args:
-            brand_info: Dictionary containing brand information
-            output_path: Path to save the final video
-            
-        Returns:
-            Dictionary with generation results and metadata
+        # Performance optimizations
+        self.executor = ThreadPoolExecutor(max_workers=3)
+        self.cache = {}
+        self.generation_stats = {
+            "total_generations": 0,
+            "successful_generations": 0,
+            "average_duration": 0
+        }
+        
+        logger.info("Enhanced video orchestrator initialized")
+
+    def generate_video_ad(
+        self,
+        brand_name: str,
+        brand_description: str,
+        product_name: str = "",
+        product_description: str = "",
+        target_audience: str = "general audience",
+        tone: str = "professional",
+        duration: int = 18,
+        call_to_action: str = "Learn more",
+        creative_style: str = "modern",
+        progress_callback: Optional[Callable[[int, str], None]] = None,
+        product_image_url: Optional[str] = None
+    ) -> Optional[str]:
         """
+        Enhanced video generation with performance optimizations and better error handling
+        """
+        generation_id = str(uuid.uuid4())
         start_time = time.time()
-        generation_id = f"gen_{int(start_time)}"
         
-        # Initialize trace context
-        set_trace_context(f"video_gen_{generation_id}", generation_id)
+        # Set trace context for logging
+        set_trace_context(generation_id)
         
         try:
-            orchestrator_logger.info("Video generation started", "orchestration.start",
-                                   **{"orchestration.generation_id": generation_id, 
-                                      "orchestration.brand": brand_info.get('brand_name', 'unknown'),
-                                      "orchestration.duration": brand_info.get('duration', 18)})
+            self.generation_stats["total_generations"] += 1
             
-            # Validate inputs
-            if not brand_info:
-                orchestrator_logger.error("Brand information missing", "orchestration.validation.failed",
-                                        **{"orchestration.missing_field": "brand_info"})
-                raise ValueError("Brand information is required")
-                
-            # Cost estimation and validation
-            cost_estimate = cost_tracker.estimate_video_cost(
-                scene_count=3, 
-                resolution="720p", 
-                duration=brand_info.get('duration', 18)
-            )
-            budget_check = cost_tracker.validate_budget(cost_estimate.total_estimated_cost)
-            
-            print(f"Estimated cost: ${cost_estimate.total_estimated_cost:.2f} "
-                  f"(3 scenes × ${cost_estimate.video_cost_per_scene} + audio ${cost_estimate.audio_cost} + planning ${cost_estimate.planning_cost})")
-            
-            if not budget_check["within_budget"]:
-                print(f"Budget warning: {budget_check.get('warning', 'Cost exceeds limits')}")
-            
-            # Ensure output directory exists
-            os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
-            
-            # Step 1: Create enterprise video blueprint (10-20%)
+            # Initialize progress
             if progress_callback:
-                progress_callback(10, "Creating video blueprint...")
-            print("Creating enterprise video blueprint...")
-            architecture = self.planning_service.create_enterprise_blueprint(brand_info)
+                progress_callback(0, "Starting video generation...")
             
-            target_duration = architecture.get('scene_architecture', {}).get('total_duration', 18)
-            print(f"DEBUG: Orchestrator target_duration = {target_duration}s from architecture")
-            
-            if progress_callback:
-                progress_callback(20, "Blueprint created, starting video generation...")
-            
-            # Step 2: Generate video scenes (20-70%)
-            print("Generating video scenes...")
-            with tempfile.TemporaryDirectory() as temp_dir:
-                if progress_callback:
-                    progress_callback(25, "Generating Scene 1/3...")
+            # Create temporary directory with cleanup
+            with tempfile.TemporaryDirectory(prefix="relicon_") as temp_dir:
                 
-                video_results = self.video_service.generate_video_from_architecture(
-                    architecture, temp_dir, progress_callback
+                # Initialize state
+                state = VideoGenerationState(
+                    brand_info={
+                        "brand_name": brand_name,
+                        "brand_description": brand_description,
+                        "product_name": product_name,
+                        "product_description": product_description,
+                        "target_audience": target_audience,
+                        "tone": tone,
+                        "duration": duration,
+                        "call_to_action": call_to_action,
+                        "creative_style": creative_style,
+                        "product_image_url": product_image_url
+                    },
+                    output_path="",
+                    progress_callback=progress_callback,
+                    architecture={},
+                    video_results={},
+                    audio_path="",
+                    temp_dir=temp_dir,
+                    success=False,
+                    error=None,
+                    generation_id=generation_id,
+                    start_time=start_time,
+                    checkpoints={}
                 )
                 
-                if video_results['generated_scenes'] == 0:
-                    raise Exception("No video scenes were generated successfully")
+                # Execute generation pipeline with checkpoints
+                result = self._execute_pipeline(state)
                 
-                if progress_callback:
-                    progress_callback(70, "All video scenes generated successfully")
+                # Update statistics
+                duration_seconds = time.time() - start_time
+                if result:
+                    self.generation_stats["successful_generations"] += 1
+                    
+                    # Update average duration
+                    total = self.generation_stats["total_generations"]
+                    current_avg = self.generation_stats["average_duration"]
+                    self.generation_stats["average_duration"] = (
+                        (current_avg * (total - 1) + duration_seconds) / total
+                    )
                 
-                # Step 3: Generate audio track (70-85%)
-                if progress_callback:
-                    progress_callback(75, "Generating voiceover and background music...")
-                print("Generating audio track...")
-                audio_path = os.path.join(temp_dir, "audio_track.mp3")
-                audio_success = self.audio_service.generate_audio_from_architecture(
-                    architecture, audio_path
-                )
+                logger.info(f"Generation {generation_id} completed in {duration_seconds:.2f}s")
+                return result
                 
-                if not audio_success:
-                    raise Exception("Audio generation failed")
-                
-                if progress_callback:
-                    progress_callback(85, "Audio with background music generated")
-                
-                # Step 4: Assemble final video (85-95%)
-                if progress_callback:
-                    progress_callback(88, "Assembling final video with audio...")
-                print("Assembling final video...")
-                video_files = [video['file_path'] for video in video_results['videos']]
-                assembly_success = self.assembly_service.assemble_final_video(
-                    video_files, audio_path, output_path, target_duration
-                )
-                
-                if not assembly_success:
-                    raise Exception("Video assembly failed")
-                
-                if progress_callback:
-                    progress_callback(95, "Video assembly completed")
-            
-            # Step 5: Validate final output (95-100%)
+        except Exception as e:
+            logger.error(f"Generation {generation_id} failed: {e}", exc_info=True)
             if progress_callback:
-                progress_callback(98, "Validating final video...")
-            print("Validating final video...")
-            validation = self.assembly_service.validate_video_output(
-                output_path, target_duration
-            )
+                progress_callback(0, f"Generation failed: {str(e)}")
+            return None
+        finally:
+            # Clear trace context
+            set_trace_context(None)
+
+    def _execute_pipeline(self, state: VideoGenerationState) -> Optional[str]:
+        """Execute the video generation pipeline with enhanced error handling"""
+        
+        try:
+            # Step 1: Planning (10% progress)
+            if not self._execute_planning_step(state):
+                return None
             
-            if progress_callback:
-                progress_callback(100, "Video generation completed successfully")
+            # Step 2: Parallel video and audio generation (10-80% progress)
+            if not self._execute_parallel_generation(state):
+                return None
             
-            end_time = time.time()
-            total_time = end_time - start_time
-            
-            # Log actual costs for tracking
-            cost_tracker.log_generation_cost(
-                job_id=generation_id,
-                actual_cost=cost_estimate.total_estimated_cost,
-                scenes_generated=video_results['generated_scenes'],
-                resolution="720p"
-            )
-            
-            # Compile results
-            results = {
-                'success': True,
-                'generation_id': generation_id,
-                'output_path': output_path,
-                'duration': total_time,
-                'target_duration': target_duration,
-                'architecture': architecture,
-                'video_results': video_results,
-                'audio_success': audio_success,
-                'assembly_success': assembly_success,
-                'validation': validation,
-                'cost_breakdown': {
-                    'estimated_cost': cost_estimate.total_estimated_cost,
-                    'video_cost': cost_estimate.total_video_cost,
-                    'audio_cost': cost_estimate.audio_cost,
-                    'planning_cost': cost_estimate.planning_cost,
-                    'resolution': cost_estimate.resolution,
-                    'scenes_generated': video_results['generated_scenes']
-                },
-                'metadata': {
-                    'created_at': time.time(),
-                    'video_provider': settings.VIDEO_PROVIDER,
-                    'audio_provider': settings.AUDIO_PROVIDER,
-                    'text_provider': settings.TEXT_PROVIDER,
-                    'cost_optimized': True,
-                    'version': '2.0'
-                }
-            }
-            
-            print(f"Video generation completed in {total_time:.1f}s: {output_path}")
-            return results
+            # Step 3: Assembly (80-100% progress)
+            return self._execute_assembly_step(state)
             
         except Exception as e:
-            end_time = time.time()
-            total_time = end_time - start_time
+            state["error"] = str(e)
+            logger.error(f"Pipeline execution failed: {e}")
+            return None
+
+    def _execute_planning_step(self, state: VideoGenerationState) -> bool:
+        """Execute planning step with caching"""
+        try:
+            if state["progress_callback"]:
+                state["progress_callback"](5, "Generating video architecture...")
             
-            error_results = {
-                'success': False,
-                'generation_id': generation_id,
-                'error': str(e),
-                'duration': total_time,
-                'output_path': output_path,
-                'metadata': {
-                    'created_at': time.time(),
-                    'error_occurred': True
-                }
+            # Create cache key for planning
+            cache_key = self._create_cache_key(state["brand_info"])
+            
+            # Check cache first
+            if cache_key in self.cache:
+                logger.info("Using cached architecture")
+                state["architecture"] = self.cache[cache_key]
+            else:
+                # Generate new architecture
+                architecture = self.planning_service.create_video_architecture(
+                    brand_name=state["brand_info"]["brand_name"],
+                    brand_description=state["brand_info"]["brand_description"],
+                    product_name=state["brand_info"]["product_name"],
+                    product_description=state["brand_info"]["product_description"],
+                    target_audience=state["brand_info"]["target_audience"],
+                    tone=state["brand_info"]["tone"],
+                    duration=state["brand_info"]["duration"],
+                    call_to_action=state["brand_info"]["call_to_action"],
+                    creative_style=state["brand_info"]["creative_style"]
+                )
+                
+                if not architecture:
+                    raise Exception("Failed to generate video architecture")
+                
+                state["architecture"] = architecture
+                
+                # Cache the result (limit cache size)
+                if len(self.cache) > 100:
+                    # Remove oldest entry
+                    oldest_key = next(iter(self.cache))
+                    del self.cache[oldest_key]
+                
+                self.cache[cache_key] = architecture
+            
+            # Save checkpoint
+            state["checkpoints"]["planning"] = {
+                "completed": True,
+                "timestamp": time.time(),
+                "architecture_scenes": len(state["architecture"].get("scenes", []))
             }
             
-            print(f"Video generation failed after {total_time:.1f}s: {e}")
-            return error_results
-    
-    def create_video_from_simple_prompt(self, prompt: str, output_path: str, 
-                                      duration: int = 18) -> Dict[str, Any]:
-        """
-        Create video from a simple text prompt.
-        
-        Args:
-            prompt: Simple text description
-            output_path: Path to save the final video
-            duration: Video duration in seconds
+            if state["progress_callback"]:
+                state["progress_callback"](10, "Video architecture created")
             
-        Returns:
-            Dictionary with generation results
-        """
-        # Convert simple prompt to brand info
-        brand_info = {
-            'brand_name': 'Custom Video',
-            'brand_description': prompt,
-            'target_audience': 'general',
-            'call_to_action': 'Learn more',
-            'duration': duration
+            return True
+            
+        except Exception as e:
+            logger.error(f"Planning step failed: {e}")
+            state["error"] = f"Planning failed: {str(e)}"
+            return False
+
+    def _execute_parallel_generation(self, state: VideoGenerationState) -> bool:
+        """Execute video and audio generation in parallel for better performance"""
+        try:
+            if state["progress_callback"]:
+                state["progress_callback"](15, "Starting parallel video and audio generation...")
+            
+            # Prepare futures for parallel execution
+            futures = {}
+            
+            # Submit video generation task
+            video_future = self.executor.submit(
+                self._generate_videos_with_progress,
+                state
+            )
+            futures["video"] = video_future
+            
+            # Submit audio generation task
+            audio_future = self.executor.submit(
+                self._generate_audio_with_progress,
+                state
+            )
+            futures["audio"] = audio_future
+            
+            # Wait for completion with progress updates
+            completed_tasks = set()
+            
+            while len(completed_tasks) < len(futures):
+                for task_name, future in futures.items():
+                    if task_name not in completed_tasks and future.done():
+                        try:
+                            result = future.result()
+                            if not result:
+                                raise Exception(f"{task_name} generation failed")
+                            completed_tasks.add(task_name)
+                            logger.info(f"{task_name} generation completed")
+                        except Exception as e:
+                            logger.error(f"{task_name} generation failed: {e}")
+                            return False
+                
+                # Update overall progress
+                progress = 15 + (len(completed_tasks) / len(futures)) * 65
+                if state["progress_callback"]:
+                    state["progress_callback"](
+                        int(progress),
+                        f"Generating content... ({len(completed_tasks)}/{len(futures)} tasks complete)"
+                    )
+                
+                time.sleep(0.5)  # Small delay to prevent busy waiting
+            
+            # Save checkpoint
+            state["checkpoints"]["generation"] = {
+                "completed": True,
+                "timestamp": time.time(),
+                "video_scenes": len(state["video_results"]),
+                "audio_generated": bool(state["audio_path"])
+            }
+            
+            if state["progress_callback"]:
+                state["progress_callback"](80, "Video and audio generation completed")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Parallel generation failed: {e}")
+            state["error"] = f"Generation failed: {str(e)}"
+            return False
+
+    def _generate_videos_with_progress(self, state: VideoGenerationState) -> bool:
+        """Generate videos with progress tracking"""
+        try:
+            scenes = state["architecture"].get("scenes", [])
+            if not scenes:
+                raise Exception("No scenes in architecture")
+            
+            video_results = {}
+            
+            for i, scene in enumerate(scenes):
+                scene_progress = 20 + (i / len(scenes)) * 40
+                
+                if state["progress_callback"]:
+                    state["progress_callback"](
+                        int(scene_progress),
+                        f"Generating scene {i+1}/{len(scenes)}: {scene.get('type', 'unknown')}"
+                    )
+                
+                video_path = self.video_service.generate_scene_video(
+                    scene=scene,
+                    temp_dir=state["temp_dir"],
+                    product_image_url=state["brand_info"].get("product_image_url")
+                )
+                
+                if not video_path:
+                    raise Exception(f"Failed to generate scene {i+1}")
+                
+                video_results[f"scene_{i+1}"] = video_path
+            
+            state["video_results"] = video_results
+            return True
+            
+        except Exception as e:
+            logger.error(f"Video generation failed: {e}")
+            return False
+
+    def _generate_audio_with_progress(self, state: VideoGenerationState) -> bool:
+        """Generate audio with progress tracking"""
+        try:
+            if state["progress_callback"]:
+                state["progress_callback"](25, "Generating voiceover...")
+            
+            # Extract script from architecture
+            script_parts = []
+            for scene in state["architecture"].get("scenes", []):
+                if scene.get("voiceover"):
+                    script_parts.append(scene["voiceover"])
+            
+            full_script = " ".join(script_parts)
+            
+            if not full_script.strip():
+                raise Exception("No script content for audio generation")
+            
+            audio_path = self.audio_service.generate_voiceover(
+                script=full_script,
+                tone=state["brand_info"]["tone"],
+                temp_dir=state["temp_dir"]
+            )
+            
+            if not audio_path:
+                raise Exception("Failed to generate audio")
+            
+            state["audio_path"] = audio_path
+            return True
+            
+        except Exception as e:
+            logger.error(f"Audio generation failed: {e}")
+            return False
+
+    def _execute_assembly_step(self, state: VideoGenerationState) -> Optional[str]:
+        """Execute final assembly step"""
+        try:
+            if state["progress_callback"]:
+                state["progress_callback"](85, "Assembling final video...")
+            
+            # Prepare video clips in order
+            video_clips = []
+            scenes = state["architecture"].get("scenes", [])
+            
+            for i, scene in enumerate(scenes):
+                scene_key = f"scene_{i+1}"
+                if scene_key in state["video_results"]:
+                    video_clips.append(state["video_results"][scene_key])
+                else:
+                    raise Exception(f"Missing video for scene {i+1}")
+            
+            if not video_clips:
+                raise Exception("No video clips to assemble")
+            
+            # Generate output filename
+            timestamp = int(time.time())
+            output_filename = f"ad_{timestamp}_{state['generation_id'][:8]}.mp4"
+            output_path = Path("outputs") / output_filename
+            
+            # Ensure outputs directory exists
+            output_path.parent.mkdir(exist_ok=True)
+            
+            if state["progress_callback"]:
+                state["progress_callback"](90, "Combining video and audio...")
+            
+            # Assemble final video
+            final_video = self.assembly_service.assemble_final_video(
+                video_clips=video_clips,
+                audio_path=state["audio_path"],
+                output_path=str(output_path),
+                target_duration=state["brand_info"]["duration"]
+            )
+            
+            if not final_video or not Path(final_video).exists():
+                raise Exception("Final video assembly failed")
+            
+            # Save final checkpoint
+            state["checkpoints"]["assembly"] = {
+                "completed": True,
+                "timestamp": time.time(),
+                "output_path": final_video,
+                "file_size": Path(final_video).stat().st_size
+            }
+            
+            if state["progress_callback"]:
+                state["progress_callback"](100, "Video generation completed successfully!")
+            
+            state["success"] = True
+            state["output_path"] = final_video
+            
+            logger.info(f"Video generation completed: {final_video}")
+            return final_video
+            
+        except Exception as e:
+            logger.error(f"Assembly step failed: {e}")
+            state["error"] = f"Assembly failed: {str(e)}"
+            return None
+
+    def _create_cache_key(self, brand_info: Dict[str, Any]) -> str:
+        """Create cache key for planning results"""
+        import hashlib
+        
+        # Create hash from key brand info
+        key_data = {
+            "brand_name": brand_info.get("brand_name", ""),
+            "brand_description": brand_info.get("brand_description", ""),
+            "product_name": brand_info.get("product_name", ""),
+            "target_audience": brand_info.get("target_audience", ""),
+            "creative_style": brand_info.get("creative_style", ""),
+            "duration": brand_info.get("duration", 18)
         }
         
-        return self.create_complete_video(brand_info, output_path)
-    
-    def switch_providers(self, video_provider: Optional[str] = None, 
-                        audio_provider: Optional[str] = None,
-                        text_provider: Optional[str] = None) -> None:
-        """
-        Switch providers at runtime.
-        
-        Args:
-            video_provider: New video provider name
-            audio_provider: New audio provider name
-            text_provider: New text provider name
-        """
-        try:
-            if video_provider:
-                self.video_service.switch_provider(video_provider)
-            if audio_provider:
-                self.audio_service.switch_provider(audio_provider)
-            if text_provider:
-                self.planning_service.switch_provider(text_provider)
-            
-            print("Provider switching completed")
-            
-        except Exception as e:
-            print(f"Provider switching failed: {e}")
-            raise
-    
-    def get_system_status(self) -> Dict[str, Any]:
-        """Get current system status and configuration."""
+        key_string = str(sorted(key_data.items()))
+        return hashlib.md5(key_string.encode()).hexdigest()
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get orchestrator statistics"""
         return {
-            'providers': {
-                'video': settings.VIDEO_PROVIDER,
-                'audio': settings.AUDIO_PROVIDER,
-                'text': settings.TEXT_PROVIDER
-            },
-            'configuration': {
-                'max_concurrent_jobs': settings.MAX_CONCURRENT_JOBS,
-                'job_timeout': settings.JOB_TIMEOUT,
-                'output_dir': settings.OUTPUT_DIR,
-                'temp_dir': settings.TEMP_DIR
-            },
-            'capabilities': {
-                'video_providers': ['hailuo', 'luma'],
-                'audio_providers': ['elevenlabs'],
-                'text_providers': ['openai']
-            }
+            "total_generations": self.generation_stats["total_generations"],
+            "successful_generations": self.generation_stats["successful_generations"],
+            "success_rate": (
+                self.generation_stats["successful_generations"] / 
+                max(1, self.generation_stats["total_generations"])
+            ) * 100,
+            "average_duration": self.generation_stats["average_duration"],
+            "cache_size": len(self.cache)
         }
+
+    def clear_cache(self):
+        """Clear the planning cache"""
+        self.cache.clear()
+        logger.info("Planning cache cleared")
+
+    def shutdown(self):
+        """Shutdown the orchestrator"""
+        self.executor.shutdown(wait=True)
+        logger.info("Orchestrator shutdown complete")

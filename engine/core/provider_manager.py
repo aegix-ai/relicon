@@ -42,6 +42,13 @@ class ProviderManager:
     
     def _create_video_provider(self, provider_name: str) -> VideoGenerator:
         """Create video provider instance based on configuration."""
+        # Check for mock mode
+        mock_mode = os.getenv('MOCK_MODE', 'false').lower() == 'true'
+        if mock_mode:
+            from providers.mock_video import MockVideoProvider
+            print("🎭 Using MOCK video provider (no API calls)")
+            return MockVideoProvider()
+
         if provider_name == 'hailuo':
             from providers.hailuo import HailuoProvider
             return HailuoProvider()
@@ -53,6 +60,13 @@ class ProviderManager:
     
     def _create_audio_provider(self, provider_name: str) -> AudioGenerator:
         """Create audio provider instance based on configuration."""
+        # Check for mock mode
+        mock_mode = os.getenv('MOCK_MODE', 'false').lower() == 'true'
+        if mock_mode:
+            from providers.mock_audio import MockAudioProvider
+            print("🎭 Using MOCK audio provider (no API calls)")
+            return MockAudioProvider()
+
         if provider_name == 'elevenlabs':
             from providers.elevenlabs import ElevenLabsProvider
             return ElevenLabsProvider()
@@ -61,6 +75,13 @@ class ProviderManager:
     
     def _create_text_provider(self, provider_name: str) -> TextGenerator:
         """Create text provider instance based on configuration."""
+        # Check for mock mode
+        mock_mode = os.getenv('MOCK_MODE', 'false').lower() == 'true'
+        if mock_mode:
+            from providers.mock_text import MockTextProvider
+            print("🎭 Using MOCK text provider (no API calls)")
+            return MockTextProvider()
+
         if provider_name == 'openai':
             from providers.openai import OpenAIProvider
             return OpenAIProvider()
