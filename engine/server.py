@@ -1,6 +1,8 @@
+# type: ignore
+
 """
-Improved Relicon Ad Generator API Server
-Enhanced with reliability, error handling, and performance optimizations
+    Improved Relicon Ad Generator API Server
+    Enhanced with reliability, error handling, and performance optimizations
 """
 
 import sys
@@ -66,24 +68,24 @@ async def lifespan(app: FastAPI):
     try:
         # Startup
         logger.info("Starting Relicon API server...")
-        
+
         # Initialize services
         from backend.core.job_manager import JobManager
         app_state["job_manager"] = JobManager()
         app_state["health_status"] = "healthy"
-        
+
         # Validate API keys
         required_keys = ["OPENAI_API_KEY", "LUMA_API_KEY", "ELEVENLABS_API_KEY"]
         missing_keys = [key for key in required_keys if not os.getenv(key)]
-        
+
         if missing_keys:
             logger.warning(f"Missing API keys: {missing_keys}")
             if not os.getenv("MOCK_MODE", "false").lower() == "true":
                 app_state["health_status"] = "degraded"
-        
+
         logger.info("Server startup complete")
         yield
-        
+
     except Exception as e:
         logger.error(f"Startup failed: {e}")
         app_state["health_status"] = "unhealthy"
@@ -97,7 +99,7 @@ async def lifespan(app: FastAPI):
 # Initialize FastAPI with lifespan
 app = FastAPI(
     title="Relicon Ad Generator API",
-    version="2.0.0",
+    version="2.3.0",
     description="Enhanced AI video generation API",
     lifespan=lifespan
 )
@@ -116,19 +118,21 @@ app.add_middleware(
 )
 
 # Rate limiting
-def check_rate_limit(client_ip: str, limit: int = 10, window: int = 3600) -> bool:
+def check_rate_limit(client_ip: str,
+                     limit: int = 10,
+                     window: int = 3600) -> bool:
     """Enhanced rate limiting with sliding window"""
     now = time.time()
     cutoff = now - window
-    
+
     # Clean old requests
     app_state["rate_limiter"][client_ip] = [
         t for t in app_state["rate_limiter"][client_ip] if t > cutoff
     ]
-    
+
     if len(app_state["rate_limiter"][client_ip]) >= limit:
         return False
-    
+
     app_state["rate_limiter"][client_ip].append(now)
     return True
 
@@ -146,7 +150,8 @@ class VideoRequest(BaseModel):
     product_image_url: Optional[str] = None
 
     @validator('*', pre=True)
-    def sanitize_input(cls, v):
+    def sanitize_input(cls,
+                       v):
         if isinstance(v, str):
             # Remove dangerous characters
             dangerous = ['<', '>', ';', '&', '|', '`', '$']
@@ -157,7 +162,8 @@ class VideoRequest(BaseModel):
 
 # Error handlers
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+async def global_exception_handler(request: Request,
+                                   exc: Exception):
     logger.error(f"Unhandled error: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
@@ -165,7 +171,8 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 @app.exception_handler(HTTPException)
-async def custom_http_exception_handler(request: Request, exc: HTTPException):
+async def custom_http_exception_handler(request: Request,
+                                        exc: HTTPException):
     logger.warning(f"HTTP error {exc.status_code}: {exc.detail}")
     return await http_exception_handler(request, exc)
 
@@ -174,7 +181,7 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException):
 async def health_check():
     """Enhanced health check"""
     status = app_state["health_status"]
-    
+
     # Check services
     services = {
         "job_manager": app_state["job_manager"] is not None,
@@ -183,7 +190,7 @@ async def health_check():
         "elevenlabs_key": bool(os.getenv("ELEVENLABS_API_KEY")),
         "mock_mode": os.getenv("MOCK_MODE", "false").lower() == "true"
     }
-    
+
     return {
         "status": status,
         "timestamp": time.time(),
@@ -205,11 +212,11 @@ async def generate_video(
         client_ip = request.client.host if request.client else "unknown"
         if not check_rate_limit(client_ip):
             raise HTTPException(429, "Rate limit exceeded")
-        
+
         # Validate job manager
         if not app_state["job_manager"]:
             raise HTTPException(503, "Service unavailable")
-        
+
         # Create and start job
         job_id = app_state["job_manager"].create_job(video_request.dict())
         background_tasks.add_task(
@@ -217,10 +224,10 @@ async def generate_video(
             job_id,
             video_request.dict()
         )
-        
+
         logger.info(f"Started job {job_id} for {client_ip}")
         return {"job_id": job_id, "status": "queued"}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -234,14 +241,14 @@ async def get_job_status(job_id: str):
     # Validate job ID
     if not job_id or len(job_id) > 100 or any(c in job_id for c in ['..', '/', '\\']):
         raise HTTPException(400, "Invalid job ID")
-    
+
     if not app_state["job_manager"]:
         raise HTTPException(503, "Service unavailable")
-    
+
     status = app_state["job_manager"].get_job_status(job_id)
     if not status:
         raise HTTPException(404, "Job not found")
-    
+
     return status
 
 # Video serving endpoint
@@ -251,27 +258,27 @@ async def get_video(filename: str):
     # Validate filename
     if not filename or len(filename) > 200 or any(c in filename for c in ['..', '/', '\\']):
         raise HTTPException(400, "Invalid filename")
-    
+
     if not filename.endswith('.mp4'):
         raise HTTPException(400, "Invalid file type")
-    
+
     # Secure path resolution
     try:
         video_path = (Path("outputs") / filename).resolve()
         outputs_dir = Path("outputs").resolve()
-        
+
         if not str(video_path).startswith(str(outputs_dir)):
             raise HTTPException(403, "Access denied")
-        
+
         if not video_path.exists():
             raise HTTPException(404, "Video not found")
-        
+
         return FileResponse(
             video_path,
             media_type="video/mp4",
             headers={"Cache-Control": "public, max-age=3600"}
         )
-        
+
     except Exception as e:
         logger.error(f"Video serving error: {e}")
         raise HTTPException(500, "File access error")
@@ -282,20 +289,21 @@ async def get_metrics():
     """System metrics for monitoring"""
     if not app_state["job_manager"]:
         return {"error": "Service unavailable"}
-    
+
     return app_state["job_manager"].get_metrics()
 
 if __name__ == "__main__":
     print("🚀 Starting Enhanced Relicon API Server...")
-    
+
     # Graceful shutdown handler
-    def signal_handler(signum, frame):
+    def signal_handler(signum,
+                       frame):
         logger.info("Received shutdown signal")
         sys.exit(0)
-    
+
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-    
+
     uvicorn.run(
         app,
         host="0.0.0.0",

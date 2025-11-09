@@ -1,12 +1,12 @@
 """
-Improved Job Manager with enhanced reliability and performance
+    Improved Job Manager with enhanced reliability and performance
 """
 
 import asyncio
 import time
 import threading
 from typing import Dict, Any, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
 import logging
 from collections import defaultdict
@@ -20,7 +20,8 @@ logger = get_logger("job_manager_improved")
 class JobManager:
     """Enhanced job manager with reliability and performance improvements"""
 
-    def __init__(self, max_workers: int = 3):
+    def __init__(self,
+                 max_workers: int = 3):
         self.jobs: Dict[str, Dict[str, Any]] = {}
         self.pipeline = VideoGenerationPipeline()
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
@@ -41,7 +42,8 @@ class JobManager:
         self._start_cleanup_task()
         logger.info(f"Enhanced job manager initialized with {max_workers} workers")
 
-    def create_job(self, request_data: Dict[str, Any]) -> str:
+    def create_job(self,
+                   request_data: Dict[str, Any]) -> str:
         """Create job with enhanced validation and tracking"""
         import random
         import string
@@ -55,7 +57,7 @@ class JobManager:
                 "status": "queued",
                 "progress": 0,
                 "message": "Job queued",
-                "created_at": datetime.utcnow().isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
                 "started_at": None,
                 "completed_at": None,
                 "video_url": None,
@@ -70,7 +72,8 @@ class JobManager:
         logger.info(f"Created job {job_id}")
         return job_id
 
-    def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
+    def get_job_status(self,
+                       job_id: str) -> Optional[Dict[str, Any]]:
         """Get job status with additional metadata"""
         with self.job_lock:
             job = self.jobs.get(job_id)
@@ -81,13 +84,13 @@ class JobManager:
             estimated_completion = None
             if job["status"] == "processing" and job["started_at"]:
                 started = datetime.fromisoformat(job["started_at"])
-                elapsed = (datetime.utcnow() - started).total_seconds()
+                elapsed = (datetime.now(timezone.utc) - started).total_seconds()
                 progress = max(job["progress"], 1)
 
                 # Estimate based on current progress
                 total_estimated = (elapsed / progress) * 100
                 remaining = max(0, total_estimated - elapsed)
-                estimated_completion = (datetime.utcnow() + timedelta(seconds=remaining)).isoformat()
+                estimated_completion = (datetime.now(timezone.utc) + timedelta(seconds=remaining)).isoformat()
 
             return {
                 "job_id": job["job_id"],
@@ -117,7 +120,9 @@ class JobManager:
                 return i + 1
         return 0
 
-    def update_job(self, job_id: str, updates: Dict[str, Any]):
+    def update_job(self,
+                   job_id: str,
+                   updates: Dict[str, Any]):
         """Thread-safe job updates with validation"""
         with self.job_lock:
             if job_id not in self.jobs:
@@ -131,10 +136,10 @@ class JobManager:
 
             # Update timestamps
             if updates.get("status") == "processing" and not self.jobs[job_id].get("started_at"):
-                updates["started_at"] = datetime.utcnow().isoformat()
+                updates["started_at"] = datetime.now(timezone.utc).isoformat()
 
             if updates.get("status") in ["completed", "failed"]:
-                updates["completed_at"] = datetime.utcnow().isoformat()
+                updates["completed_at"] = datetime.now(timezone.utc).isoformat()
 
                 # Update metrics
                 if updates.get("status") == "completed":
@@ -145,7 +150,7 @@ class JobManager:
                 # Calculate duration for metrics
                 if self.jobs[job_id].get("started_at"):
                     started = datetime.fromisoformat(self.jobs[job_id]["started_at"])
-                    duration = (datetime.utcnow() - started).total_seconds()
+                    duration = (datetime.now(timezone.utc) - started).total_seconds()
 
                     # Update average duration
                     completed = self.metrics["completed_jobs"]
@@ -162,7 +167,9 @@ class JobManager:
                 message = updates.get("message", "")
                 logger.info(f"Job {job_id}: {status} ({progress}%) - {message}")
 
-    async def start_generation(self, job_id: str, request_data: Dict[str, Any]):
+    async def start_generation(self,
+                               job_id: str,
+                               request_data: Dict[str, Any]):
         """Start generation with improved error handling and retries"""
         if self.active_jobs >= self.max_workers:
             logger.warning(f"Job {job_id} queued - max workers ({self.max_workers}) reached")
@@ -182,7 +189,10 @@ class JobManager:
         finally:
             self.active_jobs -= 1
 
-    def _run_generation_with_retry(self, job_id: str, request_data: Dict[str, Any], max_retries: int = 2):
+    def _run_generation_with_retry(self,
+                                   job_id: str,
+                                   request_data: Dict[str, Any],
+                                   max_retries: int = 2):
         """Run generation with retry logic"""
         for attempt in range(max_retries + 1):
             try:
@@ -215,7 +225,9 @@ class JobManager:
                         "retry_count": attempt
                     })
 
-    def _run_generation(self, job_id: str, request_data: Dict[str, Any]):
+    def _run_generation(self,
+                        job_id: str,
+                        request_data: Dict[str, Any]):
         """Core generation logic with enhanced progress tracking"""
         try:
             self.update_job(job_id, {
@@ -226,7 +238,8 @@ class JobManager:
             })
 
             # Enhanced progress callback with step tracking
-            def progress_callback(progress: int, message: str):
+            def progress_callback(progress: int,
+                                  message: str):
                 # Map progress to steps for better UX
                 step_mapping = {
                     (0, 20): "Planning",
@@ -287,7 +300,7 @@ class JobManager:
         def cleanup_old_jobs():
             while True:
                 try:
-                    cutoff = datetime.utcnow() - timedelta(hours=24)
+                    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
 
                     with self.job_lock:
                         old_jobs = [

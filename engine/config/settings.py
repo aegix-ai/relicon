@@ -14,10 +14,14 @@ class Settings:
     OPENAI_API_KEY: str = os.environ.get("OPENAI_API_KEY", "")
     LUMA_API_KEY: str = os.environ.get("LUMA_API_KEY", "")
     ELEVENLABS_API_KEY: str = os.environ.get("ELEVENLABS_API_KEY", "")
-    HAILUO_API_KEY: str = os.environ.get("HAILUO_API_KEY", "")
+    # VEO3_API_KEY: str = os.environ.get("VEO3_API_KEY", "")  # Will be added later
 
     # Provider Configuration
-    VIDEO_PROVIDER: str = os.environ.get("VIDEO_PROVIDER", "luma")  # luma (Ray 3 primary), hailuo (fallback)
+
+    # VIDEO_PROVIDER: str = os.environ.get("VIDEO_PROVIDER", "veo")  # Google Veo3/3.1 environment variable will be
+                                                                     # added here later
+
+    VIDEO_PROVIDER: str = os.environ.get("VIDEO_PROVIDER", "luma")  # luma (Ray 3 primary)
     AUDIO_PROVIDER: str = os.environ.get("AUDIO_PROVIDER", "elevenlabs")  # elevenlabs
     TEXT_PROVIDER: str = os.environ.get("TEXT_PROVIDER", "openai")  # openai
 
@@ -63,8 +67,8 @@ class Settings:
         # Video provider validation
         if self.VIDEO_PROVIDER == "luma" and not self.LUMA_API_KEY:
             errors.append("LUMA_API_KEY is required for Luma video provider")
-        elif self.VIDEO_PROVIDER == "hailuo" and not self.HAILUO_API_KEY:
-            errors.append("HAILUO_API_KEY is required for Hailuo video provider")
+
+        # Google Veo3/3.1 will be added here later
 
         # Audio provider validation
         if self.AUDIO_PROVIDER == "elevenlabs" and not self.ELEVENLABS_API_KEY:
