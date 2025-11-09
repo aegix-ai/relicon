@@ -76,7 +76,8 @@ class VideoGenerationPipeline:
 
         return graph.compile()
 
-    def _plan_video(self, state: PipelineState) -> PipelineState:
+    def _plan_video(self,
+                    state: PipelineState) -> PipelineState:
         """Step 1: Plan video architecture (angle → scenes)"""
         try:
             logger.info("Planning video architecture", "pipeline.plan.start")
@@ -98,7 +99,8 @@ class VideoGenerationPipeline:
 
         return state
 
-    def _generate_videos(self, state: PipelineState) -> PipelineState:
+    def _generate_videos(self,
+                         state: PipelineState) -> PipelineState:
         """Step 2: Generate video scenes (with caching)"""
         try:
             if state.get("error"):
@@ -140,7 +142,8 @@ class VideoGenerationPipeline:
 
         return state
 
-    def _generate_audio(self, state: PipelineState) -> PipelineState:
+    def _generate_audio(self,
+                        state: PipelineState) -> PipelineState:
         """Step 3: Generate voiceover + music"""
         try:
             if state.get("error"):
@@ -167,7 +170,8 @@ class VideoGenerationPipeline:
 
         return state
 
-    def _assemble_final_video(self, state: PipelineState) -> PipelineState:
+    def _assemble_final_video(self,
+                              state: PipelineState) -> PipelineState:
         """Step 4: Assemble final video with FFmpeg"""
         try:
             if state.get("error"):
@@ -201,7 +205,8 @@ class VideoGenerationPipeline:
 
         return state
 
-    def generate(self, brand_info: Dict[str, Any]) -> Optional[str]:
+    def generate(self,
+                 brand_info: Dict[str, Any]) -> Optional[str]:
         """
         Generate complete video ad from brand information.
 

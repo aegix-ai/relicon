@@ -62,7 +62,8 @@ class PlanningService:
 
         self.workflow = workflow.compile()
 
-    def _generate_initial_blueprint(self, state: BlueprintState) -> BlueprintState:
+    def _generate_initial_blueprint(self,
+                                    state: BlueprintState) -> BlueprintState:
         """Generate initial video blueprint"""
         try:
             print("🎬 Generating initial blueprint...")
@@ -79,7 +80,8 @@ class PlanningService:
             state["is_valid"] = False
             return state
 
-    def _validate_blueprint_quality(self, state: BlueprintState) -> BlueprintState:
+    def _validate_blueprint_quality(self,
+                                    state: BlueprintState) -> BlueprintState:
         """Validate blueprint quality with enhanced checks"""
         errors = []
         blueprint = state.get("blueprint", {})
@@ -168,7 +170,8 @@ class PlanningService:
             state["is_valid"] = False
             return state
 
-    def _should_refine(self, state: BlueprintState) -> str:
+    def _should_refine(self,
+                       state: BlueprintState) -> str:
         """Determine if blueprint needs refinement"""
         # If blueprint is empty or has critical errors, fail immediately
         if not state.get("blueprint") or state.get("error"):
@@ -187,7 +190,8 @@ class PlanningService:
         print(f"🔄 Refinement attempt {retry_count + 1}/2")
         return "refine"
 
-    def _refine_blueprint(self, state: BlueprintState) -> BlueprintState:
+    def _refine_blueprint(self,
+                          state: BlueprintState) -> BlueprintState:
         """Refine blueprint based on validation errors with enhanced realism fixes"""
         try:
             print("🔧 Refining blueprint...")
@@ -253,7 +257,8 @@ class PlanningService:
             state["messages"].append(f"Refinement error: {str(e)}")
             return state
 
-    def _finalize_blueprint(self, state: BlueprintState) -> BlueprintState:
+    def _finalize_blueprint(self,
+                            state: BlueprintState) -> BlueprintState:
         """Finalize blueprint with metadata and final sync verification"""
         blueprint = state["blueprint"]
 
@@ -300,7 +305,8 @@ class PlanningService:
         print(f"🎉 Blueprint finalized: {blueprint['production_metadata']['scene_count']} scenes, 15s, SYNC: {blueprint['production_metadata']['audio_video_sync']}")
         return state
 
-    def create_video_architecture(self, brand_info: Dict[str, Any]) -> Dict[str, Any]:
+    def create_video_architecture(self,
+                                  brand_info: Dict[str, Any]) -> Dict[str, Any]:
         """
         DEPRECATED: Use create_enterprise_blueprint() for new implementations.
         Legacy method maintained for backward compatibility.
@@ -308,7 +314,8 @@ class PlanningService:
         print("Using deprecated method. Consider switching to create_enterprise_blueprint()")
         return self.create_enterprise_blueprint(brand_info)
 
-    def validate_architecture(self, architecture: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_architecture(self, a
+                              rchitecture: Dict[str, Any]) -> Dict[str, Any]:
         """
         Validate and correct video architecture with enterprise-grade precision.
 
@@ -375,120 +382,128 @@ class PlanningService:
             print(f"Architecture validation failed: {e}")
             raise
 
-    def _correct_scene_timing(self, architecture: Dict[str, Any], target_duration: int) -> Dict[str, Any]:
-        """
-        Correct scene timing with intelligent distribution for narrative flow.
-        Maintains storytelling structure: Hook-Build-Transform-Resolve.
-        """
-        scenes = architecture.get('scene_architecture', {}).get('scenes', [])
-        scene_count = len(scenes)
 
-        if scene_count == 0:
-            return architecture
+# SUSPECTED OF NOT BEING USED --- Depricated --- Should be deleted if unnecessary
+# =========================================================================
+    # def _correct_scene_timing(self,
+    #                           architecture: Dict[str, Any],
+    #                           target_duration: int) -> Dict[str, Any]:
+    #     """
+    #     Correct scene timing with intelligent distribution for narrative flow.
+    #     Maintains storytelling structure: Hook-Build-Transform-Resolve.
+    #     """
+    #     scenes = architecture.get('scene_architecture', {}).get('scenes', [])
+    #     scene_count = len(scenes)
 
-        # Force exactly 3 scenes for optimal 18s structure
-        if scene_count != 3:
-            print(f"Adjusting from {scene_count} to exactly 3 scenes for 18s structure")
-            # Take first 3 scenes if more than 3, or duplicate if less than 3
-            if scene_count > 3:
-                scenes = scenes[:3]
-                scene_count = 3
-            elif scene_count < 3:
-                # Duplicate scenes to reach 3
-                while len(scenes) < 3:
-                    scenes.append(scenes[0].copy())
-                scene_count = 3
+    #     if scene_count == 0:
+    #         return architecture
 
-        # Perfect 18s distribution for 3 scenes: Hook(6s) - Problem/Solution(6s) - Resolve(6s)
-        # Using 6s per scene to support both Luma (5s) and Hailuo (6s) providers
-        durations = [6, 6, 6]
+    #     # Force exactly 3 scenes for optimal 18s structure
+    #     if scene_count != 3:
+    #         print(f"Adjusting from {scene_count} to exactly 3 scenes for 18s structure")
+    #         # Take first 3 scenes if more than 3, or duplicate if less than 3
+    #         if scene_count > 3:
+    #             scenes = scenes[:3]
+    #             scene_count = 3
+    #         elif scene_count < 3:
+    #             # Duplicate scenes to reach 3
+    #             while len(scenes) < 3:
+    #                 scenes.append(scenes[0].copy())
+    #             scene_count = 3
 
-        # Apply corrected durations and update scenes array
-        for i, scene in enumerate(scenes):
-            scene['duration'] = durations[i] if i < len(durations) else durations[0]
+    #     # Perfect 18s distribution for 3 scenes: Hook(6s) - Problem/Solution(6s) - Resolve(6s)
+    #     # Using 6s per scene to support both Luma (5s) and Hailuo (6s) providers
+    #     durations = [6, 6, 6]
 
-        # Update the scenes array in architecture
-        architecture['scene_architecture']['scenes'] = scenes
-        architecture['scene_architecture']['total_duration'] = target_duration
+    #     # Apply corrected durations and update scenes array
+    #     for i, scene in enumerate(scenes):
+    #         scene['duration'] = durations[i] if i < len(durations) else durations[0]
 
-        actual_total = sum(scene.get('duration', 0) for scene in scenes)
-        print(f"Applied narrative-optimized timing: {scene_count} scenes, {actual_total}s total")
-        return architecture
+    #     # Update the scenes array in architecture
+    #     architecture['scene_architecture']['scenes'] = scenes
+    #     architecture['scene_architecture']['total_duration'] = target_duration
 
-    def create_enterprise_blueprint(self, brand_info: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Create enterprise-grade video blueprint using LangGraph workflow.
-        This is the primary architect method that creates production-ready plans with validation.
+    #     actual_total = sum(scene.get('duration', 0) for scene in scenes)
+    #     print(f"Applied narrative-optimized timing: {scene_count} scenes, {actual_total}s total")
+    #     return architecture
 
-        Args:
-            brand_info: Brand information dictionary
+    # def create_enterprise_blueprint(self,
+    #                                 brand_info: Dict[str, Any]) -> Dict[str, Any]:
+    #     """
+    #     Create enterprise-grade video blueprint using LangGraph workflow.
+    #     This is the primary architect method that creates production-ready plans with validation.
 
-        Returns:
-            Complete enterprise video blueprint with validation metadata
-        """
-        try:
-            # Validate input requirements
-            required_brand_fields = ['brand_name', 'brand_description']
-            for field in required_brand_fields:
-                if not brand_info.get(field):
-                    raise ValueError(f"Missing required brand field: {field}")
+    #     Args:
+    #         brand_info: Brand information dictionary
 
-            # Set enterprise defaults
-            brand_info.setdefault('duration', 15)  # 15s = 3×5s for perfect Luma sync
-            brand_info.setdefault('target_audience', 'professional')
-            brand_info.setdefault('call_to_action', 'Learn more')
+    #     Returns:
+    #         Complete enterprise video blueprint with validation metadata
+    #     """
+    #     try:
+    #         # Validate input requirements
+    #         required_brand_fields = ['brand_name', 'brand_description']
+    #         for field in required_brand_fields:
+    #             if not brand_info.get(field):
+    #                 raise ValueError(f"Missing required brand field: {field}")
 
-            # Handle product image if available
-            product_image_url = brand_info.get('product_image_url')
-            if product_image_url:
-                print(f"📸 Product image detected: {product_image_url}")
-                brand_info['has_product_image'] = True
-                brand_info['image_integration_strategy'] = 'keyframe_first_scene'
-            else:
-                brand_info['has_product_image'] = False
+    #         # Set enterprise defaults
+    #         brand_info.setdefault('duration', 15)  # 15s = 3×5s for perfect Luma sync
+    #         brand_info.setdefault('target_audience', 'professional')
+    #         brand_info.setdefault('call_to_action', 'Learn more')
 
-            print(f"\n{'='*60}")
-            print(f"🚀 Starting LangGraph Blueprint Workflow")
-            print(f"{'='*60}\n")
+    #         # Handle product image if available
+    #         product_image_url = brand_info.get('product_image_url')
+    #         if product_image_url:
+    #             print(f"📸 Product image detected: {product_image_url}")
+    #             brand_info['has_product_image'] = True
+    #             brand_info['image_integration_strategy'] = 'keyframe_first_scene'
+    #         else:
+    #             brand_info['has_product_image'] = False
 
-            # Initialize state for LangGraph workflow
-            initial_state: BlueprintState = {
-                "brand_info": brand_info,
-                "blueprint": {},
-                "validation_errors": [],
-                "retry_count": 0,
-                "is_valid": False,
-                "messages": []
-            }
+    #         print(f"\n{'='*60}")
+    #         print(f"🚀 Starting LangGraph Blueprint Workflow")
+    #         print(f"{'='*60}\n")
 
-            # Execute LangGraph workflow
-            final_state = self.workflow.invoke(initial_state)
+    #         # Initialize state for LangGraph workflow
+    #         initial_state: BlueprintState = {
+    #             "brand_info": brand_info,
+    #             "blueprint": {},
+    #             "validation_errors": [],
+    #             "retry_count": 0,
+    #             "is_valid": False,
+    #             "messages": []
+    #         }
 
-            # Extract final blueprint
-            blueprint = final_state["blueprint"]
+    #         # Execute LangGraph workflow
+    #         final_state = self.workflow.invoke(initial_state)
 
-            print(f"\n{'='*60}")
-            print(f"✅ Blueprint Workflow Complete")
-            print(f"Validation Status: {'PASSED' if final_state['is_valid'] else 'WITH WARNINGS'}")
-            print(f"Refinement Iterations: {final_state['retry_count']}")
-            print(f"{'='*60}\n")
+    #         # Extract final blueprint
+    #         blueprint = final_state["blueprint"]
 
-            return blueprint
+    #         print(f"\n{'='*60}")
+    #         print(f"✅ Blueprint Workflow Complete")
+    #         print(f"Validation Status: {'PASSED' if final_state['is_valid'] else 'WITH WARNINGS'}")
+    #         print(f"Refinement Iterations: {final_state['retry_count']}")
+    #         print(f"{'='*60}\n")
 
-        except Exception as e:
-            print(f"❌ Enterprise blueprint creation failed: {e}")
-            raise
+    #         return blueprint
 
-    def switch_provider(self, provider_name: str) -> None:
-        """
-        Switch planning provider at runtime.
+    #     except Exception as e:
+    #         print(f"❌ Enterprise blueprint creation failed: {e}")
+    #         raise
 
-        Args:
-            provider_name: Name of the provider ('openai', etc.)
-        """
-        try:
-            self.provider_manager.set_text_provider(provider_name)
-            print(f"Switched to {provider_name} planning provider")
-        except Exception as e:
-            print(f"Failed to switch to {provider_name}: {e}")
-            raise
+    # def switch_provider(self,
+    #                     provider_name: str) -> None:
+    #     """
+    #     Switch planning provider at runtime.
+
+    #     Args:
+    #         provider_name: Name of the provider ('openai', etc.)
+    #     """
+    #     try:
+    #         self.provider_manager.set_text_provider(provider_name)
+    #         print(f"Switched to {provider_name} planning provider")
+    #     except Exception as e:
+    #         print(f"Failed to switch to {provider_name}: {e}")
+    #         raise
+# =========================================================================

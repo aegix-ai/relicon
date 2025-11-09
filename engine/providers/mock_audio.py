@@ -1,22 +1,23 @@
 """
-Mock audio generation provider for testing without ElevenLabs API.
+    Mock audio generation provider for testing without ElevenLabs API.
 """
 
 import os
 import time
 import subprocess
 from typing import Optional
-from interfaces.audio_generator import AudioGenerator
 
 
-class MockAudioProvider(AudioGenerator):
+class MockAudioProvider:
     """Mock audio generator for testing without API calls."""
 
     def __init__(self):
         print("🎭 Mock Audio Provider initialized (no API key required)")
 
-    def generate_speech(self, text: str, voice_id: str = "default",
-                       output_path: Optional[str] = None) -> str:
+    def generate_speech(self,
+                        text: str,
+                        voice_id: str = "default",
+                        output_path: Optional[str] = None) -> str:
         """Generate mock speech audio."""
 
         print(f"🎭 Mock speech generation started")
@@ -35,8 +36,10 @@ class MockAudioProvider(AudioGenerator):
             print(f"✅ Mock speech URL: {mock_url}")
             return mock_url
 
-    def generate_music(self, prompt: str, duration: int = 30,
-                      output_path: Optional[str] = None) -> str:
+    def generate_music(self,
+                       prompt: str,
+                       duration: int = 30,
+                       output_path: Optional[str] = None) -> str:
         """Generate mock background music."""
 
         print(f"🎭 Mock music generation started")
@@ -55,7 +58,9 @@ class MockAudioProvider(AudioGenerator):
             print(f"✅ Mock music URL: {mock_url}")
             return mock_url
 
-    def _create_mock_audio_file(self, output_path: str, duration: int = 18) -> bool:
+    def _create_mock_audio_file(self,
+                                output_path: str,
+                                duration: int = 18) -> bool:
         """Create a mock audio file."""
 
         print(f"🎭 Creating mock audio file: {output_path}")
@@ -86,7 +91,9 @@ class MockAudioProvider(AudioGenerator):
         except (subprocess.CalledProcessError, FileNotFoundError):
             return False
 
-    def _create_test_audio_with_ffmpeg(self, output_path: str, duration: int) -> bool:
+    def _create_test_audio_with_ffmpeg(self,
+                                       output_path: str,
+                                       duration: int) -> bool:
         """Create a simple test audio file using FFmpeg."""
         try:
             # Create a silent audio file with the specified duration
@@ -114,7 +121,8 @@ class MockAudioProvider(AudioGenerator):
             print(f"FFmpeg test audio creation failed: {e}")
             return False
 
-    def _create_placeholder_audio(self, output_path: str) -> bool:
+    def _create_placeholder_audio(self,
+                                  output_path: str) -> bool:
         """Create a placeholder audio file when FFmpeg is not available."""
         try:
             # Create a minimal MP3 file header
@@ -130,6 +138,8 @@ class MockAudioProvider(AudioGenerator):
             print(f"Placeholder audio creation failed: {e}")
             return False
 
-    def text_to_speech(self, text: str, voice: str = "default") -> str:
+    def text_to_speech(self,
+                       text: str,
+                       voice: str = "default") -> str:
         """Mock text to speech."""
         return self.generate_speech(text, voice_id=voice)

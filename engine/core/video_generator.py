@@ -15,7 +15,6 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 
 from providers.luma import LumaProvider
-from providers.hailuo import HailuoProvider
 from providers.mock_video import MockVideoProvider
 from core.logger import get_logger
 
@@ -27,14 +26,11 @@ class VideoService:
     def __init__(self):
         self.providers = {
             'luma': LumaProvider(),
-            'hailuo': HailuoProvider(),
             'mock': MockVideoProvider()
         }
 
         # Provider priority order
-        self.provider_order = ['luma', 'hailuo', 'mock']
-
-        # Check if we're in mock mode
+        self.provider_order = ['luma', 'mock']        # Check if we're in mock mode
         self.mock_mode = os.getenv('MOCK_MODE', 'false').lower() == 'true'
         if self.mock_mode:
             self.provider_order = ['mock']
@@ -60,12 +56,15 @@ class VideoService:
             logger.info(f"Redis not available, caching disabled: {e}")
             return None
 
-    def _get_cache_key(self, prompt: str, image_url: Optional[str] = None) -> str:
+    def _get_cache_key(self,
+                       prompt: str,
+                       image_url: Optional[str] = None) -> str:
         """Generate cache key from prompt and image URL"""
         cache_data = f"{prompt}:{image_url or ''}"
         return f"video:{hashlib.md5(cache_data.encode()).hexdigest()}"
 
-    def _get_cached_video(self, cache_key: str) -> Optional[str]:
+    def _get_cached_video(self,
+                          cache_key: str) -> Optional[str]:
         """Retrieve cached video path if available"""
         if not self.redis_cache:
             return None
@@ -80,7 +79,10 @@ class VideoService:
 
         return None
 
-    def _cache_video(self, cache_key: str, video_path: str, ttl: int = 86400):
+    def _cache_video(self,
+                     cache_key: str,
+                     video_path: str,
+                     ttl: int = 86400):
         """Cache video path with TTL (default 24 hours)"""
         if not self.redis_cache:
             return
@@ -91,8 +93,10 @@ class VideoService:
         except Exception as e:
             logger.warning(f"Cache storage failed: {e}")
 
-    def generate_scene_video(self, scene: Dict[str, Any], temp_dir: str,
-                           product_image_url: Optional[str] = None) -> Optional[str]:
+    def generate_scene_video(self,
+                             scene: Dict[str, Any],
+                             temp_dir: str,
+                             product_image_url: Optional[str] = None) -> Optional[str]:
         """Generate video for a single scene with caching support"""
 
         scene_number = scene.get('scene_number', 1)
@@ -200,8 +204,9 @@ class VideoService:
         logger.error(f"All providers failed for scene {scene_number}")
         return None
 
-    def generate_videos_for_architecture(self, architecture: Dict[str, Any],
-                                       temp_dir: str) -> Dict[str, str]:
+    def generate_videos_for_architecture(self,
+                                         architecture: Dict[str, Any],
+                                         temp_dir: str) -> Dict[str, str]:
         """Generate videos for all scenes in architecture with product image integration"""
 
         scenes = architecture.get('scenes', [])

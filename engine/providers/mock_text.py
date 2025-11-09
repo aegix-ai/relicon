@@ -1,19 +1,19 @@
 """
-Mock text generation provider for testing without OpenAI API.
+    Mock text generation provider for testing without OpenAI API.
 """
 
 import time
 from typing import Dict, Any, List
-from interfaces.text_generator import TextGenerator
 
 
-class MockTextProvider(TextGenerator):
+class MockTextProvider:
     """Mock text generator for testing without API calls."""
 
     def __init__(self):
         print("🎭 Mock Text Provider initialized (no API key required)")
 
-    def architect_complete_video(self, brand_info: Dict[str, Any]) -> Dict[str, Any]:
+    def architect_complete_video(self,
+                                 brand_info: Dict[str, Any]) -> Dict[str, Any]:
         """Create mock video architecture without calling OpenAI."""
 
         brand_name = brand_info.get('brand_name', 'Test Brand')
@@ -96,7 +96,9 @@ class MockTextProvider(TextGenerator):
         print(f"✅ Mock architecture created: 3 scenes, 18s duration")
         return architecture
 
-    def create_cutting_edge_prompts(self, architecture: Dict[str, Any], service_type: str = "luma") -> List[Dict[str, Any]]:
+    def create_cutting_edge_prompts(self,
+                                    architecture: Dict[str, Any],
+                                    service_type: str = "luma") -> List[Dict[str, Any]]:
         """Generate mock service-specific prompts."""
         scenes = architecture.get('scene_architecture', {}).get('scenes', [])
 
@@ -108,6 +110,8 @@ class MockTextProvider(TextGenerator):
 
         return enhanced_scenes
 
-    def generate_text(self, prompt: str, max_tokens: int = 500) -> str:
+    def generate_text(self,
+                      prompt: str,
+                      max_tokens: int = 500) -> str:
         """Generate mock text response."""
         return f"Mock response to: {prompt[:50]}..."

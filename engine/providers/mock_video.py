@@ -1,22 +1,25 @@
 """
-Mock video generation provider for testing without Luma/Hailuo API.
+    Mock video generation provider for testing without Luma API.
 """
 
 import os
 import time
 import subprocess
 from typing import Optional
-from interfaces.video_generator import VideoGenerator
 
 
-class MockVideoProvider(VideoGenerator):
+class MockVideoProvider:
     """Mock video generator for testing without API calls."""
 
     def __init__(self):
         print("🎭 Mock Video Provider initialized (no API key required)")
 
-    def generate_video(self, prompt: str, aspect_ratio: str = "9:16",
-                      image_url: Optional[str] = None, force_unique: bool = False, **kwargs) -> str:
+    def generate_video(self,
+                       prompt: str,
+                       aspect_ratio: str = "9:16",
+                       image_url: Optional[str] = None,
+                       force_unique: bool = False,
+                       **kwargs) -> str:
         """Generate mock video without calling real API."""
 
         print(f"🎭 Mock video generation started")
@@ -36,7 +39,10 @@ class MockVideoProvider(VideoGenerator):
 
         return mock_url
 
-    def download_video(self, video_url: str, output_path: str, max_retries: int = 3) -> bool:
+    def download_video(self,
+                       video_url: str,
+                       output_path: str,
+                       max_retries: int = 3) -> bool:
         """Create mock video file instead of downloading."""
 
         print(f"🎭 Creating mock video file: {output_path}")
@@ -69,7 +75,8 @@ class MockVideoProvider(VideoGenerator):
         except (subprocess.CalledProcessError, FileNotFoundError):
             return False
 
-    def _create_test_video_with_ffmpeg(self, output_path: str) -> bool:
+    def _create_test_video_with_ffmpeg(self,
+                                       output_path: str) -> bool:
         """Create a simple test video using FFmpeg."""
         try:
             # Create a 6-second video with a color background and text
@@ -98,7 +105,8 @@ class MockVideoProvider(VideoGenerator):
             print(f"FFmpeg test video creation failed: {e}")
             return False
 
-    def _create_placeholder_video(self, output_path: str) -> bool:
+    def _create_placeholder_video(self,
+                                  output_path: str) -> bool:
         """Create a placeholder file when FFmpeg is not available."""
         try:
             # Create a minimal MP4 file header (won't be playable but valid for testing)
@@ -114,10 +122,15 @@ class MockVideoProvider(VideoGenerator):
             print(f"Placeholder creation failed: {e}")
             return False
 
-    def text_to_video(self, prompt: str, aspect_ratio: str = "9:16") -> str:
+    def text_to_video(self,
+                      prompt: str,
+                      aspect_ratio: str = "9:16") -> str:
         """Mock text to video generation."""
         return self.generate_video(prompt, aspect_ratio, image_url=None)
 
-    def image_to_video(self, prompt: str, image_url: str, aspect_ratio: str = "9:16") -> str:
+    def image_to_video(self,
+                       prompt: str,
+                       image_url: str,
+                       aspect_ratio: str = "9:16") -> str:
         """Mock image to video generation."""
         return self.generate_video(prompt, aspect_ratio, image_url=image_url)

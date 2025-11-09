@@ -21,8 +21,11 @@ class AssemblyService:
     def __init__(self):
         pass
 
-    def assemble_final_video(self, video_files: List[str], audio_file: str,
-                           output_path: str, target_duration: float = 15.0) -> bool:
+    def assemble_final_video(self,
+                             video_files: List[str],
+                             audio_file: str,
+                             output_path: str,
+                             target_duration: float = 15.0) -> bool:
         """
         Assemble final video from video scenes and audio track.
 
@@ -88,7 +91,9 @@ class AssemblyService:
             print(f"Video assembly failed: {e}")
             return False
 
-    def _concatenate_videos(self, video_files: List[str], output_path: str) -> bool:
+    def _concatenate_videos(self,
+                            video_files: List[str],
+                            output_path: str) -> bool:
         """Concatenate multiple video files into one."""
         try:
             # Create filter complex for concatenation with scaling
@@ -132,7 +137,10 @@ class AssemblyService:
             print(f"Video concatenation error: {e}")
             return False
 
-    def _adjust_video_duration(self, input_path: str, output_path: str, target_duration: float) -> bool:
+    def _adjust_video_duration(self,
+                               input_path: str,
+                               output_path: str,
+                               target_duration: float) -> bool:
         """Adjust video duration to exact target length."""
         try:
             # Get current video duration
@@ -186,7 +194,11 @@ class AssemblyService:
             print(f"Duration adjustment error: {e}")
             return False
 
-    def _combine_video_audio(self, video_path: str, audio_path: str, output_path: str, duration: float) -> bool:
+    def _combine_video_audio(self,
+                             video_path: str,
+                             audio_path: str,
+                             output_path: str,
+                             duration: float) -> bool:
         """Combine video and audio into final output."""
         try:
             # First, let's verify the audio file has proper volume
@@ -222,7 +234,9 @@ class AssemblyService:
             print(f"Video-audio combination error: {e}")
             return False
 
-    def validate_video_output(self, video_path: str, expected_duration: float = 15.0) -> Dict[str, Any]:
+    def validate_video_output(self,
+                              video_path: str,
+                              expected_duration: float = 15.0) -> Dict[str, Any]:
         """
         Validate the final video output.
 

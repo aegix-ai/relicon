@@ -23,7 +23,9 @@ class AudioService:
     def __init__(self):
         self.provider_manager = provider_manager
 
-    def generate_audio_from_architecture(self, architecture: Dict[str, Any], output_path: str) -> bool:
+    def generate_audio_from_architecture(self,
+                                         architecture: Dict[str, Any],
+                                         output_path: str) -> bool:
         """
         Generate complete audio track from architectural plan.
 
@@ -120,7 +122,9 @@ class AudioService:
             print(f"Audio generation failed: {e}")
             return False
 
-    def _split_script_by_scenes(self, script: str, scenes: List[Dict[str, Any]]) -> List[str]:
+    def _split_script_by_scenes(self,
+                                script: str,
+                                scenes: List[Dict[str, Any]]) -> List[str]:
         """Split script into parts based on scene count and duration, preventing repetition."""
         if not scenes:
             return [script]
@@ -150,7 +154,10 @@ class AudioService:
 
         return script_parts
 
-    def generate_single_audio(self, text: str, output_path: str, audio_config: Optional[Dict[str, Any]] = None) -> bool:
+    def generate_single_audio(self,
+                              text: str,
+                              output_path: str,
+                              audio_config: Optional[Dict[str, Any]] = None) -> bool:
         """
         Generate a single audio file from text.
 
@@ -177,7 +184,11 @@ class AudioService:
             print(f"Single audio generation failed: {e}")
             return False
 
-    def _add_background_music(self, voice_path: str, duration: float, tone: str, output_path: str) -> bool:
+    def _add_background_music(self,
+                              voice_path: str,
+                              duration: float,
+                              tone: str,
+                              output_path: str) -> bool:
         """
         Add background music to voiceover.
 
@@ -216,8 +227,12 @@ class AudioService:
             shutil.copy2(voice_path, output_path)
             return True
 
-    def _mix_audio(self, voice_path: str, music_path: str, output_path: str,
-                   voice_volume: float = 1.0, music_volume: float = 0.15) -> bool:
+    def _mix_audio(self,
+                   voice_path: str,
+                   music_path: str,
+                   output_path: str,
+                   voice_volume: float = 1.0,
+                   music_volume: float = 0.15) -> bool:
         """
         Mix voiceover with background music using FFmpeg.
 
@@ -257,7 +272,8 @@ class AudioService:
             print(f"Audio mixing error: {e}")
             return False
 
-    def switch_provider(self, provider_name: str) -> None:
+    def switch_provider(self,
+                        provider_name: str) -> None:
         """
         Switch audio generation provider at runtime.
 
