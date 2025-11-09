@@ -1,3 +1,5 @@
+# type: ignore
+
 """
     Cost tracking service for video generation.
     Tracks costs associated with video scenes, audio generation, and planning.
@@ -38,8 +40,10 @@ class CostTracker:
     # ElevenLabs TTS cost per audio & music generation
     ELEVENLABS_COST_PER_AUDIO = 0.05
 
-    def estimate_video_cost(self, scene_count: int = 3, resolution: str = "720p",
-                          duration: int = 18) -> CostEstimate:
+    def estimate_video_cost(self,
+                            scene_count: int = 3,
+                            resolution: str = "720p",
+                            duration: int = 18) -> CostEstimate:
         """
         Calculate cost estimate for video generation.
 

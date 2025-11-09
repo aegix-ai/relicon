@@ -1,46 +1,36 @@
+# type: ignore
+
 """
-  Relicon - Enterprise AI Video Generation Platform
-  
-  A modular, provider-agnostic video generation system with enterprise-grade
-  architecture and seamless provider switching capabilities.
+Relicon - AI Video Generation Engine
+
+Simple pipeline: Brand Info → Planning → Video Generation → Audio → Assembly → Final Video
 """
 
-from .core.orchestrator import VideoOrchestrator
+from .core.pipeline import VideoGenerationPipeline, pipeline
 from .core.provider_manager import provider_manager
 from .config.settings import settings
 
-__version__ = "0.9.0"
+__version__ = "1.0.0"
 __author__ = "Relicon"
 
-# Main entry points
-def create_video(brand_info, output_path):
-    """Create a complete video from brand information."""
-    orchestrator = VideoOrchestrator()
-    return orchestrator.create_complete_video(brand_info, output_path)
+# Main entry point
+def generate_video_ad(brand_info: dict) -> str:
+    """
+    Generate a complete video ad from brand information.
 
-def create_video_from_prompt(prompt, output_path, duration=30):
-    """Create video from a simple text prompt."""
-    orchestrator = VideoOrchestrator()
-    return orchestrator.create_video_from_simple_prompt(prompt, output_path, duration)
+    Args:
+        brand_info: Dict with brand_name, brand_description, product_name, etc.
 
-# Provider management
-def switch_providers(video=None, audio=None, text=None):
-    """Switch AI service providers at runtime."""
-    orchestrator = VideoOrchestrator()
-    orchestrator.switch_providers(video, audio, text)
+    Returns:
+        Path to generated video file
+    """
+    return pipeline.generate(brand_info)
 
-def get_system_status():
-    """Get current system status and configuration."""
-    orchestrator = VideoOrchestrator()
-    return orchestrator.get_system_status()
-
-# Export key classes for advanced usage
+# Export for advanced usage
 __all__ = [
-    'VideoOrchestrator',
-    'provider_manager', 
+    'VideoGenerationPipeline',
+    'pipeline',
+    'generate_video_ad',
+    'provider_manager',
     'settings',
-    'create_video',
-    'create_video_from_prompt',
-    'switch_providers',
-    'get_system_status'
 ]
