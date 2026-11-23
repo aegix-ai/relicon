@@ -10,7 +10,7 @@ from typing import Any, Literal, get_args, get_origin
 import numpy as np
 from pydantic import BaseModel
 
-from .models import DURATIONS, PLATFORM_MAX_S, TAG, Brief, Genome
+from .models import DURATIONS, PLATFORM_MAX_S, TAG, Brief, Genome, cta_bounds
 
 
 @dataclass(frozen=True)
@@ -51,7 +51,7 @@ def _walk(model: type[BaseModel], prefix: str, out: list[LField]) -> None:
         if path == "format.duration_s":
             out.append(LField(path, "cat", DURATIONS))
         elif path == "text.cta_time_s":
-            out.append(LField(path, "frac", lo=0.5, hi=0.95))
+            out.append(LField(path, "frac", lo=0.0, hi=1.0))
         elif get_origin(ann) is Literal:
             out.append(LField(path, "cat", get_args(ann)))
         elif ann is bool:
@@ -99,7 +99,8 @@ def get(g: Genome, path: str) -> Any:
     for p in path.split("."):
         obj = getattr(obj, p)
     if path == "text.cta_time_s":
-        return obj / max(g.format.duration_s, 1)
+        lo, hi = cta_bounds(g.format.duration_s)
+        return (obj - lo) / (hi - lo)
     return obj
 
 
@@ -109,7 +110,8 @@ def put(g: Genome, path: str, value: Any) -> None:
     for p in parts[:-1]:
         obj = getattr(obj, p)
     if path == "text.cta_time_s":
-        value = round(float(value) * g.format.duration_s, 2)
+        lo, hi = cta_bounds(g.format.duration_s)
+        value = round(lo + float(value) * (hi - lo), 2)
     setattr(obj, parts[-1], value)
 
 

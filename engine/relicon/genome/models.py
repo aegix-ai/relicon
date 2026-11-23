@@ -51,6 +51,11 @@ PLATFORM_MAX_S = {"meta_feed": 240, "meta_reels": 90, "tiktok": 300, "youtube_sh
                   "youtube_instream": 300}
 
 
+def cta_bounds(duration_s: float) -> tuple[float, float]:
+    """CTA (end card) starts in the last half of short ads, the last 10 s of long ones."""
+    return duration_s - min(0.5 * duration_s, 10.0), duration_s - 1.0
+
+
 class _M(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -231,7 +236,8 @@ class Genome(_M):
         f.aspect_ratio = PLATFORM_ASPECT[b.platform]
         f.duration_s = min(f.duration_s, PLATFORM_MAX_S[b.platform])
         f.scene_count = max(1, round(f.duration_s / f.avg_shot_length_s))
-        t.cta_time_s = round(min(max(t.cta_time_s, 0.5 * f.duration_s), f.duration_s - 1.0), 2)
+        lo, hi = cta_bounds(f.duration_s)
+        t.cta_time_s = round(min(max(t.cta_time_s, lo), hi), 2)
         if self.audio.voice.accent == "none" and t.caption_style == "none":
             t.caption_style = "minimal"  # an ad with no voice still needs words on screen
         return self

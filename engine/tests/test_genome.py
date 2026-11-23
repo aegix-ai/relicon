@@ -5,6 +5,7 @@ import numpy as np
 from relicon.config import REPO_ROOT
 from relicon.genome import Brief, Genome
 from relicon.genome import space
+from relicon.genome.models import cta_bounds
 from relicon.genome.export import json_schema, typescript
 
 BRIEF = Brief(product="cold brew", niche="coffee_nightshift", vertical="food_bev", platform="tiktok")
@@ -26,7 +27,8 @@ def test_sample_and_roundtrip():
         g2 = Genome.model_validate_json(g.model_dump_json())
         assert g2 == g
         assert g.format.aspect_ratio == "9:16"
-        assert 0.5 * g.format.duration_s <= g.text.cta_time_s <= g.format.duration_s - 1
+        lo, hi = cta_bounds(g.format.duration_s)
+        assert lo - 1e-6 <= g.text.cta_time_s <= hi + 1e-6
         assert g.ad_name().startswith(f"rlc_{g.id}_")
 
 
