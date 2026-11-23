@@ -40,3 +40,18 @@ TikTok, Reels and Shorts move their UI between app versions. `assemble.SAFE` kee
 
 ## D13. Hard cuts use concat, only real transitions use xfade
 A chain of 1-frame xfades stopped the video stream early (7.5 s of video in a 15 s file) while the container still reported 15 s. Cuts now use concat, crossfade/whip/fade-to-black use xfade, all at a 1/25 timebase, and QC checks video and audio stream durations separately.
+
+## D14. Batch rule: Thompson sampling with a 25% exploration share (70/20/10 tried, not adopted)
+The owner asked whether a 70/20/10 rule (70% one-parameter changes to the best ads, 20% 3-5 changes or crossovers, 10% random genomes) beats the current rule. On the same 3 scenarios, 2 seeds and 15 generations, the mean launched ad reached 50% of the oracle with the current rule and 48% with 70/20/10; the LLM-only baseline stayed at 19%. The gap is noise, so the tested rule stays. It already behaves close to 70/20/10: Thompson picks come mostly from 1-2 parameter mutations of the top 5 ads, a quarter of the batch goes to the most uncertain above-median candidates, and 10 random genomes enter every candidate pool.
+
+## D15. Model settings were tuned on one scenario
+Prior sd 0.12 per coefficient, a local candidate pool (40 mutations per parent, 10 random) and a soft near-duplicate penalty were picked on `coffee_nightshift@tiktok`. With prior sd 0.25 and 80 random candidates, Thompson kept picking far-away random genomes and did not improve. The eval runs all 12 scenarios with other market seeds and reports per-scenario results.
+
+## D16. Conversion rate is reported as nearly unlearnable at test budgets
+At $150 per ad the simulated ads get about 5 conversions each. With 400 random ads, the model's predicted conversion logit correlates 0.15 with the truth, against 0.89 for hook rate and 0.86 for clicks. The report says this instead of hiding it; it is also true of real ad accounts at these budgets.
+
+## D17. One dashboard route for the new engine
+`/relicon` holds Studio, Campaigns, Ads, Learning, Simulation Lab and Data as tabs over the engine API (`relicon/api.py`). The old dashboard pages stay as they were apart from type fixes. `engine/server.py` now serves `relicon.api` because the old JobManager server could not start (AUDIT).
+
+## D18. CSV presets are not verified against live exports
+No Meta or TikTok ad account was available. Column names follow the presets in `csv_import.py`; `--map` overrides any of them. TikTok reports 2-second views, which are used as the hook count and labeled so in each record. Live API connectors are a labeled stub behind `RELICON_LIVE_APIS=1`.
