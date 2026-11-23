@@ -2,8 +2,19 @@ from relicon.cli import main
 from relicon.store import Store
 
 
-def test_cli_runs():
-    assert main(["demo"]) == 0
+import pytest
+
+
+@pytest.mark.integration
+def test_zero_key_demo_loop():
+    """Full loop with no keys, no network: render, simulate, learn, propose, render."""
+    assert main(["--short-side", "160", "demo", "--quick"]) == 0
+    st = Store()
+    from relicon.learning.policy import active
+    pol = active(st, "coffee_nightshift")
+    assert pol and pol["is_simulated"] and len(pol["obs_ids"]) == 8
+    ads = st.list("ad")
+    assert len(ads) == 2
 
 
 def test_store_roundtrip(tmp_path):
