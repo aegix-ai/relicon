@@ -7,4 +7,5 @@ PNPM="$(command -v pnpm || echo 'npx -y pnpm@9.15.0')"
 (cd engine && ../.venv/bin/uvicorn server:app --port 8000 --log-level warning) &
 API=$!
 trap 'kill $API 2>/dev/null' EXIT
+echo "Relicon console: http://localhost:3000/relicon"
 NEXT_PUBLIC_RELICON_DEMO=1 NEXT_PUBLIC_ENGINE_URL=http://localhost:8000 $PNPM dev
