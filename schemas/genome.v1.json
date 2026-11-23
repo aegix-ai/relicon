@@ -1,0 +1,1027 @@
+{
+  "$defs": {
+    "Audio": {
+      "additionalProperties": false,
+      "properties": {
+        "voice": {
+          "$ref": "#/$defs/Voice"
+        },
+        "music": {
+          "$ref": "#/$defs/Music"
+        },
+        "sfx_density": {
+          "default": "low",
+          "enum": [
+            "none",
+            "low",
+            "medium",
+            "high"
+          ],
+          "title": "Sfx Density",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        }
+      },
+      "title": "Audio",
+      "type": "object"
+    },
+    "Brief": {
+      "additionalProperties": false,
+      "properties": {
+        "product": {
+          "title": "Product",
+          "type": "string",
+          "x-relicon-tag": "fixed"
+        },
+        "offer": {
+          "default": "",
+          "title": "Offer",
+          "type": "string",
+          "x-relicon-tag": "fixed"
+        },
+        "price_point": {
+          "default": 30.0,
+          "minimum": 0,
+          "title": "Price Point",
+          "type": "number",
+          "x-relicon-tag": "fixed"
+        },
+        "currency": {
+          "default": "USD",
+          "title": "Currency",
+          "type": "string",
+          "x-relicon-tag": "fixed"
+        },
+        "vertical": {
+          "default": "general",
+          "title": "Vertical",
+          "type": "string",
+          "x-relicon-tag": "fixed"
+        },
+        "niche": {
+          "default": "general",
+          "title": "Niche",
+          "type": "string",
+          "x-relicon-tag": "fixed"
+        },
+        "brand": {
+          "default": "unbranded",
+          "title": "Brand",
+          "type": "string",
+          "x-relicon-tag": "fixed"
+        },
+        "audience_persona": {
+          "default": "",
+          "title": "Audience Persona",
+          "type": "string",
+          "x-relicon-tag": "fixed"
+        },
+        "platform": {
+          "default": "tiktok",
+          "enum": [
+            "meta_feed",
+            "meta_reels",
+            "tiktok",
+            "youtube_shorts",
+            "youtube_instream"
+          ],
+          "title": "Platform",
+          "type": "string",
+          "x-relicon-tag": "fixed"
+        },
+        "objective": {
+          "default": "roas",
+          "enum": [
+            "roas",
+            "cpa",
+            "ctr",
+            "awareness"
+          ],
+          "title": "Objective",
+          "type": "string",
+          "x-relicon-tag": "fixed"
+        },
+        "constraints": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Constraints",
+          "type": "array",
+          "x-relicon-tag": "fixed"
+        },
+        "inferred_fields": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Inferred Fields",
+          "type": "array",
+          "x-relicon-tag": "derived"
+        }
+      },
+      "required": [
+        "product"
+      ],
+      "title": "Brief",
+      "type": "object"
+    },
+    "Chapter": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "start_s": {
+          "title": "Start S",
+          "type": "number",
+          "x-relicon-tag": "derived"
+        },
+        "end_s": {
+          "title": "End S",
+          "type": "number",
+          "x-relicon-tag": "derived"
+        }
+      },
+      "required": [
+        "title",
+        "start_s",
+        "end_s"
+      ],
+      "title": "Chapter",
+      "type": "object"
+    },
+    "Format": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_s": {
+          "default": 15,
+          "maximum": 300,
+          "minimum": 6,
+          "title": "Duration S",
+          "type": "integer",
+          "x-relicon-tag": "learnable"
+        },
+        "aspect_ratio": {
+          "default": "9:16",
+          "enum": [
+            "9:16",
+            "1:1",
+            "4:5",
+            "16:9"
+          ],
+          "title": "Aspect Ratio",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "structure": {
+          "default": "hook_problem_solution_cta",
+          "enum": [
+            "hook_problem_solution_cta",
+            "story",
+            "demo",
+            "listicle",
+            "comparison",
+            "testimonial_style",
+            "founder_story",
+            "unboxing",
+            "problem_agitate_solve"
+          ],
+          "title": "Structure",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "scene_count": {
+          "default": 3,
+          "minimum": 1,
+          "title": "Scene Count",
+          "type": "integer",
+          "x-relicon-tag": "derived"
+        },
+        "avg_shot_length_s": {
+          "default": 3.0,
+          "maximum": 8.0,
+          "minimum": 1.0,
+          "title": "Avg Shot Length S",
+          "type": "number",
+          "x-relicon-tag": "learnable"
+        },
+        "chapters": {
+          "items": {
+            "$ref": "#/$defs/Chapter"
+          },
+          "title": "Chapters",
+          "type": "array",
+          "x-relicon-tag": "derived"
+        }
+      },
+      "title": "Format",
+      "type": "object"
+    },
+    "Hook": {
+      "additionalProperties": false,
+      "properties": {
+        "hook_type": {
+          "default": "question",
+          "enum": [
+            "question",
+            "bold_claim",
+            "pattern_interrupt",
+            "problem_shot",
+            "result_first",
+            "social_proof",
+            "curiosity_gap"
+          ],
+          "title": "Hook Type",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "first_frame_subject": {
+          "default": "product",
+          "enum": [
+            "product",
+            "face",
+            "hands",
+            "text_card",
+            "scene"
+          ],
+          "title": "First Frame Subject",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "on_screen_text": {
+          "default": "",
+          "title": "On Screen Text",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "motion_intensity": {
+          "default": "medium",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "title": "Motion Intensity",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "sound_cue": {
+          "default": "voice_first",
+          "enum": [
+            "none",
+            "whoosh",
+            "beat_drop",
+            "voice_first",
+            "silence_break"
+          ],
+          "title": "Sound Cue",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        }
+      },
+      "title": "Hook",
+      "type": "object"
+    },
+    "Identity": {
+      "additionalProperties": false,
+      "properties": {
+        "genome_id": {
+          "title": "Genome Id",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "parent_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Parent Ids",
+          "type": "array",
+          "x-relicon-tag": "derived"
+        },
+        "generation": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Generation",
+          "type": "integer",
+          "x-relicon-tag": "derived"
+        },
+        "policy_version": {
+          "default": "priors",
+          "title": "Policy Version",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "selection_reason": {
+          "default": "",
+          "title": "Selection Reason",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        }
+      },
+      "title": "Identity",
+      "type": "object"
+    },
+    "Music": {
+      "additionalProperties": false,
+      "properties": {
+        "genre": {
+          "default": "pop",
+          "enum": [
+            "lofi",
+            "pop",
+            "hip_hop",
+            "electronic",
+            "acoustic",
+            "cinematic_score",
+            "none"
+          ],
+          "title": "Genre",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "bpm": {
+          "default": 110,
+          "maximum": 160,
+          "minimum": 60,
+          "title": "Bpm",
+          "type": "integer",
+          "x-relicon-tag": "learnable"
+        },
+        "energy": {
+          "default": "medium",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "title": "Energy",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "volume_ratio": {
+          "default": 0.2,
+          "maximum": 0.6,
+          "minimum": 0.05,
+          "title": "Volume Ratio",
+          "type": "number",
+          "x-relicon-tag": "learnable"
+        },
+        "license": {
+          "default": "generated:mock",
+          "title": "License",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        }
+      },
+      "title": "Music",
+      "type": "object"
+    },
+    "Narrative": {
+      "additionalProperties": false,
+      "properties": {
+        "angle": {
+          "default": "pain",
+          "enum": [
+            "pain",
+            "desire",
+            "status",
+            "savings",
+            "convenience",
+            "fear_of_missing_out"
+          ],
+          "title": "Angle",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "tone": {
+          "default": "energetic",
+          "enum": [
+            "energetic",
+            "calm",
+            "humorous",
+            "serious",
+            "warm",
+            "urgent"
+          ],
+          "title": "Tone",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "emotional_arc": {
+          "default": "rise",
+          "enum": [
+            "rise",
+            "fall_rise",
+            "flat_high",
+            "tension_release"
+          ],
+          "title": "Emotional Arc",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "claims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claims",
+          "type": "array",
+          "x-relicon-tag": "derived"
+        },
+        "proof_types": {
+          "items": {
+            "enum": [
+              "testimonial",
+              "demo",
+              "stat",
+              "expert",
+              "ugc_review",
+              "before_after"
+            ],
+            "type": "string"
+          },
+          "maxItems": 2,
+          "title": "Proof Types",
+          "type": "array",
+          "x-relicon-tag": "learnable"
+        }
+      },
+      "title": "Narrative",
+      "type": "object"
+    },
+    "OfferMechanics": {
+      "additionalProperties": false,
+      "properties": {
+        "discount_pct": {
+          "default": 0,
+          "enum": [
+            0,
+            10,
+            15,
+            20,
+            30
+          ],
+          "title": "Discount Pct",
+          "type": "integer",
+          "x-relicon-tag": "learnable"
+        },
+        "guarantee": {
+          "default": "none",
+          "enum": [
+            "none",
+            "money_back_30d",
+            "free_returns"
+          ],
+          "title": "Guarantee",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "urgency": {
+          "default": "none",
+          "enum": [
+            "none",
+            "limited_time",
+            "limited_stock"
+          ],
+          "title": "Urgency",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        }
+      },
+      "title": "OfferMechanics",
+      "type": "object"
+    },
+    "Production": {
+      "additionalProperties": false,
+      "properties": {
+        "providers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Providers",
+          "type": "object",
+          "x-relicon-tag": "derived"
+        },
+        "cost_usd": {
+          "items": {
+            "$ref": "#/$defs/StageCost"
+          },
+          "title": "Cost Usd",
+          "type": "array",
+          "x-relicon-tag": "derived"
+        },
+        "total_cost_usd": {
+          "default": 0.0,
+          "title": "Total Cost Usd",
+          "type": "number",
+          "x-relicon-tag": "derived"
+        },
+        "render_time_s": {
+          "default": 0.0,
+          "title": "Render Time S",
+          "type": "number",
+          "x-relicon-tag": "derived"
+        },
+        "qc": {
+          "additionalProperties": true,
+          "title": "Qc",
+          "type": "object",
+          "x-relicon-tag": "derived"
+        },
+        "policy_flags": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Policy Flags",
+          "type": "array",
+          "x-relicon-tag": "derived"
+        },
+        "ai_disclosure": {
+          "additionalProperties": true,
+          "title": "Ai Disclosure",
+          "type": "object",
+          "x-relicon-tag": "derived"
+        },
+        "continuity_bible": {
+          "additionalProperties": true,
+          "title": "Continuity Bible",
+          "type": "object",
+          "x-relicon-tag": "derived"
+        },
+        "is_mock": {
+          "default": true,
+          "title": "Is Mock",
+          "type": "boolean",
+          "x-relicon-tag": "derived"
+        }
+      },
+      "title": "Production",
+      "type": "object"
+    },
+    "ResultRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "enum": [
+            "simulated",
+            "csv_meta",
+            "csv_tiktok",
+            "api_meta",
+            "api_tiktok"
+          ],
+          "title": "Source",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "variant": {
+          "default": "a",
+          "title": "Variant",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "date_start": {
+          "default": "",
+          "title": "Date Start",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "date_end": {
+          "default": "",
+          "title": "Date End",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "attribution_window_days": {
+          "default": 7,
+          "title": "Attribution Window Days",
+          "type": "integer",
+          "x-relicon-tag": "derived"
+        },
+        "window_closed": {
+          "default": true,
+          "title": "Window Closed",
+          "type": "boolean",
+          "x-relicon-tag": "derived"
+        },
+        "metrics": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Metrics",
+          "type": "object",
+          "x-relicon-tag": "derived"
+        },
+        "is_simulated": {
+          "title": "Is Simulated",
+          "type": "boolean",
+          "x-relicon-tag": "derived"
+        },
+        "raw": {
+          "additionalProperties": true,
+          "title": "Raw",
+          "type": "object",
+          "x-relicon-tag": "derived"
+        }
+      },
+      "required": [
+        "source",
+        "is_simulated"
+      ],
+      "title": "ResultRecord",
+      "type": "object"
+    },
+    "SceneGenome": {
+      "additionalProperties": false,
+      "properties": {
+        "scene_id": {
+          "title": "Scene Id",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "start_s": {
+          "minimum": 0,
+          "title": "Start S",
+          "type": "number",
+          "x-relicon-tag": "derived"
+        },
+        "end_s": {
+          "exclusiveMinimum": 0,
+          "title": "End S",
+          "type": "number",
+          "x-relicon-tag": "derived"
+        },
+        "purpose": {
+          "title": "Purpose",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "chapter": {
+          "default": 0,
+          "title": "Chapter",
+          "type": "integer",
+          "x-relicon-tag": "derived"
+        },
+        "visual_prompt": {
+          "default": "",
+          "title": "Visual Prompt",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "shot_type": {
+          "default": "medium",
+          "enum": [
+            "close_up",
+            "medium",
+            "wide",
+            "macro",
+            "pov",
+            "text_card"
+          ],
+          "title": "Shot Type",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "model": {
+          "default": "",
+          "title": "Model",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "seed": {
+          "default": 0,
+          "title": "Seed",
+          "type": "integer",
+          "x-relicon-tag": "derived"
+        },
+        "reference_assets": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reference Assets",
+          "type": "array",
+          "x-relicon-tag": "derived"
+        },
+        "vo_line": {
+          "default": "",
+          "title": "Vo Line",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "on_screen_text": {
+          "default": "",
+          "title": "On Screen Text",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        },
+        "transition": {
+          "default": "cut",
+          "enum": [
+            "cut",
+            "crossfade",
+            "whip",
+            "fade_black"
+          ],
+          "title": "Transition",
+          "type": "string",
+          "x-relicon-tag": "derived"
+        }
+      },
+      "required": [
+        "scene_id",
+        "start_s",
+        "end_s",
+        "purpose"
+      ],
+      "title": "SceneGenome",
+      "type": "object"
+    },
+    "StageCost": {
+      "additionalProperties": false,
+      "properties": {
+        "stage": {
+          "title": "Stage",
+          "type": "string"
+        },
+        "provider": {
+          "title": "Provider",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "estimated_usd": {
+          "default": 0.0,
+          "title": "Estimated Usd",
+          "type": "number"
+        },
+        "actual_usd": {
+          "default": 0.0,
+          "title": "Actual Usd",
+          "type": "number"
+        }
+      },
+      "required": [
+        "stage",
+        "provider",
+        "model"
+      ],
+      "title": "StageCost",
+      "type": "object"
+    },
+    "Text": {
+      "additionalProperties": false,
+      "properties": {
+        "caption_style": {
+          "default": "bold_word_by_word",
+          "enum": [
+            "none",
+            "minimal",
+            "bold_word_by_word",
+            "subtitle_bar"
+          ],
+          "title": "Caption Style",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "text_density": {
+          "default": "medium",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "title": "Text Density",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "cta_text": {
+          "default": "Shop now",
+          "enum": [
+            "Shop now",
+            "Learn more",
+            "Get yours",
+            "Try it free",
+            "Order today"
+          ],
+          "title": "Cta Text",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "cta_time_s": {
+          "default": 12.0,
+          "minimum": 0,
+          "title": "Cta Time S",
+          "type": "number",
+          "x-relicon-tag": "learnable"
+        },
+        "end_card": {
+          "default": true,
+          "title": "End Card",
+          "type": "boolean",
+          "x-relicon-tag": "learnable"
+        }
+      },
+      "title": "Text",
+      "type": "object"
+    },
+    "Visual": {
+      "additionalProperties": false,
+      "properties": {
+        "style": {
+          "default": "ugc_look",
+          "enum": [
+            "ugc_look",
+            "cinematic",
+            "studio_product",
+            "animation",
+            "mixed"
+          ],
+          "title": "Style",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "palette": {
+          "default": "warm",
+          "enum": [
+            "warm",
+            "cool",
+            "neutral",
+            "high_contrast",
+            "pastel"
+          ],
+          "title": "Palette",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "lighting": {
+          "default": "natural",
+          "enum": [
+            "natural",
+            "studio",
+            "low_key",
+            "high_key",
+            "neon"
+          ],
+          "title": "Lighting",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "camera_motion": {
+          "default": "handheld",
+          "enum": [
+            "static",
+            "handheld",
+            "slow_push",
+            "dynamic_tracking"
+          ],
+          "title": "Camera Motion",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "human_presence": {
+          "default": "single_person",
+          "enum": [
+            "none",
+            "hands_only",
+            "single_person",
+            "group"
+          ],
+          "title": "Human Presence",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "product_screen_time_pct": {
+          "default": 35.0,
+          "maximum": 90,
+          "minimum": 5,
+          "title": "Product Screen Time Pct",
+          "type": "number",
+          "x-relicon-tag": "learnable"
+        },
+        "setting": {
+          "default": "home",
+          "enum": [
+            "home",
+            "outdoor",
+            "studio",
+            "workplace",
+            "store",
+            "abstract"
+          ],
+          "title": "Setting",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        }
+      },
+      "title": "Visual",
+      "type": "object"
+    },
+    "Voice": {
+      "additionalProperties": false,
+      "properties": {
+        "energy": {
+          "default": "medium",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "title": "Energy",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        },
+        "pace_wpm": {
+          "default": 150,
+          "maximum": 200,
+          "minimum": 110,
+          "title": "Pace Wpm",
+          "type": "integer",
+          "x-relicon-tag": "learnable"
+        },
+        "accent": {
+          "default": "neutral_us",
+          "enum": [
+            "neutral_us",
+            "british",
+            "australian",
+            "none"
+          ],
+          "title": "Accent",
+          "type": "string",
+          "x-relicon-tag": "learnable"
+        }
+      },
+      "title": "Voice",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "genome.v1",
+      "default": "genome.v1",
+      "title": "Schema Version",
+      "type": "string",
+      "x-relicon-tag": "derived"
+    },
+    "identity": {
+      "$ref": "#/$defs/Identity"
+    },
+    "brief": {
+      "$ref": "#/$defs/Brief"
+    },
+    "format": {
+      "$ref": "#/$defs/Format"
+    },
+    "hook": {
+      "$ref": "#/$defs/Hook"
+    },
+    "narrative": {
+      "$ref": "#/$defs/Narrative"
+    },
+    "visual": {
+      "$ref": "#/$defs/Visual"
+    },
+    "audio": {
+      "$ref": "#/$defs/Audio"
+    },
+    "text": {
+      "$ref": "#/$defs/Text"
+    },
+    "offer_mechanics": {
+      "$ref": "#/$defs/OfferMechanics"
+    },
+    "scenes": {
+      "items": {
+        "$ref": "#/$defs/SceneGenome"
+      },
+      "title": "Scenes",
+      "type": "array",
+      "x-relicon-tag": "derived"
+    },
+    "production": {
+      "$ref": "#/$defs/Production"
+    },
+    "results": {
+      "items": {
+        "$ref": "#/$defs/ResultRecord"
+      },
+      "title": "Results",
+      "type": "array",
+      "x-relicon-tag": "derived"
+    }
+  },
+  "required": [
+    "brief"
+  ],
+  "title": "Relicon Creative Genome v1",
+  "type": "object",
+  "$id": "https://relicon.ai/schemas/genome.v1.json"
+}
