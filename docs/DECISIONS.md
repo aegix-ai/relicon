@@ -28,3 +28,15 @@ Without a key, the "LLM-only, no data" baseline uses the mock creative director 
 
 ## D9. Work on branch `feat/self-improving-engine`
 The repo's main branch is untouched until the owner merges.
+
+## D10. New MiniMax client instead of reusing `engine/providers/hailuo.py`
+The old client appends random "cinematography" phrases and a random seed tag to every prompt, so the video would no longer match its genome, and it hardcodes model `video-01` and `720p`, neither of which is on MiniMax's price page. `relicon/providers/minimax.py` keeps the same endpoints with the prompt unchanged and a configurable model. Untested against the live API (no key in this environment).
+
+## D11. Music and sound effects are synthesized locally in every mode
+ElevenLabs lists Music at $0.15/min and Sound Effects at $0.12/min (checked 2026-11-23), but its Music endpoint could not be checked against docs here. Local synthesis costs $0, has a clear license (`generated:local`), and keeps real renders cheap. A paid music provider can be added behind `MusicProvider`.
+
+## D12. Safe zones are conservative fractions, not pixel specs
+TikTok, Reels and Shorts move their UI between app versions. `assemble.SAFE` keeps captions out of the top 10 to 14%, bottom 20 to 22% and the right-side button rail. QC checks every text box against these rects. Tighten them if a platform publishes exact numbers.
+
+## D13. Hard cuts use concat, only real transitions use xfade
+A chain of 1-frame xfades stopped the video stream early (7.5 s of video in a 15 s file) while the container still reported 15 s. Cuts now use concat, crossfade/whip/fade-to-black use xfade, all at a 1/25 timebase, and QC checks video and audio stream durations separately.
