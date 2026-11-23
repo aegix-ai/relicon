@@ -3,16 +3,21 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
+import { isDemo } from '@/lib/supabase'
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isDemo && !loading && !user) {
       router.push('/login')
     }
   }, [user, loading, router])
+
+  if (isDemo) {
+    return <>{children}</>
+  }
 
   if (loading) {
     return (
