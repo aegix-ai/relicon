@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
             account.platform_user_id,
             account.access_token,
             video.video_url,
-            caption + (hashtags.length ? '\n\n' + hashtags.map(t => `#${t}`).join(' ') : '')
+            caption + (hashtags.length ? '\n\n' + hashtags.map((t: string) => `#${t}`).join(' ') : '')
           );
           platformPostId = fbResult.id;
           permalink = fbResult.permalink;
@@ -133,8 +133,8 @@ export async function POST(request: NextRequest) {
             caption,
             hashtags
           );
-          platformPostId = ttResult.publish_id;
-          permalink = ttResult.share_url;
+          platformPostId = (ttResult as any)?.publish_id;
+          permalink = (ttResult as any)?.share_url;
           break;
 
         default:

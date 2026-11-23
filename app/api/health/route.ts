@@ -8,8 +8,7 @@ export async function GET() {
     
     try {
       // Test Supabase connection
-      const { createClient } = await import('@/lib/supabase-server')
-      const supabase = createClient()
+      const { supabaseServer: supabase } = await import('@/lib/supabase-server')
       const { error } = await supabase.from('users').select('count').limit(1)
       dbStatus = error ? 'error' : 'healthy'
     } catch (error) {

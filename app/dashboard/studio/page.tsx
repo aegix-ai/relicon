@@ -440,10 +440,12 @@ export default function StudioPage() {
 
       {/* Publish Modal */}
       <PublishModal
-        isOpen={publishModalOpen}
-        onClose={() => setPublishModalOpen(false)}
-        videoUrl={videoUrl}
-        videoId={videoId}
+        open={publishModalOpen}
+        onOpenChange={setPublishModalOpen}
+        videoUrl={videoUrl ?? ''}
+        videoId={videoId ?? 0}
+        productName=""
+        productDescription=""
       />
     </div>
   )

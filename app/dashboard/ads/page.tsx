@@ -24,7 +24,7 @@ export default function AdsPage() {
 
   const fetchAds = async () => {
     try {
-      const response = await fetch(`/api/videos?userId=${user.id}`)
+      const response = await fetch(`/api/videos?userId=${user?.id}`)
       const data = await response.json()
       
       if (data.success) {
