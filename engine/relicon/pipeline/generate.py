@@ -55,14 +55,16 @@ class Pipeline:
     def propose(self, sentence: str | None, brief: Brief | None, genome: Genome | None, duration: int | None,
                 platform: str | None, objective: str | None) -> Genome:
         if genome is not None:
-            return genome.model_copy(deep=True).normalize()
-        b = brief or brief_step.expand(sentence or "", self.ps.text, platform, objective)
-        try:
-            from ..learning.engine import propose_for_brief
-            g = propose_for_brief(b, self.store)
-        except Exception:  # noqa: BLE001 - no policy yet for this niche
-            g = None
-        g = g or template_genome(b)
+            g = genome.model_copy(deep=True)
+        else:
+            b = brief or brief_step.expand(sentence or "", self.ps.text, platform, objective)
+            try:
+                from ..learning.engine import propose_for_brief
+                g = propose_for_brief(b, self.store)
+            except Exception as e:  # noqa: BLE001 - learning must never block a render
+                self.emit_note = f"learning unavailable, using template: {e}"
+                g = None
+            g = g or template_genome(b)
         if duration:
             frac = g.text.cta_time_s / g.format.duration_s
             g.format.duration_s = duration
