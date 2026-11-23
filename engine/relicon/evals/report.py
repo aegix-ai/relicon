@@ -67,6 +67,11 @@ def production(durations, short_side: int) -> list[dict]:
     return rows
 
 
+def _say(msg: str) -> None:
+    import sys
+    print(f"[eval] {msg}", file=sys.stderr, flush=True)
+
+
 def main(quick: bool = False, out_dir: Path | None = None) -> Path:
     t0 = time.time()
     out = Path(out_dir or REPO_ROOT / "evals")
@@ -75,13 +80,15 @@ def main(quick: bool = False, out_dir: Path | None = None) -> Path:
     seeds = [1] if quick else [1, 2, 3]
     gens, k = (4, 6) if quick else (15, 8)
     runs = {m: [] for m in harness.METHODS}
-    for name in scen:
+    for n_i, name in enumerate(scen):
+        _say(f"main runs {n_i + 1}/{len(scen)}: {name} ({time.time() - t0:.0f} s)")
         for m in harness.METHODS:
             for s in seeds:
                 runs[m].append(harness.run(get(name), m, s, gens=gens, k=k)[0])
     # robustness: relicon vs llm_only
     rob_scen = scen[:2] if quick else ["coffee_nightshift@tiktok", "skincare_dry@meta_reels", "fitness_home@tiktok",
                                        "saas_freelance@meta_reels"]
+    _say("robustness runs")
     rob = {}
     for m in ("relicon", "llm_only"):
         rob[("high noise", m)] = [harness.run(get(n), m, s, gens=gens, k=k, noise="high")[0] for n in rob_scen for s in seeds]
@@ -89,12 +96,14 @@ def main(quick: bool = False, out_dir: Path | None = None) -> Path:
     # cold start vs warm start from a sibling niche in the same vertical (beauty has two niches)
     pairs = [("skincare_teen@tiktok", "skincare_dry@tiktok")] if quick else \
         [("skincare_teen@tiktok", "skincare_dry@tiktok"), ("skincare_teen@meta_reels", "skincare_dry@meta_reels")]
+    _say("cold vs warm start")
     cold, warm = [], []
     for target, sib in pairs:
         for s in seeds:
             _, hist = harness.run(get(sib), "relicon", 100 + s, gens=gens, k=k)
             cold.append(harness.run(get(target), "relicon", s, gens=gens, k=k)[0])
             warm.append(harness.run(get(target), "relicon", s, gens=gens, k=k, history=hist, variant="warm")[0])
+    _say("production renders")
     prod = production([6] if quick else [6, 15, 30, 60, 300], 160 if quick else 240)
 
     curves = {m: _curve(r, "batch_mean") for m, r in runs.items()}
