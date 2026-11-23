@@ -75,16 +75,16 @@ See [`evals/REPORT.md`](evals/REPORT.md) for the full report, including robustne
 
 ![learning curve](evals/learning_curve.png)
 
-Development check (3 scenarios, 2 seeds, 15 generations of 8 ads; share of the oracle reached by the mean launched ad):
+Full run: 12 scenarios × 3 seeds, 15 generations of 8 ads at $150 each. The share of the oracle is the true value of the ad divided by the best ad the hidden truth allows.
 
-| method | gen 0 | gen 14 |
-|---|---|---|
-| Relicon | 19% | 50% |
-| random | 20% | 21% |
-| template | 19% | 19% |
-| LLM-only (mock director) | 19% | 19% |
+| method | gen 0 | gen 14 (mean launched ad) | recommended ad, gen 14 | runs reaching 75% of oracle |
+|---|---|---|---|---|
+| Relicon | 21% | 49% | 53% | 5/36 |
+| random | 20% | 21% | 34% | 0/36 |
+| template | 20% | 20% | 21% | 0/36 |
+| LLM-only (mock director) | 21% | 20% | 25% | 0/36 |
 
-The full 12-scenario numbers are in the report.
+No method reached 90% of the oracle in 15 generations. Under high noise Relicon ends at 32% (LLM-only 22%), and under drift at 31% (LLM-only 20%). Warm start from a sibling niche ended at 42%, below the cold start's 50%: pooling across niches hurt in these runs. That is an open problem, not a solved one.
 
 What the numbers do not say: the market is invented, so these results show that the learning loop works as designed, not that it will lift a real ad account by the same amount. Conversion rate is close to unlearnable at $150 per ad (D16), so most of the gain comes from hook rate and clicks.
 
